@@ -92,9 +92,9 @@ meta: {
 
 ---
 
-## 💾 Database Schemas & Registry (SQLite)
+## 💾 Database Schemas & Registry (MongoDB)
 
-The local SQLite database (`payload.db` at root) stores data for 6 core collections:
+The MongoDB database stores data for 6 core collections:
 
 1. **Users (`users`):** Authentication collection. Roles: `admin` | `instructor` | `student`.
 2. **Media (`media`):** Upload collection for graphic assets. Resizes images into `thumbnail`, `card`, and `hero` resolutions using **Sharp**.

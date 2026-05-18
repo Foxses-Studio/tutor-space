@@ -11,7 +11,7 @@ It provides completely isolated environments for public-facing client pages and 
 - **🚀 Native Next.js 16 + React 19:** High-performance React Server Components (RSC) and server actions.
 - **⚡ Payload CMS 3.x Native Integration:** No external backend needed—the administrative panel runs directly inside the same Next.js process.
 - **📁 Modular Architecture:** Route groups (`(app)` and `(payload)`) completely isolate styling and page layout hierarchies.
-- **💾 Zero-Configuration SQLite Database:** Local development database (`payload.db`) runs instantly out-of-the-box.
+- **💾 High-Performance MongoDB Database:** Scalable document-based database configuration for modern web loads.
 - **🖼️ Automated High-Performance Uploads:** Integrates **Sharp** to automatically compress and optimize upload assets into multiple responsive resolution cards.
 - **👤 Role-Based Registries:** Custom Users, Categories, Courses, Lessons, and payment-ready Enrollments schemas.
 - **📦 Clean Package Management:** Switched fully to **pnpm** for ultra-fast, cached dependency execution.
@@ -22,7 +22,7 @@ It provides completely isolated environments for public-facing client pages and 
 
 - **Core Framework:** Next.js 16.2.6 & React 19.2.4
 - **Headless CMS Engine:** Payload CMS 3.84.1
-- **Database Layer:** SQLite powered by `@payloadcms/db-sqlite`
+- **Database Layer:** MongoDB powered by `@payloadcms/db-mongodb`
 - **Image Resizer:** Sharp 0.34.5
 - **Style Processor:** Tailwind CSS v4
 - **Package Manager:** pnpm 10.31.0

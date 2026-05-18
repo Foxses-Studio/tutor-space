@@ -1,5 +1,5 @@
 import { buildConfig } from 'payload'
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import sharp from 'sharp'
 import path from 'path'
@@ -31,10 +31,8 @@ export default buildConfig({
     },
   },
   editor: lexicalEditor(),
-  db: sqliteAdapter({
-    client: {
-      url: process.env.DATABASE_URL || 'file:./payload.db',
-    },
+  db: mongooseAdapter({
+    url: process.env.DATABASE_URL || 'mongodb://127.0.0.1/tutor-space',
   }),
   sharp,
   collections: [
