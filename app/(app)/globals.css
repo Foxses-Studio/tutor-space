@@ -19,3 +19,14 @@ body {
   color: var(--foreground);
   font-family: var(--font-nunito), sans-serif;
 }
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
