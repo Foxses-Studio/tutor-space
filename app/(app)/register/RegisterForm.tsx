@@ -115,292 +115,260 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen flex bg-white font-sans">
       
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-xl bg-transparent p-0 relative z-10"
-      >
-        
-        {/* Branding header */}
-        <div className="flex flex-col items-center mb-8">
-          <Link href="/" className="flex items-center gap-2 mb-4 group">
-            <span className="h-10 w-10 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-lg">
-              T
-            </span>
-            <span className="text-2xl font-bold font-display tracking-tight text-zinc-900">
-              Tutor Space
-            </span>
-          </Link>
-          <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight font-display text-center">
-            Student Registration
-          </h2>
-          <p className="text-zinc-500 font-semibold text-base mt-2 text-center">
-            Join as a learner and begin your journey
+      {/* Left Side: Premium Navy Branding Column (Hidden on Mobile) */}
+      <div className="hidden lg:flex w-1/2 bg-[#0A163A] text-white flex-col justify-between p-16 relative overflow-hidden select-none">
+        {/* Soft glowing purple blur gradient blobs */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#615fff]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#543cdf]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Top: Logo */}
+        <Link href="/" className="flex items-center gap-2.5 z-10 group self-start">
+          <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+            T
+          </span>
+          <span className="text-xl font-bold font-display tracking-tight text-white">
+            Tutor Space
+          </span>
+        </Link>
+
+        {/* Middle: Brand Messages */}
+        <div className="flex flex-col gap-6 z-10 my-auto">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-[#615fff] uppercase tracking-wider self-start">
+            Student Platform
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold font-display tracking-tight leading-tight text-white">
+            Unlock your <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#615fff] to-[#807eff]">Learning Potential</span>
+          </h1>
+          <p className="text-zinc-400 text-lg max-w-md font-medium leading-relaxed">
+            Access world-class interactive courses, learn from top global instructors, and track your progress all in one single, powerful space.
           </p>
         </div>
 
-        {/* Multi-step progress indicator */}
-        <div className="flex items-center justify-between mb-10 px-6">
-          {[1, 2, 3].map((s) => (
-            <React.Fragment key={s}>
-              <div className="flex items-center justify-center relative">
-                <div 
-                  className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-300 ${
-                    step >= s 
-                      ? 'bg-[#615fff] border-[#615fff] text-white' 
-                      : 'border-zinc-200 text-zinc-400 bg-white'
-                  }`}
-                >
-                  {step > s ? <FiCheck className="h-5 w-5" /> : s}
-                </div>
-                <span className="absolute -bottom-6 text-base font-bold text-zinc-400 whitespace-nowrap hidden sm:block">
-                  {s === 1 ? 'Account' : s === 2 ? 'Profile' : 'Interests'}
-                </span>
-              </div>
-              {s < 3 && (
-                <div className="flex-1 h-0.5 mx-4 bg-zinc-200 relative overflow-hidden">
-                  <div 
-                    className="absolute inset-y-0 left-0 bg-[#615fff] transition-all duration-500"
-                    style={{ width: step > s ? '100%' : '0%' }}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
+        {/* Bottom: Copyright Footer */}
+        <div className="text-zinc-500 text-base font-semibold z-10">
+          &copy; 2026 Tutor Space Inc. All rights reserved.
         </div>
+      </div>
 
-        {/* Multi-step Forms inside AnimatePresence */}
-        <div className="mt-4">
-          <AnimatePresence mode="wait">
-            
-            {/* STEP 1: Account Setup */}
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-5"
-              >
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-base font-bold text-zinc-700">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-                      <FiUser className="h-5 w-5" />
-                    </span>
-                    <input
-                      id="name"
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="John Doe"
-                      className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
-                    />
-                  </div>
-                </div>
+      {/* Right Side: Form Workspace Column */}
+      <div className="w-full lg:w-1/2 min-h-screen bg-white flex items-center justify-center p-8 sm:p-12 relative overflow-y-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="w-full max-w-md bg-transparent p-0 relative z-10"
+        >
+          {/* Logo visible only on mobile */}
+          <div className="flex justify-start lg:hidden mb-8">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+                T
+              </span>
+              <span className="text-xl font-bold font-display tracking-tight text-zinc-900">
+                Tutor Space
+              </span>
+            </Link>
+          </div>
 
-                {/* Email Address */}
-                <div className="space-y-1.5">
-                  <label htmlFor="email" className="text-base font-bold text-zinc-700">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-                      <FiMail className="h-5 w-5" />
-                    </span>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
-                    />
-                  </div>
-                </div>
+          {/* Form Header */}
+          <div className="flex flex-col items-start mb-8">
+            <span className="text-base font-bold text-[#615fff] uppercase tracking-wider mb-2">
+              Get Started
+            </span>
+            <h2 className="text-3xl font-bold text-zinc-900 tracking-tight font-display">
+              Student Registration
+            </h2>
+          </div>
 
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <label htmlFor="password" className="text-base font-bold text-zinc-700">
-                    Password (Min. 6 chars)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-                      <FiLock className="h-5 w-5" />
-                    </span>
-                    <input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-11 pr-11 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors"
-                    >
-                      {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Next Button */}
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 mt-4 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
-                >
-                  Continue
-                  <FiArrowRight className="h-5 w-5" />
-                </button>
-              </motion.div>
-            )}
-
-            {/* STEP 2: Profile Info */}
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-5"
-              >
-                {/* Phone Number */}
-                <div className="space-y-1.5">
-                  <label htmlFor="phone" className="text-base font-bold text-zinc-700">
-                    Phone Number (Optional)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-                      <FiPhone className="h-5 w-5" />
-                    </span>
-                    <input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1 (555) 000-0000"
-                      className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Academic Level */}
-                <div className="space-y-1.5">
-                  <label htmlFor="academic" className="text-base font-bold text-zinc-700">
-                    Academic Level
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400 pointer-events-none">
-                      <FiBookOpen className="h-5 w-5" />
-                    </span>
-                    <select
-                      id="academic"
-                      value={academicLevel}
-                      onChange={(e) => setAcademicLevel(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-semibold text-zinc-700 bg-white cursor-pointer appearance-none"
-                    >
-                      <option value="High School">High School</option>
-                      <option value="College/University">College / University</option>
-                      <option value="Graduate School">Graduate School</option>
-                      <option value="Professional">Professional / Working</option>
-                      <option value="Hobbyist">Hobbyist / Lifelong Learner</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-400">
-                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex gap-4 pt-2">
-                  <button
-                    type="button"
-                    onClick={handlePrevStep}
-                    className="flex-1 py-3.5 rounded-lg border border-zinc-200 hover:border-zinc-300 text-zinc-700 font-bold text-base hover:bg-zinc-50 transition-all cursor-pointer"
+          {/* Multi-step progress indicator */}
+          <div className="flex items-center justify-between mb-8">
+            {[1, 2, 3].map((s) => (
+              <React.Fragment key={s}>
+                <div className="flex items-center justify-center relative">
+                  <div 
+                    className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-300 ${
+                      step >= s 
+                        ? 'bg-[#615fff] border-[#615fff] text-white' 
+                        : 'border-zinc-200 text-zinc-400 bg-white'
+                    }`}
                   >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all cursor-pointer"
-                  >
-                    Continue
-                    <FiArrowRight className="h-5 w-5" />
-                  </button>
+                    {step > s ? <FiCheck className="h-5 w-5" /> : s}
+                  </div>
+                  <span className="absolute -bottom-6 text-xs font-bold text-zinc-400 whitespace-nowrap hidden sm:block">
+                    {s === 1 ? 'Account' : s === 2 ? 'Profile' : 'Interests'}
+                  </span>
                 </div>
-              </motion.div>
-            )}
+                {s < 3 && (
+                  <div className="flex-1 h-0.5 mx-3 bg-zinc-200 relative overflow-hidden">
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-[#615fff] transition-all duration-500"
+                      style={{ width: step > s ? '100%' : '0%' }}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
 
-            {/* STEP 3: Learning Preferences & Final Acceptance */}
-            {step === 3 && (
-              <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Multi-step Forms inside AnimatePresence */}
+          <div className="mt-4">
+            <AnimatePresence mode="wait">
+              
+              {/* STEP 1: Account Setup */}
+              {step === 1 && (
                 <motion.div
-                  key="step3"
+                  key="step1"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
                   className="space-y-5"
                 >
-                  {/* Select Interests */}
-                  <div className="space-y-2">
-                    <label className="text-base font-bold text-zinc-700 block">
-                      Learning Interests (Multi-select)
+                  {/* Name */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="name" className="text-base font-bold text-zinc-700">
+                      Full Name
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {interestOptions.map(option => {
-                        const isSelected = selectedInterests.includes(option)
-                        return (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => toggleInterest(option)}
-                            className={`px-4 py-3 rounded-lg border text-base font-semibold transition-all text-center cursor-pointer ${
-                              isSelected 
-                                ? 'bg-[#615fff]/10 border-[#615fff] text-[#615fff]' 
-                                : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'
-                            }`}
-                          >
-                            {option}
-                          </button>
-                        )
-                      })}
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
+                        <FiUser className="h-5 w-5" />
+                      </span>
+                      <input
+                        id="name"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="John Doe"
+                        className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                      />
                     </div>
                   </div>
 
-                  {/* Terms Acceptance */}
-                  <div className="flex items-start gap-3 pt-2">
-                    <input
-                      id="terms"
-                      type="checkbox"
-                      required
-                      checked={termsAccepted}
-                      onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="mt-1 h-5 w-5 rounded border-zinc-300 text-[#615fff] focus:ring-[#615fff] cursor-pointer"
-                    />
-                    <label htmlFor="terms" className="text-base font-semibold text-zinc-500 cursor-pointer select-none">
-                      I agree to the <span className="text-[#615fff] hover:underline font-bold">Terms of Service</span> and <span className="text-[#615fff] hover:underline font-bold">Privacy Policy</span>.
+                  {/* Email Address */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="email" className="text-base font-bold text-zinc-700">
+                      Email Address
                     </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
+                        <FiMail className="h-5 w-5" />
+                      </span>
+                      <input
+                        id="email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                      />
+                    </div>
                   </div>
 
-                  {/* Navigation & Submit Buttons */}
+                  {/* Password */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="password" className="text-base font-bold text-zinc-700">
+                      Password (Min. 6 chars)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
+                        <FiLock className="h-5 w-5" />
+                      </span>
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full pl-11 pr-11 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors"
+                      >
+                        {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 mt-4 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
+                  >
+                    Continue
+                    <FiArrowRight className="h-5 w-5" />
+                  </button>
+                </motion.div>
+              )}
+
+              {/* STEP 2: Profile Info */}
+              {step === 2 && (
+                <motion.div
+                  key="step2"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-5"
+                >
+                  {/* Phone Number */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="phone" className="text-base font-bold text-zinc-700">
+                      Phone Number (Optional)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
+                        <FiPhone className="h-5 w-5" />
+                      </span>
+                      <input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+1 (555) 000-0000"
+                        className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Academic Level */}
+                  <div className="space-y-1.5">
+                    <label htmlFor="academic" className="text-base font-bold text-zinc-700">
+                      Academic Level
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400 pointer-events-none">
+                        <FiBookOpen className="h-5 w-5" />
+                      </span>
+                      <select
+                        id="academic"
+                        value={academicLevel}
+                        onChange={(e) => setAcademicLevel(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-semibold text-zinc-700 bg-white cursor-pointer appearance-none"
+                      >
+                        <option value="High School">High School</option>
+                        <option value="College/University">College / University</option>
+                        <option value="Graduate School">Graduate School</option>
+                        <option value="Professional">Professional / Working</option>
+                        <option value="Hobbyist">Hobbyist / Lifelong Learner</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-zinc-400">
+                        <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Buttons */}
                   <div className="flex gap-4 pt-2">
                     <button
                       type="button"
@@ -410,36 +378,111 @@ export default function RegisterForm() {
                       Back
                     </button>
                     <button
-                      type="submit"
-                      disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      type="button"
+                      onClick={handleNextStep}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all cursor-pointer"
                     >
-                      {loading ? (
-                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        'Register'
-                      )}
+                      Continue
+                      <FiArrowRight className="h-5 w-5" />
                     </button>
                   </div>
                 </motion.div>
-              </form>
-            )}
+              )}
 
-          </AnimatePresence>
-        </div>
+              {/* STEP 3: Learning Preferences & Final Acceptance */}
+              {step === 3 && (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <motion.div
+                    key="step3"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-5"
+                  >
+                    {/* Select Interests */}
+                    <div className="space-y-2">
+                      <label className="text-base font-bold text-zinc-700 block">
+                        Learning Interests (Multi-select)
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {interestOptions.map(option => {
+                          const isSelected = selectedInterests.includes(option)
+                          return (
+                            <button
+                              key={option}
+                              type="button"
+                              onClick={() => toggleInterest(option)}
+                              className={`px-4 py-3 rounded-lg border text-base font-semibold transition-all text-center cursor-pointer ${
+                                isSelected 
+                                  ? 'bg-[#615fff]/10 border-[#615fff] text-[#615fff]' 
+                                  : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300'
+                              }`}
+                            >
+                              {option}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
 
-        {/* Footer info link */}
-        <div className="mt-8 text-center text-base font-semibold text-zinc-500 pt-6">
-          Already have an account?{' '}
-          <Link 
-            href="/login" 
-            className="text-[#615fff] hover:text-[#543cdf] font-bold transition-colors"
-          >
-            Sign In
-          </Link>
-        </div>
+                    {/* Terms Acceptance */}
+                    <div className="flex items-start gap-3 pt-2">
+                      <input
+                        id="terms"
+                        type="checkbox"
+                        required
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="mt-1 h-5 w-5 rounded border-zinc-300 text-[#615fff] focus:ring-[#615fff] cursor-pointer"
+                      />
+                      <label htmlFor="terms" className="text-base font-semibold text-zinc-500 cursor-pointer select-none">
+                        I agree to the <span className="text-[#615fff] hover:underline font-bold">Terms of Service</span> and <span className="text-[#615fff] hover:underline font-bold">Privacy Policy</span>.
+                      </label>
+                    </div>
 
-      </motion.div>
+                    {/* Navigation & Submit Buttons */}
+                    <div className="flex gap-4 pt-2">
+                      <button
+                        type="button"
+                        onClick={handlePrevStep}
+                        className="flex-1 py-3.5 rounded-lg border border-zinc-200 hover:border-zinc-300 text-zinc-700 font-bold text-base hover:bg-zinc-50 transition-all cursor-pointer"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        {loading ? (
+                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          'Register'
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                </form>
+              )}
+
+            </AnimatePresence>
+          </div>
+
+          {/* Footer info link */}
+          <div className="mt-8 text-left text-base font-semibold text-zinc-500 pt-6">
+            Already have an account?{' '}
+            <Link 
+              href="/login" 
+              className="text-[#615fff] hover:text-[#543cdf] font-bold transition-colors"
+            >
+              Sign In
+            </Link>
+          </div>
+
+        </motion.div>
+      </div>
+
     </div>
   )
 }

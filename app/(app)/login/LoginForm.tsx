@@ -13,6 +13,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,124 +68,178 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen flex bg-white font-sans">
       
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-lg bg-transparent p-0 relative z-10"
-      >
-        
-        {/* Branding header */}
-        <div className="flex flex-col items-center mb-8">
-          <Link href="/" className="flex items-center gap-2 mb-4 group">
-            <span className="h-10 w-10 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-lg">
-              T
-            </span>
-            <span className="text-2xl font-bold font-display tracking-tight text-zinc-900">
-              Tutor Space
-            </span>
-          </Link>
-          <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight font-display text-center">
-            Welcome Back!
-          </h2>
-          <p className="text-zinc-500 font-semibold text-base mt-2 text-center">
-            Sign in to your student learning workspace
+      {/* Left Side: Premium Navy Branding Column (Hidden on Mobile) */}
+      <div className="hidden lg:flex w-1/2 bg-[#0A163A] text-white flex-col justify-between p-16 relative overflow-hidden select-none">
+        {/* Soft glowing purple blur gradient blobs */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#615fff]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#543cdf]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Top: Logo */}
+        <Link href="/" className="flex items-center gap-2.5 z-10 group self-start">
+          <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+            T
+          </span>
+          <span className="text-xl font-bold font-display tracking-tight text-white">
+            Tutor Space
+          </span>
+        </Link>
+
+        {/* Middle: Brand Messages */}
+        <div className="flex flex-col gap-6 z-10 my-auto">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-base font-bold text-[#615fff] uppercase tracking-wider self-start">
+            Student Portal
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold font-display tracking-tight leading-tight text-white">
+            Manage your <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#615fff] to-[#807eff]">Learning Journey</span>
+          </h1>
+          <p className="text-zinc-400 text-lg max-w-md font-medium leading-relaxed">
+            Experience the next generation of online learning. Secure, intuitive, and designed specifically for modern students.
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* Email input */}
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-base font-bold text-zinc-700">
-              Email Address
-            </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-                <FiMail className="h-5 w-5" />
+        {/* Bottom: Copyright Footer */}
+        <div className="text-zinc-500 text-base font-semibold z-10">
+          &copy; 2026 Tutor Space Inc. All rights reserved.
+        </div>
+      </div>
+
+      {/* Right Side: Form Workspace Column */}
+      <div className="w-full lg:w-1/2 min-h-screen bg-white flex items-center justify-center p-8 sm:p-12 relative overflow-y-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="w-full max-w-md bg-transparent p-0 relative z-10"
+        >
+          {/* Logo visible only on mobile */}
+          <div className="flex justify-start lg:hidden mb-8">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+                T
               </span>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
-              />
-            </div>
+              <span className="text-xl font-bold font-display tracking-tight text-zinc-900">
+                Tutor Space
+              </span>
+            </Link>
           </div>
 
-          {/* Password input */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          {/* Form Header */}
+          <div className="flex flex-col items-start mb-8">
+            <span className="text-base font-bold text-[#615fff] uppercase tracking-wider mb-2">
+              Welcome Back
+            </span>
+            <h2 className="text-3xl font-bold text-zinc-900 tracking-tight font-display">
+              Secure Login
+            </h2>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Email input */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-base font-bold text-zinc-700">
+                Email Address
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
+                  <FiMail className="h-5 w-5" />
+                </span>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@mediaportal.com"
+                  className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Password input */}
+            <div className="space-y-2">
               <label htmlFor="password" className="text-base font-bold text-zinc-700">
                 Password
               </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
+                  <FiLock className="h-5 w-5" />
+                </span>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-11 pr-11 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors"
+                >
+                  {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Remember Me & Forgot Password (Aligned Horizontally) */}
+            <div className="flex items-center justify-between text-base font-semibold">
+              <label className="flex items-center gap-2 text-zinc-500 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-5 w-5 rounded border-zinc-300 text-[#615fff] focus:ring-[#615fff] cursor-pointer"
+                />
+                Remember me
+              </label>
               <Link 
                 href="/forgot-password" 
-                className="text-base font-bold text-[#615fff] hover:text-[#543cdf] transition-colors"
+                className="text-[#615fff] hover:text-[#543cdf] transition-colors font-bold"
               >
-                Forgot?
+                Forgot password?
               </Link>
             </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-                <FiLock className="h-5 w-5" />
-              </span>
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-11 pr-11 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors"
-              >
-                {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
-              </button>
-            </div>
+
+            {/* Submit Button */}
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {loading ? (
+                <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  Sign In to Dashboard
+                  <FiArrowRight className="h-5 w-5" />
+                </>
+              )}
+            </motion.button>
+          </form>
+
+          {/* Footer info link */}
+          <div className="mt-8 text-left text-base font-semibold text-zinc-500 pt-6">
+            Don&apos;t have an account?{' '}
+            <Link 
+              href="/register" 
+              className="text-[#615fff] hover:text-[#543cdf] font-bold transition-colors"
+            >
+              Sign Up
+            </Link>
           </div>
 
-          {/* Submit Button */}
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {loading ? (
-              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                Sign In
-                <FiArrowRight className="h-5 w-5" />
-              </>
-            )}
-          </motion.button>
-        </form>
+        </motion.div>
+      </div>
 
-        {/* Footer info link */}
-        <div className="mt-8 text-center text-base font-semibold text-zinc-500 pt-6">
-          Don&apos;t have an account?{' '}
-          <Link 
-            href="/register" 
-            className="text-[#615fff] hover:text-[#543cdf] font-bold transition-colors"
-          >
-            Sign Up
-          </Link>
-        </div>
-
-      </motion.div>
     </div>
   )
 }
