@@ -38,11 +38,11 @@ export default async function Marquee() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#543CDF] via-[#615fff] to-[#7c3aed] py-6 overflow-hidden relative select-none z-10 transform -rotate-[5deg] scale-[1.02] origin-center my-8 shadow-xl shadow-[#615fff]/20 border-y border-white/10">
+    <div className="w-full bg-gradient-to-r from-[#615fff]/5 via-purple-50/30 to-[#615fff]/8 py-6 overflow-hidden relative select-none z-10 transform -rotate-[5deg] scale-[1.02] origin-center my-8 border-y border-[#615fff]/15 shadow-sm shadow-[#615fff]/5">
       <div className="animate-marquee-track flex gap-20">
         
         {/* Marquee Group 1 */}
-        <div className="flex gap-20 items-center shrink-0 text-base font-extrabold uppercase tracking-widest text-white">
+        <div className="flex gap-20 items-center shrink-0 text-base font-extrabold uppercase tracking-widest text-[#543CDF]">
           {items.map((item, index) => (
             <React.Fragment key={`g1-${index}`}>
               <span>{item}</span>
@@ -52,7 +52,7 @@ export default async function Marquee() {
         </div>
 
         {/* Marquee Group 2 (Duplicate for infinite seamless loop) */}
-        <div className="flex gap-20 items-center shrink-0 text-base font-extrabold uppercase tracking-widest text-white" aria-hidden="true">
+        <div className="flex gap-20 items-center shrink-0 text-base font-extrabold uppercase tracking-widest text-[#543CDF]" aria-hidden="true">
           {items.map((item, index) => (
             <React.Fragment key={`g2-${index}`}>
               <span>{item}</span>
