@@ -46,7 +46,7 @@ export default async function Marquee() {
           {items.map((item, index) => (
             <React.Fragment key={`g1-${index}`}>
               <span>{item}</span>
-              <span className="h-2.5 w-2.5 rounded-full bg-[#FDBF2D] shadow-sm shadow-[#FDBF2D]/50" />
+              <img src="/svg/sparkle.png" alt="sparkle" className="h-6 w-6 object-contain shrink-0" />
             </React.Fragment>
           ))}
         </div>
@@ -56,7 +56,7 @@ export default async function Marquee() {
           {items.map((item, index) => (
             <React.Fragment key={`g2-${index}`}>
               <span>{item}</span>
-              <span className="h-2.5 w-2.5 rounded-full bg-[#FDBF2D] shadow-sm shadow-[#FDBF2D]/50" />
+              <img src="/svg/sparkle.png" alt="sparkle" className="h-6 w-6 object-contain shrink-0" />
             </React.Fragment>
           ))}
         </div>
