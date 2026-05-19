@@ -28,10 +28,10 @@ export default function Home() {
               Easily
             </span>
 
-            {/* Avatar right next to Easily */}
-            <span className="inline-block align-middle -ml-[30px] relative -top-2 md:-top-4 z-10">
+            {/* Avatar right next to Easily - Matches screenshot avatar */}
+            <span className="inline-block align-middle -ml-[30px] relative -top-2 md:-top-0 z-10">
               <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150&h=150" 
+                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150&h=150" 
                 alt="Instructor" 
                 className="w-12 h-12 md:w-16 md:h-16 rounded-full border-3 border-white shadow-md object-cover"
               />
@@ -47,10 +47,10 @@ export default function Home() {
           <span className="block">
             <span className="align-middle">Anywhere </span>
 
-            {/* Double Overlapping Avatars */}
+            {/* Double Overlapping Avatars - Matches screenshot */}
             <span className="inline-flex items-center justify-center align-middle mx-1 md:mx-2 translate-y-1">
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150&h=150" 
+                src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150&h=150" 
                 alt="Student 1" 
                 className="w-12 h-12 md:w-16 md:h-16 rounded-full border-3 border-white shadow-md object-cover -mr-4 relative z-20"
               />
@@ -66,9 +66,9 @@ export default function Home() {
 
         </h1>
 
-        {/* Subheading/Subtitle in Nunito (Minimum size 16px/text-base) */}
-        <p className="text-base sm:text-lg md:text-xl text-[#4F5B7C] font-semibold text-center max-w-2xl mx-auto mb-10 leading-relaxed font-sans">
-          On my website, you'll find resources and trainings to help you find aliveness and vitality in your relationships.
+        {/* Subheading/Subtitle in Nunito (Split exactly after "find") */}
+        <p className="text-base sm:text-lg md:text-xl text-[#4F5B7C] font-semibold text-center max-w-3xl mx-auto mb-10 leading-relaxed font-sans">
+          On my website, you'll find resources and trainings to help you find <br className="hidden md:block" /> aliveness and vitality in your relationships.
         </p>
 
         {/* Action Button - Minimum border radius 8px/rounded-lg (using rounded-2xl) */}
