@@ -1,18 +1,10 @@
-'use client'
-
 import React from 'react'
 import Navbar from '@/components/Navbar'
 
 export default function Home() {
   return (
-    <div className="min-h-[160vh] bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden">
       
-      {/* Subtle Background Pattern */}
-      <div 
-        className="absolute inset-0 bg-[url('/svg/pattern.svg')] bg-cover bg-center opacity-[0.03] pointer-events-none" 
-        style={{ mixBlendMode: 'multiply' }}
-      />
-
       {/* Scroll-Adaptive Navbar */}
       <Navbar />
 
@@ -87,27 +79,6 @@ export default function Home() {
         </div>
 
       </main>
-
-      {/* Bottom Corner Accent Elements */}
-      
-      {/* Lower Left Purple Gradient Card/Pill Shape (border-radius > 8px) */}
-      <div 
-        className="fixed -left-20 -bottom-20 w-52 h-52 rounded-[2.5rem] bg-gradient-to-tr from-[#9B51E0] to-[#543CDF] opacity-90 hidden md:block z-0 pointer-events-none"
-        style={{ transform: 'rotate(15deg)' }}
-      />
-
-      {/* Lower Right Photo Card Wrapper (border-radius > 8px) */}
-      <div 
-        className="fixed -right-16 -bottom-16 w-60 h-60 rounded-[2.5rem] bg-white border-4 border-white shadow-2xl overflow-hidden hidden md:block z-0 pointer-events-none"
-        style={{ transform: 'rotate(-10deg)' }}
-      >
-        <img 
-          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=300&h=300" 
-          alt="Students studying together" 
-          className="w-full h-full object-cover"
-        />
-      </div>
-
     </div>
   )
 }
