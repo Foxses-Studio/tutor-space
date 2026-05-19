@@ -5,7 +5,6 @@ import sharp from 'sharp'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// Import Collections
 import { Users } from './collections/Users'
 import { Courses } from './collections/Courses'
 import { Lessons } from './collections/Lessons'

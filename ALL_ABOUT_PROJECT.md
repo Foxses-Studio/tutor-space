@@ -44,12 +44,20 @@ tutor-space/
 │   ├── (app)/                    # 🌐 PUBLIC FRONTEND WEBSITE
 │   │   ├── globals.css           # Global CSS variables, Tailwind configurations & fonts
 │   │   ├── layout.tsx            # Main HTML wrapper (loads Nunito & Plus Jakarta Sans)
-│   │   └── page.tsx              # Tutor Space Landing Page (Renders course tracks & features)
+│   │   └── page.tsx              # Tutor Space Landing Page (Now extremely modular)
 │   │
 │   └── (payload)/                # ⚙️ PAYLOAD CMS ADMIN & API GATEWAY
 │       ├── admin/                # Catch-all routes for administrative panel
 │       ├── api/                  # REST/GraphQL API catch-all endpoints
 │       └── layout.tsx            # Isolated admin layout wrapping Payload's RootLayout
+│
+├── components/                   # 🧩 REUSABLE MODULAR UI COMPONENTS
+│   ├── Navbar.tsx                # Glassmorphism Navbar with responsive drawer & auth dropdown
+│   ├── Hero.tsx                  # Beautiful Hero landing section
+│   ├── Stats.tsx                 # Platform stats banner
+│   ├── Features.tsx              # Grid of feature highlight cards
+│   ├── Courses.tsx               # Curated featured course cards
+│   └── Footer.tsx                # Clean, structured site footer
 │
 ├── collections/                  # 💾 MONGODB DATABASE COLLECTIONS SCHEMA
 │   ├── Categories.ts             # Course categories schema
