@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function Marquee() {
   return (
-    <div className="w-full bg-[#fafafa] border-y border-zinc-100 py-6 overflow-hidden relative select-none z-10">
+    <div className="w-full bg-[#fafafa] border-y border-zinc-100 py-6 overflow-hidden relative select-none z-10 transform -rotate-[1.5deg] scale-[1.02] origin-center my-6">
       <div className="animate-marquee-track flex gap-20">
         
         {/* Marquee Group 1 */}
