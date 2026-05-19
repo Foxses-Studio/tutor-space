@@ -16,8 +16,8 @@ export default function Home() {
           
           {/* Row 1: Learn Easily [Avatar] */}
           <span className="block relative mb-3 md:mb-5">
-            {/* Purple Curved Pointing Arrow (heading-svg.svg) */}
-            <span className="absolute -left-14 -top-8 w-20 h-20 pointer-events-none hidden lg:block transform -rotate-12">
+            {/* Purple Curved Pointing Arrow (heading-svg.svg) - Made Larger */}
+            <span className="absolute -left-24 -top-12 w-32 h-32 pointer-events-none hidden lg:block transform -rotate-12">
               <img src="/svg/heading-svg.svg" alt="arrow pointer" className="w-full h-full object-contain" />
             </span>
 
@@ -37,8 +37,8 @@ export default function Home() {
               />
             </span>
 
-            {/* Purple Lines Spark (heading-svg2.svg) */}
-            <span className="absolute right-6 -top-4 w-12 h-12 pointer-events-none hidden lg:block">
+            {/* Purple Lines Spark (heading-svg2.svg) - Made Larger */}
+            <span className="absolute right-2 -top-8 w-20 h-20 pointer-events-none hidden lg:block">
               <img src="/svg/heading-svg2.svg" alt="spark accents" className="w-full h-full object-contain" />
             </span>
           </span>
