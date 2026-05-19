@@ -44,11 +44,25 @@ export const Lessons: CollectionConfig = {
       },
     },
     {
+      name: 'lessonType',
+      type: 'select',
+      defaultValue: 'recorded',
+      required: true,
+      options: [
+        { label: 'Recorded Video', value: 'recorded' },
+        { label: 'Live Class (Zoom / Meet)', value: 'live' },
+      ],
+      admin: {
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'videoUrl',
       type: 'text',
       required: false,
       admin: {
         description: 'Link to the hosted lesson video (YouTube, Vimeo, Cloudinary, etc.)',
+        condition: (data) => !data || data.lessonType === 'recorded',
       },
     },
     {
@@ -58,6 +72,43 @@ export const Lessons: CollectionConfig = {
       required: false,
       admin: {
         description: 'Or upload a video file directly to the server.',
+        condition: (data) => !data || data.lessonType === 'recorded',
+      },
+    },
+    {
+      name: 'livePlatform',
+      type: 'select',
+      defaultValue: 'zoom',
+      options: [
+        { label: 'Zoom', value: 'zoom' },
+        { label: 'Google Meet', value: 'meet' },
+        { label: 'Microsoft Teams', value: 'teams' },
+        { label: 'Other / Custom Platform', value: 'other' },
+      ],
+      admin: {
+        condition: (data) => data?.lessonType === 'live',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'liveUrl',
+      type: 'text',
+      label: 'Live Class Meeting Link',
+      admin: {
+        description: 'Paste your Zoom, Meet, or Teams meeting link here.',
+        condition: (data) => data?.lessonType === 'live',
+      },
+    },
+    {
+      name: 'liveDate',
+      type: 'date',
+      label: 'Scheduled Date & Time',
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+        condition: (data) => data?.lessonType === 'live',
+        position: 'sidebar',
       },
     },
     {
@@ -75,6 +126,7 @@ export const Lessons: CollectionConfig = {
       admin: {
         description: 'Duration of the lesson in minutes.',
         position: 'sidebar',
+        condition: (data) => !data || data.lessonType === 'recorded',
       },
     },
     {
@@ -85,6 +137,7 @@ export const Lessons: CollectionConfig = {
       admin: {
         description: 'Allow non-enrolled students to watch this lesson as a demo.',
         position: 'sidebar',
+        condition: (data) => !data || data.lessonType === 'recorded',
       },
     },
     {
