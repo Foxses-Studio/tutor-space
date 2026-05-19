@@ -1,0 +1,123 @@
+/* Tutor Space Custom Admin Theme Overrides */
+
+/* Global CSS Variable Overrides to Inject Brand Identity */
+:root {
+  --theme-font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --theme-font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Brand Palette Variables */
+  --theme-bg: #fafafa;
+  --theme-text: #0A163A;
+  
+  /* Form Elevations */
+  --theme-elevation-50: #ffffff;
+  --theme-elevation-100: #ffffff;
+  --theme-elevation-150: #f4f4f5;
+  --theme-elevation-200: #e4e4e7;
+
+  /* Strict Border Radius Standards (Max 8px per handbook) */
+  --theme-border-radius-xs: 4px;
+  --theme-border-radius-s: 6px;
+  --theme-border-radius-m: 8px;
+  --theme-border-radius-lg: 8px;
+
+  /* Color Customizations */
+  --theme-success-500: #10b981;
+  --theme-error-500: #ef4444;
+}
+
+/* Scoped Overrides for the Admin Login and Create-First-User Authentication Wrapper */
+.payload-auth {
+  background: radial-gradient(circle at top left, rgba(97, 95, 255, 0.05), transparent 50%), 
+              radial-gradient(circle at bottom right, rgba(84, 60, 223, 0.05), transparent 50%),
+              #fafafa !important;
+  font-family: var(--theme-font-body) !important;
+}
+
+/* Beautiful Centered Authentic Form Box */
+.payload-auth .auth__wrap {
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
+  background-color: #ffffff !important;
+  padding: 2.5rem !important;
+  max-width: 480px !important;
+  width: 100% !important;
+}
+
+/* Form Title Styling */
+.payload-auth h1 {
+  font-family: var(--theme-font-heading) !important;
+  font-weight: 700 !important;
+  font-size: 1.75rem !important;
+  letter-spacing: -0.025em !important;
+  color: #0A163A !important;
+  margin-bottom: 2rem !important;
+  text-align: center !important;
+}
+
+/* Form Field Labels */
+.payload-auth label {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #3f3f46 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Beautiful Input Fields Styling */
+.payload-auth input[type="text"],
+.payload-auth input[type="email"],
+.payload-auth input[type="password"] {
+  width: 100% !important;
+  font-size: 16px !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 8px !important;
+  border: 1px solid #d4d4d8 !important;
+  color: #18181b !important;
+  background-color: #ffffff !important;
+  transition: all 0.2s ease-in-out !important;
+  font-weight: 500 !important;
+}
+
+/* Active/Focus State for Inputs */
+.payload-auth input[type="text"]:focus,
+.payload-auth input[type="email"]:focus,
+.payload-auth input[type="password"]:focus {
+  border-color: #615fff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(97, 95, 255, 0.15) !important;
+}
+
+/* Premium Primary Submit Button Override */
+.payload-auth button.btn {
+  background-color: #615fff !important;
+  border-color: #615fff !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  margin-top: 1.5rem !important;
+  box-shadow: 0 4px 6px -1px rgba(97, 95, 255, 0.2) !important;
+}
+
+/* Hover States for Primary Buttons */
+.payload-auth button.btn:hover:not([disabled]) {
+  background-color: #543cdf !important;
+  border-color: #543cdf !important;
+  box-shadow: 0 10px 15px -3px rgba(97, 95, 255, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+.payload-auth button.btn:active:not([disabled]) {
+  transform: translateY(0px) !important;
+}
+
+/* Customizing the Default Loader */
+.payload-auth .loading {
+  border-color: rgba(97, 95, 255, 0.1) !important;
+  border-top-color: #615fff !important;
+}
