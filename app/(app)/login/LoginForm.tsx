@@ -73,7 +73,7 @@ export default function LoginForm() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-lg bg-white border border-zinc-150 rounded-lg shadow-md p-8 sm:p-10 relative z-10"
+        className="w-full max-w-lg bg-transparent p-0 relative z-10"
       >
         
         {/* Branding header */}
@@ -174,7 +174,7 @@ export default function LoginForm() {
         </form>
 
         {/* Footer info link */}
-        <div className="mt-8 text-center text-base font-semibold text-zinc-500 border-t border-zinc-100 pt-6">
+        <div className="mt-8 text-center text-base font-semibold text-zinc-500 pt-6">
           Don&apos;t have an account?{' '}
           <Link 
             href="/register" 
