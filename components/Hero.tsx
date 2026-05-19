@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 export default function Hero() {
   return (
-    <section className="container h-[90vh] mx-auto px-6 relative z-10 flex flex-col items-center justify-center">
+    <section className="container h-[70vh] mx-auto px-6 relative z-10 flex flex-col items-center justify-center">
       
       {/* Main Animated Heading in Plus Jakarta Sans */}
       <motion.h1 

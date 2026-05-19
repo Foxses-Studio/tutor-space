@@ -5,7 +5,7 @@ import Marquee from '@/components/Marquee'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden flex flex-col justify-between">
+    <div className="min-h-screen bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden flex flex-col">
       
       {/* Scroll-Adaptive Navbar */}
       <Navbar />
