@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 
 interface MarqueeClientProps {
@@ -8,12 +8,22 @@ interface MarqueeClientProps {
 }
 
 export default function MarqueeClient({ items }: MarqueeClientProps) {
+  const [startScroll, setStartScroll] = useState(false)
+
+  useEffect(() => {
+    // Trigger infinite scrolling exactly after the sweep animation finishes (1.2s)
+    const timer = setTimeout(() => {
+      setStartScroll(true)
+    }, 1200)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.98, rotate: 0 }}
-      animate={{ opacity: 1, scale: 1.02, rotate: -5 }}
-      transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full bg-[#615fff]/95 backdrop-blur-md py-6 overflow-hidden relative select-none z-10 origin-center my-8 border-y border-white/10 shadow-lg shadow-[#615fff]/20 transform-gpu backface-hidden will-change-transform"
+      initial={{ clipPath: 'inset(0 0 0 100%)', rotate: 0 }}
+      animate={{ clipPath: 'inset(0 0 0 0%)', rotate: -5 }}
+      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full bg-[#615fff] py-6 overflow-hidden relative select-none z-10 origin-center my-8 border-y border-white/10 shadow-lg shadow-[#615fff]/20 transform-gpu backface-hidden will-change-transform"
       style={{
         WebkitBackfaceVisibility: 'hidden',
         backfaceVisibility: 'hidden',
@@ -21,7 +31,17 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         transformStyle: 'preserve-3d',
       }}
     >
-      <div className="animate-marquee-track flex gap-20">
+      {/* Sequenced Text Container */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.4 }}
+        className={`flex gap-20 ${startScroll ? 'animate-marquee-track' : ''}`}
+        style={{
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+        }}
+      >
         
         {/* Marquee Group 1 */}
         <div 
@@ -58,7 +78,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
           ))}
         </div>
 
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
