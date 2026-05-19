@@ -1,84 +1,155 @@
-/* Tutor Space Premium Scoped Admin Styles */
+/* Tutor Space Highly Specific Scoped Admin Style Customizations */
 
-/* Typography Override */
-body {
-  --theme-font-body: 'Inter', system-ui, -apple-system, sans-serif !important;
-  --theme-font-heading: 'Inter', system-ui, -apple-system, sans-serif !important;
+/* ========================================================
+   1. AUTHENTICATION / LOGIN PAGES (Safe to Style)
+   ======================================================== */
+.payload-auth,
+div[class*="auth"] {
+  background: radial-gradient(circle at top left, rgba(97, 95, 255, 0.05), transparent 50%), 
+              radial-gradient(circle at bottom right, rgba(84, 60, 223, 0.05), transparent 50%),
+              #fafafa !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
+}
+
+/* Auth Container */
+.payload-auth .auth__wrap,
+div[class*="auth__wrap"],
+div[class*="auth-wrap"] {
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
+  background-color: #ffffff !important;
+  padding: 2.5rem !important;
+  max-width: 480px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Auth Form Title */
+.payload-auth h1,
+div[class*="auth"] h1 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.75rem !important;
+  letter-spacing: -0.025em !important;
+  color: #0A163A !important;
+  margin-bottom: 2rem !important;
+  text-align: center !important;
+}
+
+/* Auth Primary Submit Button */
+.payload-auth button.btn,
+.payload-auth button[type="submit"],
+div[class*="auth"] button {
+  background-color: #615fff !important;
+  border-color: #615fff !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  margin-top: 1.5rem !important;
+  box-shadow: 0 4px 6px -1px rgba(97, 95, 255, 0.2) !important;
+}
+
+.payload-auth button.btn:hover:not([disabled]),
+.payload-auth button[type="submit"]:hover,
+div[class*="auth"] button:hover {
+  background-color: #543cdf !important;
+  border-color: #543cdf !important;
+  box-shadow: 0 10px 15px -3px rgba(97, 95, 255, 0.25) !important;
+  transform: translateY(-1px) !important;
 }
 
 /* ========================================================
-   PREMIUM SIDEBAR (NAVIGATION) UI
+   2. SIDEBAR NAVIGATION CUSTOMIZATIONS (Ultra-Safe)
    ======================================================== */
-
-nav[class*="nav"],
-.nav {
-  background-color: #f8fafc !important; /* Modern off-white slate */
-  border-right: 1px solid #e2e8f0 !important;
-  padding: 1.5rem 0.75rem !important;
+nav.nav,
+aside.nav,
+div[class*="nav-wrap"],
+div[class*="sidebar"] {
+  background-color: #fafafa !important;
+  border-right: 1px solid #e4e4e7 !important;
+  padding: 1.5rem 0.5rem !important;
 }
 
-/* Collapsible Group Headers */
-.nav__group-button,
-button[class*="nav__group"],
-span[class*="nav__group-label"],
-.nav__group button {
-  font-size: 14px !important;
+/* Sidebar Collapsible Group Labels */
+.nav .nav__group-label,
+.nav .group-label,
+.nav button[class*="group-label"],
+.nav button[class*="group__label"] {
+  font-size: 13px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
-  color: #64748b !important;
+  color: #71717a !important;
   margin-top: 1.5rem !important;
   margin-bottom: 0.5rem !important;
-  padding: 0 0.75rem !important;
-  background: transparent !important;
+  padding: 0.25rem 1rem !important;
   border: none !important;
+  background: transparent !important;
 }
 
-/* Nav Links (Menu Items) */
-nav a,
-a[class*="nav__link"],
-.nav a {
-  font-size: 16px !important; /* Larger premium text */
-  font-weight: 600 !important; /* Elegant semi-bold (max 700 constraint) */
-  color: #334155 !important;
-  padding: 0.75rem 1rem !important;
-  margin: 0.25rem 0 !important;
-  border-radius: 8px !important; /* Max 8px per handbook */
+/* Sidebar Links */
+.nav a.nav__link,
+.nav a[class*="nav__link"],
+.nav a[class*="link"] {
+  font-size: 16px !important; /* Premium minimum font size for readability */
+  font-weight: 600 !important; /* Highly readable font-weight */
+  color: #3f3f46 !important;
+  padding: 0.75rem 1.25rem !important;
+  margin: 0.25rem 0.75rem !important;
+  border-radius: 8px !important; /* Max 8px border-radius standard */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   display: flex !important;
   align-items: center !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   text-decoration: none !important;
 }
 
-/* Hover State for Sidebar Links */
-nav a:hover,
-a[class*="nav__link"]:hover,
-.nav a:hover {
+/* Sidebar Link Hover States */
+.nav a.nav__link:hover,
+.nav a[class*="nav__link"]:hover,
+.nav a[class*="link"]:hover {
   background-color: rgba(97, 95, 255, 0.08) !important;
   color: #615fff !important;
-  transform: translateX(4px) !important; /* Modern interactive slide */
+  transform: translateX(4px) !important; /* Subtle smooth micro-animation */
+  text-decoration: none !important;
 }
 
-/* Active State for Sidebar Links */
-nav a[class*="active"],
-a[class*="nav__link--active"],
+/* Active Sidebar Link */
+.nav a.nav__link--active,
 .nav a[class*="active"] {
-  background-color: rgba(97, 95, 255, 0.12) !important;
-  color: #615fff !important;
+  background-color: #615fff !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
-  border-left: 3px solid #615fff !important;
+  box-shadow: 0 4px 12px -2px rgba(97, 95, 255, 0.25) !important;
+}
+
+.nav a.nav__link--active:hover,
+.nav a[class*="active"]:hover {
+  background-color: #543cdf !important;
+  color: #ffffff !important;
+  transform: none !important;
 }
 
 /* ========================================================
-   PREMIUM DASHBOARD OVERRIDES
+   3. PREMIUM DASHBOARD CARD UI (Ultra-Safe)
    ======================================================== */
-
 .dashboard {
   padding: 3rem 2rem !important;
   max-width: 1200px !important;
   margin: 0 auto !important;
 }
 
+/* Dashboard Header */
 .dashboard h1,
 .template-default h1 {
   font-size: 2.25rem !important;
@@ -90,6 +161,7 @@ a[class*="nav__link--active"],
   margin-bottom: 2rem !important;
 }
 
+/* Dashboard Grid */
 .dashboard__card-list,
 ul[class*="card-list"] {
   display: grid !important;
@@ -98,6 +170,7 @@ ul[class*="card-list"] {
   margin-top: 1.5rem !important;
 }
 
+/* Dashboard Cards */
 .card,
 li[class*="card"] {
   background: #ffffff !important;
@@ -105,57 +178,24 @@ li[class*="card"] {
   border-radius: 8px !important;
   padding: 1.5rem !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  position: relative !important;
 }
 
+/* Card Hover */
 .card:hover,
 li[class*="card"]:hover {
   transform: translateY(-4px) !important;
-  box-shadow: 0 12px 20px -5px rgba(97, 95, 255, 0.15) !important;
+  box-shadow: 0 12px 20px -5px rgba(97, 95, 255, 0.15), 0 8px 10px -6px rgba(97, 95, 255, 0.1) !important;
   border-color: #a5a4ff !important;
 }
 
-/* ========================================================
-   PREMIUM AUTH PAGES DESIGN
-   ======================================================== */
-
-.payload-auth,
-div[class*="auth"] {
-  background: radial-gradient(circle at top left, rgba(97, 95, 255, 0.05), transparent 50%), 
-              radial-gradient(circle at bottom right, rgba(84, 60, 223, 0.05), transparent 50%),
-              #fafafa !important;
-}
-
-.payload-auth .auth__wrap,
-div[class*="auth__wrap"] {
-  border: 1px solid #e4e4e7 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
-  background-color: #ffffff !important;
-  padding: 2.5rem !important;
-}
-
-.payload-auth h1,
-div[class*="auth"] h1 {
-  font-size: 1.75rem !important;
+/* Card Title */
+.card h3,
+.card h4,
+li[class*="card"] h3 {
+  font-size: 1.25rem !important;
   font-weight: 700 !important;
   color: #0A163A !important;
-}
-
-.payload-auth input,
-div[class*="auth"] input {
-  border-radius: 8px !important;
-  border: 1px solid #d4d4d8 !important;
-}
-
-.payload-auth button,
-div[class*="auth"] button {
-  background-color: #615fff !important;
-  border-color: #615fff !important;
-  border-radius: 8px !important;
-}
-
-.payload-auth button:hover,
-div[class*="auth"] button:hover {
-  background-color: #543cdf !important;
+  margin-bottom: 0.75rem !important;
 }
