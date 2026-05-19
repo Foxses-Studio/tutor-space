@@ -77,31 +77,31 @@ export default function LoginForm() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-md bg-white border border-zinc-150 rounded-2xl shadow-xl shadow-zinc-200/50 p-8 sm:p-10 relative z-10"
+        className="w-full max-w-md bg-white border border-zinc-150 rounded-lg shadow-xl shadow-zinc-200/50 p-8 sm:p-10 relative z-10"
       >
         
         {/* Branding header */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-4 group">
-            <span className="h-10 w-10 rounded-xl bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-lg">
+            <span className="h-10 w-10 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-lg">
               T
             </span>
             <span className="text-2xl font-bold font-display tracking-tight text-zinc-900">
               Tutor Space
             </span>
           </Link>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight font-display">
+          <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 tracking-tight font-display text-center">
             Welcome Back!
           </h2>
-          <p className="text-zinc-500 font-medium text-base mt-2 text-center">
-            Sign in to your learning workspace
+          <p className="text-zinc-500 font-semibold text-base mt-2 text-center">
+            Sign in to your student learning workspace
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Email input - 16px min size & 8px+ border radius */}
+          {/* Email input */}
           <div className="space-y-2">
             <label htmlFor="email" className="text-base font-bold text-zinc-700">
               Email Address
@@ -117,12 +117,12 @@ export default function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full pl-11 pr-4 py-3 rounded-xl border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                className="w-full pl-11 pr-4 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
               />
             </div>
           </div>
 
-          {/* Password input - 16px min size & 8px+ border radius */}
+          {/* Password input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label htmlFor="password" className="text-base font-bold text-zinc-700">
@@ -146,7 +146,7 @@ export default function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-11 pr-11 py-3 rounded-xl border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+                className="w-full pl-11 pr-11 py-3 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
               />
               <button
                 type="button"
@@ -164,7 +164,7 @@ export default function LoginForm() {
             whileTap={{ scale: 0.99 }}
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#615fff] hover:bg-[#615fff]/95 text-white font-extrabold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -182,7 +182,7 @@ export default function LoginForm() {
           Don&apos;t have an account?{' '}
           <Link 
             href="/register" 
-            className="text-[#615fff] hover:text-[#543cdf] font-extrabold transition-colors"
+            className="text-[#615fff] hover:text-[#543cdf] font-bold transition-colors"
           >
             Sign Up
           </Link>
