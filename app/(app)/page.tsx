@@ -24,12 +24,12 @@ export default function Home() {
             <span className="align-middle">Learn </span>
             
             {/* Golden Pill Highlighter */}
-            <span className="inline-flex items-center bg-[#FDBF2D] text-[#0A163A] px-6 md:px-8 py-2 md:py-3.5 rounded-full mx-2 align-middle relative">
+            <span className="inline-flex items-center bg-[#FDBF2D] text-[#0A163A] px-8 md:px-16 py-2 md:py-[6px] rounded-full mx-2 align-middle relative ">
               Easily
             </span>
 
             {/* Avatar right next to Easily */}
-            <span className="inline-block align-middle ml-1">
+            <span className="inline-block align-middle -ml-[30px] relative -top-2 md:-top-4 z-10">
               <img 
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150&h=150" 
                 alt="Instructor" 
