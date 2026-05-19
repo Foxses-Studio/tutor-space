@@ -172,6 +172,12 @@ export const Lessons: CollectionConfig = {
         condition: (data) => data?.lessonType === 'live',
         position: 'sidebar',
       },
+      validate: (value: any, { data }: any) => {
+        if (data?.lessonType === 'live' && !value) {
+          return 'Live Platform is required for live classes.'
+        }
+        return true
+      },
     },
     {
       name: 'autoGenerateZoom',
@@ -191,6 +197,12 @@ export const Lessons: CollectionConfig = {
         description: 'Paste your Meet/Teams meeting link, or it will be auto-generated for Zoom if checked above.',
         condition: (data) => data?.lessonType === 'live',
       },
+      validate: (value: any, { data }: any) => {
+        if (data?.lessonType === 'live' && !data?.autoGenerateZoom && !value) {
+          return 'Meeting link is required unless Auto-generate Zoom is checked.'
+        }
+        return true
+      },
     },
     {
       name: 'liveDate',
@@ -202,6 +214,12 @@ export const Lessons: CollectionConfig = {
         },
         condition: (data) => data?.lessonType === 'live',
         position: 'sidebar',
+      },
+      validate: (value: any, { data }: any) => {
+        if (data?.lessonType === 'live' && !value) {
+          return 'Scheduled Date & Time is required for live classes.'
+        }
+        return true
       },
     },
     {
@@ -215,7 +233,7 @@ export const Lessons: CollectionConfig = {
     {
       name: 'duration',
       type: 'number',
-      required: false,
+      required: true,
       admin: {
         description: 'Duration of the lesson in minutes.',
         position: 'sidebar',
