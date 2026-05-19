@@ -38,7 +38,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8, duration: 0.4 }}
-          className={`flex gap-20 ${startScroll ? 'animate-marquee-track' : ''}`}
+          className={`flex ${startScroll ? 'animate-marquee-track' : ''}`}
           style={{
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
@@ -46,7 +46,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         >
           {/* Marquee Group 1 */}
           <div 
-            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased"
+            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
               WebkitBackfaceVisibility: 'hidden',
@@ -63,7 +63,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
 
           {/* Marquee Group 2 */}
           <div 
-            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased" 
+            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased" 
             aria-hidden="true"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
@@ -98,7 +98,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.95, duration: 0.4 }}
-          className={`flex gap-20 ${startScroll ? 'animate-marquee-track-reverse' : ''}`}
+          className={`flex ${startScroll ? 'animate-marquee-track-reverse' : ''}`}
           style={{
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
@@ -106,7 +106,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         >
           {/* Marquee Group 1 */}
           <div 
-            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased"
+            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
               WebkitBackfaceVisibility: 'hidden',
@@ -128,7 +128,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
 
           {/* Marquee Group 2 */}
           <div 
-            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased" 
+            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased" 
             aria-hidden="true"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',

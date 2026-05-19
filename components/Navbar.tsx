@@ -242,7 +242,7 @@ export default function Navbar() {
           {!loading && !user && (
             <Link
               href="/register"
-              className="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-md shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
+              className="hidden sm:inline-flex items-center justify-center px-10 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-md shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
             >
               Register
             </Link>
