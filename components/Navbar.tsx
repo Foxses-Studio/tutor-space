@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { FiShoppingCart, FiUser, FiLogOut, FiLayout, FiMenu, FiX, FiChevronDown, FiBookOpen } from 'react-icons/fi'
+import { FiShoppingCart, FiUser, FiLogOut, FiLayout, FiMenu, FiX, FiChevronDown } from 'react-icons/fi'
 
 interface User {
   id: string
@@ -18,8 +18,25 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [cartCount] = useState(2) // Static indicator for cart items
+  const [isScrolled, setIsScrolled] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Track scroll position for transparent to sticky background transition
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
+    }
+    // Set initial scroll state in case page is refreshed while scrolled down
+    handleScroll()
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Fetch authentication status on mount
   useEffect(() => {
@@ -56,7 +73,6 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      // In Payload, logout can be done via POST /api/users/logout
       await fetch('/api/users/logout', { method: 'POST' })
       setUser(null)
       setUserMenuOpen(false)
@@ -77,7 +93,13 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b border-zinc-900 bg-[#121212]/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/80 backdrop-blur-md border-b border-zinc-100 shadow-sm py-0' 
+          : 'bg-transparent border-b border-transparent py-1'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         
         {/* Left Side: Logo */}
@@ -85,20 +107,20 @@ export default function Navbar() {
           <span className="h-9 w-9 rounded-xl bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300">
             T
           </span>
-          <span className="text-xl font-bold font-display tracking-tight bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent group-hover:from-white group-hover:to-white transition-all">
+          <span className="text-xl font-bold font-display tracking-tight text-zinc-900 transition-all">
             Tutor Space
           </span>
         </Link>
 
         {/* Middle: Navigation Menu (Desktop) */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-          <Link href="#courses" className="text-zinc-400 hover:text-white hover:shadow-[0_1px_0_0_#615fff] pb-1 transition-all duration-200">
+          <Link href="#courses" className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200">
             Courses
           </Link>
-          <Link href="#features" className="text-zinc-400 hover:text-white hover:shadow-[0_1px_0_0_#615fff] pb-1 transition-all duration-200">
+          <Link href="#features" className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200">
             Features
           </Link>
-          <Link href="#instructors" className="text-zinc-400 hover:text-white hover:shadow-[0_1px_0_0_#615fff] pb-1 transition-all duration-200">
+          <Link href="#instructors" className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200">
             Instructors
           </Link>
         </nav>
@@ -107,10 +129,10 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           
           {/* Cart Icon */}
-          <Link href="#cart" className="relative p-2 text-zinc-400 hover:text-white transition-colors duration-200 group">
+          <Link href="#cart" className="relative p-2 text-zinc-500 hover:text-[#121212] transition-colors duration-200 group">
             <FiShoppingCart className="h-5 w-5 group-hover:scale-105 transition-transform" />
             {cartCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 h-4 min-w-4 px-1 rounded-full bg-[#615fff] text-[10px] font-bold text-white flex items-center justify-center animate-pulse border border-[#121212]">
+              <span className="absolute top-1.5 right-1.5 h-4 min-w-4 px-1 rounded-full bg-[#615fff] text-[10px] font-bold text-white flex items-center justify-center animate-pulse border border-white">
                 {cartCount}
               </span>
             )}
@@ -119,27 +141,27 @@ export default function Navbar() {
           {/* User Profile / Login Menu */}
           <div className="relative" ref={dropdownRef}>
             {loading ? (
-              <div className="h-8 w-8 rounded-full border border-zinc-800 bg-zinc-950 animate-pulse" />
+              <div className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 animate-pulse" />
             ) : user ? (
               // Authenticated User Avatar Trigger
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-1.5 focus:outline-none group"
               >
-                <div className="h-8 w-8 rounded-full border border-[#615fff]/30 bg-zinc-900 flex items-center justify-center text-xs font-bold text-[#615fff] shadow-md shadow-[#615fff]/10 group-hover:border-[#615fff] transition-all overflow-hidden">
+                <div className="h-8 w-8 rounded-full border border-[#615fff]/30 bg-zinc-50 flex items-center justify-center text-xs font-bold text-[#615fff] shadow-md shadow-[#615fff]/10 group-hover:border-[#615fff] transition-all overflow-hidden">
                   {user.profilePic ? (
                     <img src={user.profilePic} alt={user.name} className="h-full w-full object-cover" />
                   ) : (
                     getInitials(user.name)
                   )}
                 </div>
-                <FiChevronDown className={`h-3.5 w-3.5 text-zinc-500 group-hover:text-white transition-transform duration-300 ${userMenuOpen ? 'rotate-180' : ''}`} />
+                <FiChevronDown className={`h-3.5 w-3.5 text-zinc-400 group-hover:text-zinc-900 transition-transform duration-300 ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
             ) : (
               // Anonymous User Dropdown Trigger
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="p-2 text-zinc-400 hover:text-white focus:outline-none transition-colors duration-200 group"
+                className="p-2 text-zinc-500 hover:text-[#121212] focus:outline-none transition-colors duration-200 group"
               >
                 <FiUser className="h-5 w-5 group-hover:scale-105 transition-transform" />
               </button>
@@ -147,15 +169,15 @@ export default function Navbar() {
 
             {/* Dropdown Menu */}
             {userMenuOpen && (
-              <div className="absolute right-0 mt-3 w-56 rounded-xl border border-zinc-900 bg-[#121212] p-2 shadow-2xl shadow-black/80 animate-in fade-in-50 duration-200 z-50">
+              <div className="absolute right-0 mt-3 w-56 rounded-xl border border-zinc-100 bg-white p-2 shadow-xl shadow-zinc-200/50 animate-in fade-in-50 duration-200 z-50">
                 {user ? (
                   // Logged In Options
                   <>
-                    <div className="px-3 py-2 border-b border-zinc-900/60 mb-1">
-                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Signed in as</p>
-                      <p className="text-sm font-bold text-white truncate">{user.name}</p>
-                      <p className="text-xs text-zinc-400 truncate">{user.email}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 rounded bg-[#615fff]/10 border border-[#615fff]/20 text-[10px] font-semibold text-[#615fff] uppercase">
+                    <div className="px-3 py-2 border-b border-zinc-100 mb-1">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Signed in as</p>
+                      <p className="text-sm font-bold text-zinc-800 truncate">{user.name}</p>
+                      <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                      <span className="inline-block mt-1.5 px-2 py-0.5 rounded bg-[#615fff]/10 border border-[#615fff]/20 text-[10px] font-semibold text-[#615fff] uppercase">
                         {user.role}
                       </span>
                     </div>
@@ -163,7 +185,7 @@ export default function Navbar() {
                     <Link
                       href="/admin"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-zinc-900/50 transition-all duration-200"
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200"
                     >
                       <FiLayout className="h-4 w-4 text-[#615fff]" />
                       Dashboard
@@ -171,7 +193,7 @@ export default function Navbar() {
 
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 transition-all duration-200 text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 text-left"
                     >
                       <FiLogOut className="h-4 w-4" />
                       Sign Out
@@ -180,9 +202,9 @@ export default function Navbar() {
                 ) : (
                   // Logged Out Options
                   <>
-                    <div className="px-3 py-2 border-b border-zinc-900/60 mb-2">
-                      <p className="text-sm font-bold text-white">Welcome</p>
-                      <p className="text-xs text-zinc-400">Join Tutor Space to access premium courses.</p>
+                    <div className="px-3 py-2 border-b border-zinc-100 mb-2">
+                      <p className="text-sm font-bold text-zinc-800">Welcome</p>
+                      <p className="text-xs text-zinc-500">Join Tutor Space to access premium courses.</p>
                     </div>
 
                     <Link
@@ -196,7 +218,7 @@ export default function Navbar() {
                     <Link
                       href="/admin"
                       onClick={() => setUserMenuOpen(false)}
-                      className="block w-full text-center px-3 py-2 rounded-lg text-sm font-semibold border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-900/30 transition-all"
+                      className="block w-full text-center px-3 py-2 rounded-lg text-sm font-semibold border border-zinc-200 hover:border-zinc-350 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all"
                     >
                       Create Account
                     </Link>
@@ -209,7 +231,7 @@ export default function Navbar() {
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-zinc-400 hover:text-white md:hidden transition-colors"
+            className="p-2 text-zinc-500 hover:text-[#121212] md:hidden transition-colors"
           >
             {mobileMenuOpen ? <FiX className="h-6 w-6" /> : <FiMenu className="h-6 w-6" />}
           </button>
@@ -219,26 +241,26 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-zinc-900 bg-[#121212] px-6 py-4 animate-in slide-in-from-top duration-300">
+        <div className="md:hidden border-t border-zinc-100 bg-white px-6 py-4 shadow-md animate-in slide-in-from-top duration-300">
           <nav className="flex flex-col gap-4 text-base font-medium">
             <Link
               href="#courses"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-zinc-400 hover:text-white py-1 transition-colors"
+              className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
             >
               Courses
             </Link>
             <Link
               href="#features"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-zinc-400 hover:text-white py-1 transition-colors"
+              className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
             >
               Features
             </Link>
             <Link
               href="#instructors"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-zinc-400 hover:text-white py-1 transition-colors"
+              className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
             >
               Instructors
             </Link>
