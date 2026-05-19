@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46" fill="none">
+  <g clip-path="url(#clip0_mobile)">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M33 3H13C10.7909 3 9 4.79086 9 7V39C9 41.2091 10.7909 43 13 43H33C35.2091 43 37 41.2091 37 39V7C37 4.79086 35.2091 3 33 3ZM13 4.5H33C34.3807 4.5 35.5 5.61929 35.5 7V35H10.5V7C10.5 5.61929 11.6193 4.5 13 4.5ZM10.5 36.5H35.5V39C35.5 40.3807 34.3807 41.5 33 41.5H13C11.6193 41.5 10.5 40.3807 10.5 39V36.5ZM23 37C23.5523 37 24 37.4477 24 38C24 38.5523 23.5523 39 23 39C22.4477 39 22 38.5523 22 38C22 37.4477 22.4477 37 23 37Z" fill="#2E68FF"/>
+  </g>
+  <defs>
+    <clipPath id="clip0_mobile">
+      <rect width="46" height="46" fill="white"/>
+    </clipPath>
+  </defs>
+</svg>

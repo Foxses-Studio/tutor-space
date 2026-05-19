@@ -16,7 +16,6 @@ interface User {
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Courses', href: '#courses' },
-  { label: 'Features', href: '#features' },
   { label: 'Instructors', href: '#instructors' },
   { label: 'About Us', href: '#about-us' },
   { label: 'Contact Us', href: '#contact-us' },
@@ -140,6 +139,17 @@ export default function Navbar() {
         {/* Right Side: User Icon & Mobile Toggle */}
         <div className="flex items-center gap-4">
           
+          {/* Dashboard Button next to Profile Pic (Visible when logged in) */}
+          {!loading && user && (
+            <Link
+              href={user.role === 'student' ? '/dashboard' : '/admin'}
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-[#615fff] bg-[#615fff]/5 hover:bg-[#615fff] text-[#615fff] hover:text-white font-semibold text-base transition-all duration-300 cursor-pointer gap-2"
+            >
+              <FiLayout className="h-4.5 w-4.5" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Link>
+          )}
+
           {/* User Profile / Login Menu (User icon acts as Login trigger) */}
           <div className="relative" ref={dropdownRef}>
             {loading ? (
@@ -152,7 +162,11 @@ export default function Navbar() {
               >
                 <div className="h-8 w-8 rounded-full border border-[#615fff]/30 bg-zinc-50 flex items-center justify-center text-xs font-bold text-[#615fff] shadow-md shadow-[#615fff]/10 group-hover:border-[#615fff] transition-all overflow-hidden">
                   {user.profilePic ? (
-                    <img src={user.profilePic} alt={user.name} className="h-full w-full object-cover" />
+                    <img 
+                      src={typeof user.profilePic === 'object' && (user.profilePic as any).url ? (user.profilePic as any).url : user.profilePic} 
+                      alt={user.name} 
+                      className="h-full w-full object-cover" 
+                    />
                   ) : (
                     getInitials(user.name)
                   )}
@@ -160,13 +174,13 @@ export default function Navbar() {
                 <FiChevronDown className={`h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-transform duration-300 ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
             ) : (
-              // Anonymous User Dropdown Trigger (Acts as Login button)
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="p-2 text-zinc-500 hover:text-[#121212] focus:outline-none transition-colors duration-200 group cursor-pointer"
+              // Anonymous User Trigger (Takes them directly to /login page)
+              <Link
+                href="/login"
+                className="p-2 text-zinc-500 hover:text-[#121212] transition-colors duration-200 group cursor-pointer flex items-center justify-center"
               >
                 <FiUser className="h-5 w-5 group-hover:scale-105 transition-transform" />
-              </button>
+              </Link>
             )}
 
             {/* Framer Motion Profile Dropdown Menu - 16px minimum font size & 8px max border radius */}
@@ -192,7 +206,7 @@ export default function Navbar() {
                       </div>
 
                       <Link
-                        href="/admin"
+                        href={user.role === 'student' ? '/dashboard' : '/admin'}
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-base font-semibold text-zinc-600 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
                       >

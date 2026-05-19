@@ -1,0 +1,351 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
+import { 
+  FiUser, 
+  FiLogOut, 
+  FiLayout, 
+  FiBookOpen, 
+  FiAward, 
+  FiMenu, 
+  FiX, 
+  FiBell, 
+  FiSearch, 
+  FiHome,
+  FiBook
+} from 'react-icons/fi'
+import Swal from 'sweetalert2'
+
+interface UserSession {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  profilePic?: string | null
+  role: string
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [user, setUser] = useState<UserSession | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/auth/me')
+        const data = await res.json()
+
+        if (!res.ok || !data.authenticated || data.user.role !== 'student') {
+          router.push('/login')
+          return
+        }
+
+        setUser(data.user)
+      } catch (err) {
+        console.error('Failed to verify session', err)
+        router.push('/login')
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkSession()
+  }, [router])
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/students/logout', { method: 'POST' })
+      await fetch('/api/users/logout', { method: 'POST' })
+      document.cookie = 'payload-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+      document.cookie = 'student-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Logged Out',
+        text: 'You have logged out successfully.',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+      
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 1500)
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 border-4 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+          <p className="text-base font-bold text-zinc-600">Loading Student Space...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) return null
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2)
+  }
+
+  const sidebarLinks = [
+    { label: 'Overview', href: '/dashboard', icon: FiLayout },
+    { label: 'My Courses', href: '/dashboard#courses', icon: FiBookOpen },
+    { label: 'Study Hub', href: '/dashboard#study-hub', icon: FiBook },
+    { label: 'Profile Settings', href: '/dashboard/profile', icon: FiUser },
+  ]
+
+  return (
+    <div className="h-screen bg-zinc-50/50 flex font-sans overflow-hidden">
+      
+      {/* 1. Sidebar for Desktop (Sleek, Premium Dark slate theme) */}
+      <aside className="hidden lg:flex flex-col w-64 bg-[#0A1128] text-zinc-300 border-r border-[#152347] shrink-0 select-none h-full">
+        
+        {/* Sidebar Brand Header */}
+        <div className="h-20 flex items-center px-6 border-b border-[#152347] justify-between">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+              T
+            </span>
+            <span className="text-xl font-bold font-display tracking-tight text-white">
+              Tutor Space
+            </span>
+          </Link>
+        </div>
+
+        {/* Sidebar Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-4">LMS Menu</p>
+          {sidebarLinks.map((link) => {
+            const isActive = pathname === link.href || (link.href.includes('#') && typeof window !== 'undefined' && window.location.hash === link.href.split('#')[1])
+            const Icon = link.icon
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-all duration-200 group ${
+                  isActive 
+                    ? 'bg-[#615fff] text-white shadow-md shadow-[#615fff]/15' 
+                    : 'hover:bg-[#152347] hover:text-white'
+                }`}
+              >
+                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
+                <span>{link.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Sidebar Student Info Footer */}
+        <div className="p-4 border-t border-[#152347] bg-[#070d20]">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full border border-[#615fff]/30 bg-[#152347] flex items-center justify-center text-xs font-bold text-white overflow-hidden shrink-0">
+              {user.profilePic ? (
+                <img src={user.profilePic} alt={user.name} className="h-full w-full object-cover" />
+              ) : (
+                getInitials(user.name)
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold text-white truncate leading-tight">{user.name}</p>
+              <p className="text-sm font-semibold text-[#615fff] truncate mt-0.5">Student Account</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full mt-4 flex items-center justify-center gap-2 py-2 rounded-lg border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 text-red-400 font-bold text-base transition-all cursor-pointer"
+          >
+            <FiLogOut className="h-4.5 w-4.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+
+      </aside>
+
+      {/* 2. Mobile Sidebar Drawer Overlay */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)} 
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
+      {/* 3. Mobile Sidebar Drawer Panel */}
+      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-[#0A1128] text-zinc-300 border-r border-[#152347] flex flex-col justify-between select-none transition-transform duration-300 lg:hidden ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div>
+          <div className="h-20 flex items-center px-6 border-b border-[#152347] justify-between">
+            <Link href="/" className="flex items-center gap-2.5">
+              <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white text-base">
+                T
+              </span>
+              <span className="text-xl font-bold font-display tracking-tight text-white">
+                Tutor Space
+              </span>
+            </Link>
+            <button 
+              onClick={() => setSidebarOpen(false)}
+              className="p-1 rounded-lg hover:bg-[#152347] text-zinc-400 hover:text-white"
+            >
+              <FiX className="h-6 w-6" />
+            </button>
+          </div>
+
+          <nav className="px-4 py-6 space-y-2">
+            <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-4">LMS Menu</p>
+            {sidebarLinks.map((link) => {
+              const isActive = pathname === link.href
+              const Icon = link.icon
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-all duration-200 group ${
+                    isActive 
+                      ? 'bg-[#615fff] text-white shadow-md' 
+                      : 'hover:bg-[#152347] hover:text-white'
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
+                  <span>{link.label}</span>
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-[#152347] bg-[#070d20]">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full border border-[#615fff]/30 bg-[#152347] flex items-center justify-center text-xs font-bold text-white overflow-hidden shrink-0">
+              {user.profilePic ? (
+                <img src={user.profilePic} alt={user.name} className="h-full w-full object-cover" />
+              ) : (
+                getInitials(user.name)
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold text-white truncate leading-none">{user.name}</p>
+              <p className="text-sm font-semibold text-[#615fff] truncate mt-1">Student</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 text-red-400 font-bold text-base transition-all cursor-pointer"
+          >
+            <FiLogOut className="h-4.5 w-4.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* 4. Main Page Container */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        
+        {/* Sticky Top Header (Clean, Premium White Backdrop blur) */}
+        <header className="sticky top-0 z-30 w-full h-20 bg-white/80 backdrop-blur-md border-b border-zinc-200/60 px-6 flex items-center justify-between select-none shrink-0">
+          
+          {/* Mobile hamburger menu toggle */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-lg border border-zinc-200 hover:border-zinc-350 text-zinc-600 hover:text-zinc-900 bg-white"
+            >
+              <FiMenu className="h-5 w-5" />
+            </button>
+            <Link href="/" className="flex items-center gap-2">
+              <span className="h-8 w-8 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white text-sm">
+                T
+              </span>
+              <span className="text-lg font-bold font-display tracking-tight text-zinc-900">
+                Tutor Space
+              </span>
+            </Link>
+          </div>
+
+          {/* Desktop Mock Search (adds premium touch) */}
+          <div className="hidden lg:flex items-center gap-2.5 w-80 px-3.5 py-2 rounded-lg bg-zinc-50 border border-zinc-200/80 focus-within:border-[#615fff]/60 transition-colors">
+            <FiSearch className="h-4.5 w-4.5 text-zinc-400" />
+            <input 
+              type="text" 
+              placeholder="Search courses, streak, assignments..." 
+              className="bg-transparent border-none outline-none w-full text-base font-semibold text-zinc-800 placeholder-zinc-400"
+            />
+          </div>
+
+          {/* Top Bar Right side Actions */}
+          <div className="flex items-center gap-4.5 ml-auto lg:ml-0">
+            
+            {/* Back to Home Page Shortcut */}
+            <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-base font-semibold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-colors"
+            >
+              <FiHome className="h-4.5 w-4.5" />
+              <span>Home Page</span>
+            </Link>
+
+            {/* Notification Bell Icon */}
+            <button
+              onClick={() => {
+                Swal.fire({
+                  icon: 'info',
+                  title: 'Notifications',
+                  text: 'You have no new notifications.',
+                  confirmButtonColor: '#615fff',
+                })
+              }}
+              className="relative p-2 rounded-lg border border-zinc-200 hover:border-zinc-350 text-zinc-500 hover:text-zinc-900 bg-white transition-colors cursor-pointer"
+            >
+              <FiBell className="h-5 w-5" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 animate-ping" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
+            </button>
+
+            {/* User Profile Summary */}
+            <div className="flex items-center gap-3 border-l border-zinc-200 pl-4.5">
+              <div className="h-10 w-10 rounded-full border border-[#615fff]/20 bg-zinc-100 flex items-center justify-center overflow-hidden shrink-0">
+                {user.profilePic ? (
+                  <img src={user.profilePic} alt={user.name} className="h-full w-full object-cover" />
+                ) : (
+                  <FiUser className="h-5 w-5 text-zinc-500" />
+                )}
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-base font-bold text-zinc-800 leading-none">{user.name}</p>
+                <p className="text-sm font-semibold text-zinc-400 mt-1">Student</p>
+              </div>
+            </div>
+
+          </div>
+
+        </header>
+
+        {/* Main Nested Dashboard Views */}
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
+
+      </div>
+
+    </div>
+  )
+}

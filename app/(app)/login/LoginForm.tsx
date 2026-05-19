@@ -47,9 +47,14 @@ export default function LoginForm() {
           showConfirmButton: false,
         })
         
-        // Redirect to dashboard or home
+        // Redirect to dashboard or home based on role
         setTimeout(() => {
-          router.push('/admin')
+          const userRole = data.user?.role
+          if (userRole === 'admin' || userRole === 'instructor' || userRole === 'staff') {
+            router.push('/admin')
+          } else {
+            router.push('/dashboard')
+          }
           router.refresh()
         }, 1500)
       } else {

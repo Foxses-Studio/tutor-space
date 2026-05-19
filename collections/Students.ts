@@ -8,7 +8,7 @@ export const Students: CollectionConfig = {
   },
   auth: {
     tokenExpiration: 7200, // 2 hours
-    verify: false, 
+    verify: false,
   },
   admin: {
     useAsTitle: 'email',

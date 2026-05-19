@@ -33,12 +33,12 @@ body {
 .animate-marquee-track {
   display: flex;
   width: max-content;
-  animation: marquee 30s linear infinite;
+  animation: marquee 50s linear infinite;
 }
 
 .animate-marquee-track-reverse {
   display: flex;
   width: max-content;
-  animation: marquee-reverse 30s linear infinite;
+  animation: marquee-reverse 50s linear infinite;
 }
 

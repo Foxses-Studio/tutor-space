@@ -33,6 +33,28 @@ export const Media: CollectionConfig = {
   access: {
     read: () => true,
   },
+  hooks: {
+    beforeValidate: [
+      ({ data, req }) => {
+        if (data && !data.alt) {
+          let rawName = data.filename || ''
+          if (!rawName && req && (req as any).file) {
+            rawName = (req as any).file.name || ''
+          }
+          const nameToUse = rawName || 'Uploaded Media'
+          const dotIdx = nameToUse.lastIndexOf('.')
+          const cleanName = dotIdx !== -1 ? nameToUse.substring(0, dotIdx) : nameToUse
+          
+          data.alt = cleanName
+            .replace(/[-_]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'Uploaded Media'
+        }
+        return data
+      }
+    ],
+  },
   fields: [
     {
       name: 'alt',

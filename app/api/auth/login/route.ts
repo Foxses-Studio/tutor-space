@@ -17,9 +17,25 @@ export async function POST(request: Request) {
 
     const payload = await getPayload({ config: configPromise })
 
-    // 2. Perform authentication using Payload login
+    // 2. Determine which auth collection to authenticate against (users or students)
+    let collectionSlug: 'users' | 'students' = 'users'
+    const studentQuery = await payload.find({
+      collection: 'students',
+      where: {
+        email: {
+          equals: email.toLowerCase(),
+        },
+      },
+      limit: 1,
+    })
+
+    if (studentQuery.docs && studentQuery.docs.length > 0) {
+      collectionSlug = 'students'
+    }
+
+    // 3. Perform authentication using Payload login
     const result = await payload.login({
-      collection: 'users',
+      collection: collectionSlug,
       data: {
         email,
         password,
@@ -33,14 +49,35 @@ export async function POST(request: Request) {
       )
     }
 
-    // 3. Prepare response and set cookie
+    // 4. Prepare response and set cookie
+    let profilePicUrl = null
+    if (result.user.profilePic) {
+      if (typeof result.user.profilePic === 'object' && (result.user.profilePic as any).url) {
+        profilePicUrl = (result.user.profilePic as any).url
+      } else if (typeof result.user.profilePic === 'string') {
+        if (result.user.profilePic.startsWith('/') || result.user.profilePic.startsWith('http')) {
+          profilePicUrl = result.user.profilePic
+        } else {
+          try {
+            const mediaDoc = await payload.findByID({
+              collection: 'media',
+              id: result.user.profilePic,
+            })
+            profilePicUrl = mediaDoc?.url || null
+          } catch (e) {
+            console.error('Error resolving profile pic in login:', e)
+          }
+        }
+      }
+    }
+
     const safeUser = {
       id: result.user.id,
       name: result.user.name,
       email: result.user.email,
       phone: result.user.phone,
-      profilePic: result.user.profilePic,
-      role: result.user.role,
+      profilePic: profilePicUrl,
+      role: result.user.role || 'student',
     }
 
     const response = NextResponse.json({
@@ -50,9 +87,9 @@ export async function POST(request: Request) {
       token: result.token,
     })
 
-    // Set standard Payload JWT cookie
+    // Set standard Payload JWT cookie dynamically
     const cookieOptions = {
-      name: 'payload-token',
+      name: collectionSlug === 'students' ? 'student-token' : 'payload-token',
       value: result.token,
       httpOnly: true,
       path: '/',

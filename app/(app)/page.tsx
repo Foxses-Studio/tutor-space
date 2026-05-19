@@ -2,6 +2,8 @@ import React from 'react'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
+import Categories from '@/components/Categories'
+import Courses from '@/components/Courses'
 
 export default function Home() {
   return (
@@ -14,6 +16,12 @@ export default function Home() {
       <Hero>
         <Marquee />
       </Hero>
+
+      {/* 2nd Section: Course Categories Grid */}
+      <Categories />
+
+      {/* 3rd Section: Course Showcase & Filter */}
+      <Courses />
 
     </div>
   )

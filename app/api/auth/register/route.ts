@@ -52,27 +52,90 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Register user using Payload Local API
-    const user = await payload.create({
-      collection: 'users',
-      data: {
-        name,
-        email,
-        password,
-        phone: phone || undefined,
-        profilePic: profilePic || undefined,
-        role: targetRole,
-      },
-    })
+    // 3. Process base64 profile picture upload if provided
+    let profilePicId: string | number | undefined = undefined
+    if (profilePic && typeof profilePic === 'object' && profilePic.base64) {
+      try {
+        const base64Data = profilePic.base64.split(';base64,').pop() || profilePic.base64
+        const buffer = Buffer.from(base64Data, 'base64')
+        const fileName = profilePic.name || `${email.replace(/[@.]/g, '_')}_profile.jpg`
+        const mimeType = profilePic.mimeType || 'image/jpeg'
 
-    // Return registered user details safely (excluding password field)
+        const mediaDoc = await payload.create({
+          collection: 'media',
+          data: {
+            alt: `${name} Profile Picture`,
+          },
+          file: {
+            data: buffer,
+            name: fileName,
+            mimetype: mimeType,
+            size: buffer.length,
+          },
+        })
+        profilePicId = mediaDoc.id
+      } catch (uploadError) {
+        console.error('Failed to upload profile picture:', uploadError)
+      }
+    }
+
+    // 4. Register using Payload Local API under the correct collection
+    let user: any
+    if (targetRole === 'student') {
+      user = await payload.create({
+        collection: 'students',
+        data: {
+          name,
+          email,
+          password,
+          phone: phone || undefined,
+          profilePic: profilePicId || undefined,
+          status: 'active',
+        },
+      })
+    } else {
+      user = await payload.create({
+        collection: 'users',
+        data: {
+          name,
+          email,
+          password,
+          phone: phone || undefined,
+          profilePic: profilePicId || undefined,
+          role: targetRole,
+        },
+      })
+    }
+
+    // Return registered details safely (excluding password field)
+    let profilePicUrl = null
+    if (user.profilePic) {
+      if (typeof user.profilePic === 'object' && (user.profilePic as any).url) {
+        profilePicUrl = (user.profilePic as any).url
+      } else if (typeof user.profilePic === 'string') {
+        if (user.profilePic.startsWith('/') || user.profilePic.startsWith('http')) {
+          profilePicUrl = user.profilePic
+        } else {
+          try {
+            const mediaDoc = await payload.findByID({
+              collection: 'media',
+              id: user.profilePic,
+            })
+            profilePicUrl = mediaDoc?.url || null
+          } catch (e) {
+            console.error('Error resolving profile pic in register:', e)
+          }
+        }
+      }
+    }
+
     const safeUser = {
       id: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,
-      profilePic: user.profilePic,
-      role: user.role,
+      profilePic: profilePicUrl,
+      role: 'role' in user ? user.role : 'student',
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }

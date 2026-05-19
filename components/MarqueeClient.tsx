@@ -18,6 +18,15 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
     return () => clearTimeout(timer)
   }, [])
 
+  // Ensure we have enough items to loop seamlessly without blank spots/gaps.
+  // We want to repeat the items array until it has at least 20 items.
+  const repeatedItems = [...items]
+  if (repeatedItems.length > 0) {
+    while (repeatedItems.length < 20) {
+      repeatedItems.push(...items)
+    }
+  }
+
   return (
     <div className="w-full relative h-44 flex items-center justify-center my-6 overflow-visible">
       
@@ -46,14 +55,14 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         >
           {/* Marquee Group 1 */}
           <div 
-            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased"
+            className="flex gap-20 items-center shrink-0 pr-20 text-base font-bold uppercase tracking-widest text-white subpixel-antialiased"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
             }}
           >
-            {items.map((item, index) => (
+            {repeatedItems.map((item, index) => (
               <React.Fragment key={`g1-${index}`}>
                 <span>{item}</span>
                 <img src="/svg/sparkle.png" alt="sparkle" className="h-5 w-5 object-contain shrink-0 filter brightness-0 invert" />
@@ -63,7 +72,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
 
           {/* Marquee Group 2 */}
           <div 
-            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased" 
+            className="flex gap-20 items-center shrink-0 pr-20 text-base font-bold uppercase tracking-widest text-white subpixel-antialiased" 
             aria-hidden="true"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
@@ -71,7 +80,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
               backfaceVisibility: 'hidden',
             }}
           >
-            {items.map((item, index) => (
+            {repeatedItems.map((item, index) => (
               <React.Fragment key={`g2-${index}`}>
                 <span>{item}</span>
                 <img src="/svg/sparkle.png" alt="sparkle" className="h-5 w-5 object-contain shrink-0 filter brightness-0 invert" />
@@ -102,18 +111,19 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
           style={{
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
+            transform: startScroll ? undefined : 'translateX(-50%)',
           }}
         >
           {/* Marquee Group 1 */}
           <div 
-            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased"
+            className="flex gap-20 items-center shrink-0 pr-20 text-base font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
               WebkitBackfaceVisibility: 'hidden',
               backfaceVisibility: 'hidden',
             }}
           >
-            {items.slice().reverse().map((item, index) => (
+            {repeatedItems.slice().reverse().map((item, index) => (
               <React.Fragment key={`g1-rev-${index}`}>
                 <span>{item}</span>
                 <img 
@@ -128,7 +138,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
 
           {/* Marquee Group 2 */}
           <div 
-            className="flex gap-20 items-center shrink-0 pr-20 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased" 
+            className="flex gap-20 items-center shrink-0 pr-20 text-base font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased" 
             aria-hidden="true"
             style={{
               WebkitFontSmoothing: 'subpixel-antialiased',
@@ -136,7 +146,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
               backfaceVisibility: 'hidden',
             }}
           >
-            {items.slice().reverse().map((item, index) => (
+            {repeatedItems.slice().reverse().map((item, index) => (
               <React.Fragment key={`g2-rev-${index}`}>
                 <span>{item}</span>
                 <img 
