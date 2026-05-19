@@ -2,6 +2,7 @@ import { buildConfig } from 'payload'
 import { resendAdapter } from '@payloadcms/email-resend'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { s3Storage } from '@payloadcms/storage-s3'
 import sharp from 'sharp'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -19,6 +20,33 @@ import { Videos } from './collections/Videos'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const plugins = []
+
+if (
+  process.env.S3_ACCESS_KEY_ID &&
+  process.env.S3_SECRET_ACCESS_KEY &&
+  process.env.S3_ENDPOINT &&
+  process.env.S3_BUCKET
+) {
+  plugins.push(
+    s3Storage({
+      collections: {
+        media: true,
+        videos: true,
+      },
+      bucket: process.env.S3_BUCKET,
+      config: {
+        endpoint: process.env.S3_ENDPOINT,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+        },
+        region: 'auto',
+      },
+    })
+  )
+}
 
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
@@ -58,6 +86,7 @@ export default buildConfig({
     defaultFromName: 'Tutor Space Admin',
     apiKey: process.env.RESEND_API_KEY || '',
   }),
+  plugins,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
