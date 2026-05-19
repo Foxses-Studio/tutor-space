@@ -52,6 +52,15 @@ export const Lessons: CollectionConfig = {
       },
     },
     {
+      name: 'videoFile',
+      type: 'upload',
+      relationTo: 'videos',
+      required: false,
+      admin: {
+        description: 'Or upload a video file directly to the server.',
+      },
+    },
+    {
       name: 'content',
       type: 'richText', // Lexical rich text
       required: false,
