@@ -115,21 +115,17 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#615fff/5,_transparent_50%),_radial-gradient(circle_at_bottom_right,_#543cdf/5,_transparent_50%)] bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
       
-      {/* Decorative Blur Blobs */}
-      <div className="absolute top-1/4 -right-32 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -left-32 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none" />
-
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-md bg-white border border-zinc-150 rounded-lg shadow-xl shadow-zinc-200/50 p-8 sm:p-10 relative z-10"
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="w-full max-w-xl bg-white border border-zinc-150 rounded-lg shadow-md p-8 sm:p-10 relative z-10"
       >
         
         {/* Branding header */}
-        <div className="flex flex-col items-center mb-6">
+        <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-4 group">
             <span className="h-10 w-10 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-lg">
               T
@@ -147,7 +143,7 @@ export default function RegisterForm() {
         </div>
 
         {/* Multi-step progress indicator */}
-        <div className="flex items-center justify-between mb-10 px-4">
+        <div className="flex items-center justify-between mb-10 px-6">
           {[1, 2, 3].map((s) => (
             <React.Fragment key={s}>
               <div className="flex items-center justify-center relative">
@@ -160,12 +156,12 @@ export default function RegisterForm() {
                 >
                   {step > s ? <FiCheck className="h-5 w-5" /> : s}
                 </div>
-                <span className="absolute -bottom-6 text-xs font-bold text-zinc-400 whitespace-nowrap hidden sm:block">
+                <span className="absolute -bottom-6 text-base font-bold text-zinc-400 whitespace-nowrap hidden sm:block">
                   {s === 1 ? 'Account' : s === 2 ? 'Profile' : 'Interests'}
                 </span>
               </div>
               {s < 3 && (
-                <div className="flex-1 h-0.5 mx-2 bg-zinc-200 relative overflow-hidden">
+                <div className="flex-1 h-0.5 mx-4 bg-zinc-200 relative overflow-hidden">
                   <div 
                     className="absolute inset-y-0 left-0 bg-[#615fff] transition-all duration-500"
                     style={{ width: step > s ? '100%' : '0%' }}

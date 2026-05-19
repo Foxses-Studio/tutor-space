@@ -67,17 +67,13 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_#615fff/5,_transparent_50%),_radial-gradient(circle_at_bottom_left,_#543cdf/5,_transparent_50%)] bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
       
-      {/* Decorative Blur Blobs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none" />
-
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-md bg-white border border-zinc-150 rounded-lg shadow-xl shadow-zinc-200/50 p-8 sm:p-10 relative z-10"
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="w-full max-w-lg bg-white border border-zinc-150 rounded-lg shadow-md p-8 sm:p-10 relative z-10"
       >
         
         {/* Branding header */}
