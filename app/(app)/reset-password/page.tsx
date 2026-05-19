@@ -1,0 +1,11 @@
+import type { Metadata } from 'next'
+import ResetPasswordForm from './ResetPasswordForm'
+
+export const metadata: Metadata = {
+  title: 'Reset Password - Tutor Space',
+  description: 'Enter your new password to regain full access to your Tutor Space learning account.',
+}
+
+export default function ResetPasswordPage() {
+  return <ResetPasswordForm />
+}
