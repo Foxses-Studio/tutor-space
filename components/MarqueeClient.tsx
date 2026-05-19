@@ -19,66 +19,138 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
   }, [])
 
   return (
-    <motion.div 
-      initial={{ clipPath: 'inset(0 0 0 100%)', rotate: 0 }}
-      animate={{ clipPath: 'inset(0 0 0 0%)', rotate: -5 }}
-      transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      className="w-full bg-[#615fff] py-6 overflow-hidden relative select-none z-10 origin-center my-8 border-y border-white/10 shadow-lg shadow-[#615fff]/20 transform-gpu backface-hidden will-change-transform"
-      style={{
-        WebkitBackfaceVisibility: 'hidden',
-        backfaceVisibility: 'hidden',
-        WebkitTransformStyle: 'preserve-3d',
-        transformStyle: 'preserve-3d',
-      }}
-    >
-      {/* Sequenced Text Container */}
+    <div className="w-full flex flex-col gap-5 relative z-20 my-10">
+      
+      {/* Ribbon 1: Brand Purple Background, White Text (Scrolls Right to Left) */}
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.4 }}
-        className={`flex gap-20 ${startScroll ? 'animate-marquee-track' : ''}`}
+        initial={{ clipPath: 'inset(0 0 0 100%)', rotate: 0 }}
+        animate={{ clipPath: 'inset(0 0 0 0%)', rotate: -5 }}
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full bg-[#615fff] py-5 overflow-hidden relative select-none border-y border-white/10 shadow-lg shadow-[#615fff]/15 transform-gpu backface-hidden will-change-transform"
         style={{
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
+          WebkitTransformStyle: 'preserve-3d',
+          transformStyle: 'preserve-3d',
         }}
       >
-        
-        {/* Marquee Group 1 */}
-        <div 
-          className="flex gap-20 items-center shrink-0 text-base font-bold uppercase tracking-widest text-white subpixel-antialiased"
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.4 }}
+          className={`flex gap-20 ${startScroll ? 'animate-marquee-track' : ''}`}
           style={{
-            WebkitFontSmoothing: 'subpixel-antialiased',
             WebkitBackfaceVisibility: 'hidden',
             backfaceVisibility: 'hidden',
           }}
         >
-          {items.map((item, index) => (
-            <React.Fragment key={`g1-${index}`}>
-              <span>{item}</span>
-              <img src="/svg/sparkle.png" alt="sparkle" className="h-6 w-6 object-contain shrink-0 filter brightness-0 invert" />
-            </React.Fragment>
-          ))}
-        </div>
+          {/* Marquee Group 1 */}
+          <div 
+            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased"
+            style={{
+              WebkitFontSmoothing: 'subpixel-antialiased',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+            }}
+          >
+            {items.map((item, index) => (
+              <React.Fragment key={`g1-${index}`}>
+                <span>{item}</span>
+                <img src="/svg/sparkle.png" alt="sparkle" className="h-5 w-5 object-contain shrink-0 filter brightness-0 invert" />
+              </React.Fragment>
+            ))}
+          </div>
 
-        {/* Marquee Group 2 (Duplicate for infinite seamless loop) */}
-        <div 
-          className="flex gap-20 items-center shrink-0 text-base font-bold uppercase tracking-widest text-white subpixel-antialiased" 
-          aria-hidden="true"
-          style={{
-            WebkitFontSmoothing: 'subpixel-antialiased',
-            WebkitBackfaceVisibility: 'hidden',
-            backfaceVisibility: 'hidden',
-          }}
-        >
-          {items.map((item, index) => (
-            <React.Fragment key={`g2-${index}`}>
-              <span>{item}</span>
-              <img src="/svg/sparkle.png" alt="sparkle" className="h-6 w-6 object-contain shrink-0 filter brightness-0 invert" />
-            </React.Fragment>
-          ))}
-        </div>
-
+          {/* Marquee Group 2 */}
+          <div 
+            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-white subpixel-antialiased" 
+            aria-hidden="true"
+            style={{
+              WebkitFontSmoothing: 'subpixel-antialiased',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+            }}
+          >
+            {items.map((item, index) => (
+              <React.Fragment key={`g2-${index}`}>
+                <span>{item}</span>
+                <img src="/svg/sparkle.png" alt="sparkle" className="h-5 w-5 object-contain shrink-0 filter brightness-0 invert" />
+              </React.Fragment>
+            ))}
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+
+      {/* Ribbon 2: White Background, Brand Purple Text (Scrolls Left to Right) */}
+      <motion.div 
+        initial={{ clipPath: 'inset(0 100% 0 0)', rotate: 0 }}
+        animate={{ clipPath: 'inset(0 0 0 0)', rotate: -5 }}
+        transition={{ duration: 1.2, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full bg-white py-5 overflow-hidden relative select-none border-y border-[#615fff]/10 shadow-md shadow-zinc-150 transform-gpu backface-hidden will-change-transform -mt-2"
+        style={{
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden',
+          WebkitTransformStyle: 'preserve-3d',
+          transformStyle: 'preserve-3d',
+        }}
+      >
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.95, duration: 0.4 }}
+          className={`flex gap-20 ${startScroll ? 'animate-marquee-track-reverse' : ''}`}
+          style={{
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+          }}
+        >
+          {/* Marquee Group 1 */}
+          <div 
+            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased"
+            style={{
+              WebkitFontSmoothing: 'subpixel-antialiased',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+            }}
+          >
+            {items.slice().reverse().map((item, index) => (
+              <React.Fragment key={`g1-rev-${index}`}>
+                <span>{item}</span>
+                <img 
+                  src="/svg/sparkle.png" 
+                  alt="sparkle" 
+                  className="h-5 w-5 object-contain shrink-0" 
+                  style={{ filter: 'invert(40%) sepia(88%) saturate(1900%) hue-rotate(230deg) brightness(95%) contrast(110%)' }} 
+                />
+              </React.Fragment>
+            ))}
+          </div>
+
+          {/* Marquee Group 2 */}
+          <div 
+            className="flex gap-20 items-center shrink-0 text-sm font-bold uppercase tracking-widest text-[#543CDF] subpixel-antialiased" 
+            aria-hidden="true"
+            style={{
+              WebkitFontSmoothing: 'subpixel-antialiased',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+            }}
+          >
+            {items.slice().reverse().map((item, index) => (
+              <React.Fragment key={`g2-rev-${index}`}>
+                <span>{item}</span>
+                <img 
+                  src="/svg/sparkle.png" 
+                  alt="sparkle" 
+                  className="h-5 w-5 object-contain shrink-0" 
+                  style={{ filter: 'invert(40%) sepia(88%) saturate(1900%) hue-rotate(230deg) brightness(95%) contrast(110%)' }} 
+                />
+              </React.Fragment>
+            ))}
+          </div>
+        </motion.div>
+      </motion.div>
+
+    </div>
   )
 }

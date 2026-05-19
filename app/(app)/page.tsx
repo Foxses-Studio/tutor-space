@@ -10,12 +10,12 @@ export default function Home() {
       {/* Scroll-Adaptive Navbar */}
       <Navbar />
 
-      {/* Hero Section */}
-      <Hero />
-
-      {/* Infinite Marquee Scrolling Area */}
-      <Marquee />
+      {/* Hero Section with Marquee children composition */}
+      <Hero>
+        <Marquee />
+      </Hero>
 
     </div>
   )
 }
+
