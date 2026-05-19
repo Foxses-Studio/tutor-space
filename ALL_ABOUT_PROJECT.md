@@ -153,3 +153,6 @@ pnpm dev
    const payload = await getPayload({ config: configPromise })
    const courses = await payload.find({ collection: 'courses' })
    ```
+4. **Core UI Style & Spacing Rules:**
+   - **Minimum Font Size:** All body copy, labels, paragraphs, and list items must have a minimum font size of **16px** (equivalent to Tailwind's `text-base`) to maintain a clean, readable layout.
+   - **Minimum Border Radius:** All cards, buttons, input fields, badges, and user-interface element wrappers must have a border-radius of at least **8px** (equivalent to Tailwind's `rounded-lg` or larger: `rounded-xl`, `rounded-2xl`, etc.) to ensure a friendly, modern design.
