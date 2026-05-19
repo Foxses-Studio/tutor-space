@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import ForgotPasswordForm from './ForgotPasswordForm'
+import ForgotPasswordForm from '@/app/(app)/forgot-password/ForgotPasswordForm'
+
 
 export const metadata: Metadata = {
   title: 'Forgot Password - Tutor Space',

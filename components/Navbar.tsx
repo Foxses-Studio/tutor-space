@@ -210,7 +210,7 @@ export default function Navbar() {
                       </div>
 
                       <Link
-                        href="/admin"
+                        href="/login"
                         onClick={() => setUserMenuOpen(false)}
                         className="block w-full text-center px-3 py-2.5 rounded-lg text-base font-bold bg-[#615fff] hover:bg-[#615fff]/90 text-white shadow-md shadow-[#615fff]/15 transition-all mb-2"
                       >
@@ -218,7 +218,7 @@ export default function Navbar() {
                       </Link>
 
                       <Link
-                        href="/admin"
+                        href="/register"
                         onClick={() => setUserMenuOpen(false)}
                         className="block w-full text-center px-3 py-2.5 rounded-lg text-base font-bold border border-zinc-200 hover:border-zinc-350 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all"
                       >
@@ -234,7 +234,7 @@ export default function Navbar() {
           {/* Register Button (Visible when logged out) */}
           {!loading && !user && (
             <Link
-              href="/admin"
+              href="/register"
               className="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-md shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
             >
               Register

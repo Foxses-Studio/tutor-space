@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import RegisterForm from './RegisterForm'
+import RegisterForm from '@/app/(app)/register/RegisterForm'
+
 
 export const metadata: Metadata = {
   title: 'Sign Up - Tutor Space',
