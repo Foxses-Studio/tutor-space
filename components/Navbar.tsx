@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiShoppingCart, FiUser, FiLogOut, FiLayout, FiMenu, FiX, FiChevronDown } from 'react-icons/fi'
+import { FiUser, FiLogOut, FiLayout, FiMenu, FiX, FiChevronDown } from 'react-icons/fi'
 
 interface User {
   id: string
@@ -14,9 +14,12 @@ interface User {
 }
 
 const NAV_LINKS = [
+  { label: 'Home', href: '/' },
   { label: 'Courses', href: '#courses' },
   { label: 'Features', href: '#features' },
   { label: 'Instructors', href: '#instructors' },
+  { label: 'About Us', href: '#about-us' },
+  { label: 'Contact Us', href: '#contact-us' },
 ]
 
 export default function Navbar() {
@@ -24,7 +27,6 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [cartCount] = useState(2) // Static indicator for cart items
   const [isScrolled, setIsScrolled] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -98,10 +100,13 @@ export default function Navbar() {
   }
 
   return (
-    <header 
+    <motion.header 
+      initial={{ y: -70, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/80 backdrop-blur-md border-b border-zinc-100 shadow-sm py-0' 
+          ? 'bg-white/90 backdrop-blur-md border-b border-zinc-100 shadow-sm py-0' 
           : 'bg-transparent border-b border-transparent py-1'
       }`}
     >
@@ -109,7 +114,7 @@ export default function Navbar() {
         
         {/* Left Side: Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <span className="h-9 w-9 rounded-xl bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+          <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
             T
           </span>
           <span className="text-xl font-bold font-display tracking-tight text-zinc-900 transition-all">
@@ -123,9 +128,11 @@ export default function Navbar() {
             <Link 
               key={link.href} 
               href={link.href} 
-              className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200"
+              className="relative text-zinc-500 hover:text-[#121212] pb-1.5 pt-1 transition-colors duration-200 group"
             >
-              {link.label}
+              <span>{link.label}</span>
+              {/* Expanding brand underline micro-interaction */}
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#615fff] transition-all duration-300 group-hover:w-full origin-left" />
             </Link>
           ))}
         </nav>
@@ -162,7 +169,7 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Framer Motion Profile Dropdown Menu - 16px minimum font size & 8px+ border radius */}
+            {/* Framer Motion Profile Dropdown Menu - 16px minimum font size & 8px max border radius */}
             <AnimatePresence>
               {userMenuOpen && (
                 <motion.div
@@ -170,14 +177,14 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 15, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute right-0 mt-3 w-64 rounded-xl border border-zinc-150 bg-white p-2.5 shadow-xl shadow-zinc-200/50 z-50 text-zinc-800"
+                  className="absolute right-0 mt-3 w-64 rounded-lg border border-zinc-150 bg-white p-2.5 shadow-xl shadow-zinc-200/50 z-50 text-zinc-800"
                 >
                   {user ? (
                     // Logged In Options
                     <>
                       <div className="px-3 py-2 border-b border-zinc-100 mb-1">
                         <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Signed in as</p>
-                        <p className="text-base font-extrabold text-zinc-800 truncate">{user.name}</p>
+                        <p className="text-base font-bold text-zinc-800 truncate">{user.name}</p>
                         <p className="text-base text-zinc-500 truncate">{user.email}</p>
                         <span className="inline-block mt-2 px-2.5 py-0.5 rounded-lg bg-[#615fff]/10 border border-[#615fff]/20 text-xs font-bold text-[#615fff] uppercase">
                           {user.role}
@@ -206,7 +213,7 @@ export default function Navbar() {
                     <>
                       <div className="px-3 py-2 border-b border-zinc-100 mb-3">
                         <p className="text-base font-bold text-zinc-800">Welcome</p>
-                        <p className="text-base text-zinc-500">Join Tutor Space to access premium courses.</p>
+                        <p className="text-base text-zinc-500 font-medium">Join Tutor Space to access premium courses.</p>
                       </div>
 
                       <Link
@@ -231,11 +238,11 @@ export default function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* Register Button (Visible when logged out) */}
+          {/* Register Button (Visible when logged out) - Max 8px border radius */}
           {!loading && !user && (
             <Link
               href="/register"
-              className="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-md shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
+              className="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-md shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
             >
               Register
             </Link>
@@ -278,6 +285,6 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-    </header>
+    </motion.header>
   )
 }

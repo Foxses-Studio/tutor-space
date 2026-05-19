@@ -26,7 +26,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         initial={{ clipPath: 'inset(0 0 0 100%)', rotate: 0 }}
         animate={{ clipPath: 'inset(0 0 0 0%)', rotate: -5 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute w-[105vw] left-1/2 -translate-x-1/2 bg-[#615fff] py-5 overflow-hidden select-none border-y border-white/10 shadow-lg shadow-[#615fff]/15 z-20 transform-gpu backface-hidden will-change-transform"
+        className="absolute w-[105vw] left-1/2 -translate-x-1/2 bg-[#615fff] py-5 overflow-hidden select-none border-y border-white/10 shadow-lg shadow-[#615fff]/15 z-10 transform-gpu backface-hidden will-change-transform"
         style={{
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
@@ -86,7 +86,7 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         initial={{ clipPath: 'inset(0 100% 0 0)', rotate: 0 }}
         animate={{ clipPath: 'inset(0 0 0 0)', rotate: 5 }}
         transition={{ duration: 1.2, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute w-[105vw] left-1/2 -translate-x-1/2 bg-white py-5 overflow-hidden select-none border-y border-[#615fff]/15 shadow-xl shadow-zinc-200/50 z-10 transform-gpu backface-hidden will-change-transform"
+        className="absolute w-[105vw] left-1/2 -translate-x-1/2 bg-white py-5 overflow-hidden select-none border-y border-[#615fff]/15 shadow-xl shadow-zinc-200/50 z-20 transform-gpu backface-hidden will-change-transform"
         style={{
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
