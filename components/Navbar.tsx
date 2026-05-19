@@ -99,7 +99,7 @@ export default function Navbar() {
           : 'bg-transparent border-b border-transparent py-1'
       }`}
     >
-      <div className="container mx-auto px-6 h-18 flex items-center justify-between">
+      <div className="container mx-auto px-6 h-22 flex items-center justify-between">
         
         {/* Left Side: Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
