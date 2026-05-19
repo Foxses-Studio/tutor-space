@@ -3,7 +3,6 @@ import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import { importMap } from './admin/importMap.js'
 import configPromise from '@payload-config'
 import React from 'react'
-import './admin/admin.css'
 
 const serverFunction: ServerFunctionClient = async function (args) {
   'use server'

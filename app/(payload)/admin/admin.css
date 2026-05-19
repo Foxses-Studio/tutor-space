@@ -1,41 +1,49 @@
-/* Tutor Space Custom Admin Theme Overrides */
+/* Tutor Space Highly Specific Scoped Admin Style Customizations */
 
-/* Global CSS Variable Overrides to Inject Brand Identity */
-:root {
-  --theme-font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --theme-font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+/* Scoped variables for the Admin wrapper */
+.admin-custom-wrapper {
+  --theme-font-body: 'Inter', system-ui, -apple-system, sans-serif !important;
+  --theme-font-heading: 'Inter', system-ui, -apple-system, sans-serif !important;
 
   /* Brand Palette Variables */
-  --theme-bg: #fafafa;
-  --theme-text: #0A163A;
+  --theme-bg: #fafafa !important;
+  --theme-text: #0A163A !important;
   
   /* Form Elevations */
-  --theme-elevation-50: #ffffff;
-  --theme-elevation-100: #ffffff;
-  --theme-elevation-150: #f4f4f5;
-  --theme-elevation-200: #e4e4e7;
+  --theme-elevation-50: #ffffff !important;
+  --theme-elevation-100: #ffffff !important;
+  --theme-elevation-150: #f4f4f5 !important;
+  --theme-elevation-200: #e4e4e7 !important;
 
   /* Strict Border Radius Standards (Max 8px per handbook) */
-  --theme-border-radius-xs: 4px;
-  --theme-border-radius-s: 6px;
-  --theme-border-radius-m: 8px;
-  --theme-border-radius-lg: 8px;
+  --theme-border-radius-xs: 4px !important;
+  --theme-border-radius-s: 6px !important;
+  --theme-border-radius-m: 8px !important;
+  --theme-border-radius-lg: 8px !important;
 
   /* Color Customizations */
-  --theme-success-500: #10b981;
-  --theme-error-500: #ef4444;
+  --theme-success-500: #10b981 !important;
+  --theme-error-500: #ef4444 !important;
 }
 
-/* Scoped Overrides for the Admin Login and Create-First-User Authentication Wrapper */
-.payload-auth {
+/* Authentication Page Wrapper Scoping */
+.admin-custom-wrapper .payload-auth,
+.admin-custom-wrapper div[class*="auth"] {
   background: radial-gradient(circle at top left, rgba(97, 95, 255, 0.05), transparent 50%), 
               radial-gradient(circle at bottom right, rgba(84, 60, 223, 0.05), transparent 50%),
               #fafafa !important;
-  font-family: var(--theme-font-body) !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
 }
 
-/* Beautiful Centered Authentic Form Box */
-.payload-auth .auth__wrap {
+/* Beautiful Centered Form Box with High Specificity */
+.admin-custom-wrapper .payload-auth .auth__wrap,
+.admin-custom-wrapper div[class*="auth__wrap"],
+.admin-custom-wrapper div[class*="auth-wrap"] {
   border: 1px solid #e4e4e7 !important;
   border-radius: 8px !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
@@ -43,11 +51,13 @@
   padding: 2.5rem !important;
   max-width: 480px !important;
   width: 100% !important;
+  margin: 0 auto !important;
 }
 
 /* Form Title Styling */
-.payload-auth h1 {
-  font-family: var(--theme-font-heading) !important;
+.admin-custom-wrapper .payload-auth h1,
+.admin-custom-wrapper div[class*="auth"] h1 {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   font-weight: 700 !important;
   font-size: 1.75rem !important;
   letter-spacing: -0.025em !important;
@@ -57,17 +67,20 @@
 }
 
 /* Form Field Labels */
-.payload-auth label {
+.admin-custom-wrapper .payload-auth label,
+.admin-custom-wrapper div[class*="auth"] label {
   font-size: 16px !important;
   font-weight: 700 !important;
   color: #3f3f46 !important;
   margin-bottom: 0.5rem !important;
+  display: block !important;
 }
 
 /* Beautiful Input Fields Styling */
-.payload-auth input[type="text"],
-.payload-auth input[type="email"],
-.payload-auth input[type="password"] {
+.admin-custom-wrapper .payload-auth input[type="text"],
+.admin-custom-wrapper .payload-auth input[type="email"],
+.admin-custom-wrapper .payload-auth input[type="password"],
+.admin-custom-wrapper div[class*="auth"] input {
   width: 100% !important;
   font-size: 16px !important;
   padding: 0.75rem 1rem !important;
@@ -80,16 +93,17 @@
 }
 
 /* Active/Focus State for Inputs */
-.payload-auth input[type="text"]:focus,
-.payload-auth input[type="email"]:focus,
-.payload-auth input[type="password"]:focus {
+.admin-custom-wrapper .payload-auth input:focus,
+.admin-custom-wrapper div[class*="auth"] input:focus {
   border-color: #615fff !important;
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(97, 95, 255, 0.15) !important;
 }
 
 /* Premium Primary Submit Button Override */
-.payload-auth button.btn {
+.admin-custom-wrapper .payload-auth button.btn,
+.admin-custom-wrapper .payload-auth button[type="submit"],
+.admin-custom-wrapper div[class*="auth"] button {
   background-color: #615fff !important;
   border-color: #615fff !important;
   color: #ffffff !important;
@@ -105,19 +119,16 @@
 }
 
 /* Hover States for Primary Buttons */
-.payload-auth button.btn:hover:not([disabled]) {
+.admin-custom-wrapper .payload-auth button.btn:hover:not([disabled]),
+.admin-custom-wrapper .payload-auth button[type="submit"]:hover,
+.admin-custom-wrapper div[class*="auth"] button:hover {
   background-color: #543cdf !important;
   border-color: #543cdf !important;
   box-shadow: 0 10px 15px -3px rgba(97, 95, 255, 0.25) !important;
   transform: translateY(-1px) !important;
 }
 
-.payload-auth button.btn:active:not([disabled]) {
+.admin-custom-wrapper .payload-auth button:active,
+.admin-custom-wrapper div[class*="auth"] button:active {
   transform: translateY(0px) !important;
-}
-
-/* Customizing the Default Loader */
-.payload-auth .loading {
-  border-color: rgba(97, 95, 255, 0.1) !important;
-  border-top-color: #615fff !important;
 }
