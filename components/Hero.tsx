@@ -4,10 +4,10 @@ import { motion } from 'framer-motion'
 
 export default function Hero({ children }: { children?: React.ReactNode }) {
   return (
-    <section className="w-full min-h-[92vh] relative flex flex-col justify-between pt-24 overflow-hidden">
+    <section className="w-full min-h-[96vh] relative flex flex-col justify-between pt-36 md:pt-44 overflow-hidden">
       
       {/* Centered Hero Content */}
-      <div className="container mx-auto px-6 flex-grow flex flex-col items-center justify-center relative z-10 pb-8">
+      <div className="container mx-auto px-6 flex-grow flex flex-col items-center justify-center relative z-10 pb-12 pt-8 md:pt-12">
         
         {/* Main Animated Heading in Plus Jakarta Sans */}
         <motion.h1 
