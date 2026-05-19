@@ -59,5 +59,58 @@ export const Lessons: CollectionConfig = {
         description: 'Lesson content, resources, or text instructions.',
       },
     },
+    {
+      name: 'duration',
+      type: 'number',
+      required: false,
+      admin: {
+        description: 'Duration of the lesson in minutes.',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'isPreviewable',
+      type: 'checkbox',
+      label: 'Free Preview',
+      defaultValue: false,
+      admin: {
+        description: 'Allow non-enrolled students to watch this lesson as a demo.',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'seo',
+      type: 'group',
+      label: 'SEO Settings',
+      admin: {
+        position: 'sidebar',
+      },
+      fields: [
+        {
+          name: 'metaTitle',
+          type: 'text',
+          label: 'Meta Title',
+          admin: {
+            description: 'Recommended: 50-60 characters.',
+          },
+        },
+        {
+          name: 'metaDescription',
+          type: 'textarea',
+          label: 'Meta Description',
+          admin: {
+            description: 'Recommended: 150-160 characters.',
+          },
+        },
+        {
+          name: 'keywords',
+          type: 'text',
+          label: 'Focus Keywords',
+          admin: {
+            description: 'Comma-separated values.',
+          },
+        },
+      ],
+    },
   ],
 }

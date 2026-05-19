@@ -38,5 +38,54 @@ export const Blogs: CollectionConfig = {
       type: 'richText',
       required: true,
     },
+    {
+      name: 'tags',
+      type: 'array',
+      label: 'Tags / Keywords',
+      admin: {
+        description: 'Add tags to help categorize this post.',
+      },
+      fields: [
+        {
+          name: 'tag',
+          type: 'text',
+          required: true,
+        },
+      ],
+    },
+    {
+      name: 'seo',
+      type: 'group',
+      label: 'SEO Settings',
+      admin: {
+        position: 'sidebar',
+      },
+      fields: [
+        {
+          name: 'metaTitle',
+          type: 'text',
+          label: 'Meta Title',
+          admin: {
+            description: 'Recommended: 50-60 characters.',
+          },
+        },
+        {
+          name: 'metaDescription',
+          type: 'textarea',
+          label: 'Meta Description',
+          admin: {
+            description: 'Recommended: 150-160 characters.',
+          },
+        },
+        {
+          name: 'keywords',
+          type: 'text',
+          label: 'Focus Keywords',
+          admin: {
+            description: 'Comma-separated values.',
+          },
+        },
+      ],
+    },
   ],
 }

@@ -14,6 +14,7 @@ import { Media } from './collections/Media'
 import { Enrollments } from './collections/Enrollments'
 import { Blogs } from './collections/Blogs'
 import { Students } from './collections/Students'
+import { Reviews } from './collections/Reviews'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -47,6 +48,7 @@ export default buildConfig({
     Enrollments,
     Blogs,
     Students,
+    Reviews,
   ],
   secret: process.env.PAYLOAD_SECRET || 'tutor-space-development-secret-key-1234567890',
   email: resendAdapter({
