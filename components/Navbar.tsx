@@ -124,20 +124,10 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        {/* Right Side: Cart, User Icon & Mobile Toggle */}
+        {/* Right Side: User Icon & Mobile Toggle */}
         <div className="flex items-center gap-4">
           
-          {/* Cart Icon */}
-          <Link href="#cart" className="relative p-2 text-zinc-500 hover:text-[#121212] transition-colors duration-200 group">
-            <FiShoppingCart className="h-5 w-5 group-hover:scale-105 transition-transform" />
-            {cartCount > 0 && (
-              <span className="absolute top-1 right-1 h-5 min-w-5 px-1 rounded-full bg-[#615fff] text-xs font-bold text-white flex items-center justify-center border border-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-
-          {/* User Profile / Login Menu */}
+          {/* User Profile / Login Menu (User icon acts as Login trigger) */}
           <div className="relative" ref={dropdownRef}>
             {loading ? (
               <div className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 animate-pulse" />
@@ -145,7 +135,7 @@ export default function Navbar() {
               // Authenticated User Avatar Trigger
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center gap-1.5 focus:outline-none group"
+                className="flex items-center gap-1.5 focus:outline-none group cursor-pointer"
               >
                 <div className="h-8 w-8 rounded-full border border-[#615fff]/30 bg-zinc-50 flex items-center justify-center text-xs font-bold text-[#615fff] shadow-md shadow-[#615fff]/10 group-hover:border-[#615fff] transition-all overflow-hidden">
                   {user.profilePic ? (
@@ -157,10 +147,10 @@ export default function Navbar() {
                 <FiChevronDown className={`h-4 w-4 text-zinc-400 group-hover:text-zinc-900 transition-transform duration-300 ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
             ) : (
-              // Anonymous User Dropdown Trigger
+              // Anonymous User Dropdown Trigger (Acts as Login button)
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="p-2 text-zinc-500 hover:text-[#121212] focus:outline-none transition-colors duration-200 group"
+                className="p-2 text-zinc-500 hover:text-[#121212] focus:outline-none transition-colors duration-200 group cursor-pointer"
               >
                 <FiUser className="h-5 w-5 group-hover:scale-105 transition-transform" />
               </button>
@@ -234,6 +224,16 @@ export default function Navbar() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Register Button (Visible when logged out) */}
+          {!loading && !user && (
+            <Link
+              href="/admin"
+              className="hidden sm:inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-md shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer"
+            >
+              Register
+            </Link>
+          )}
 
           {/* Mobile Menu Toggle Button */}
           <button
