@@ -5,6 +5,7 @@ export const Lessons: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'course', 'order'],
+    group: 'LMS',
   },
   access: {
     read: () => true,

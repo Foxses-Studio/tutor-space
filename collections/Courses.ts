@@ -5,6 +5,7 @@ export const Courses: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'price', 'instructor', 'category', 'status'],
+    group: 'LMS',
   },
   access: {
     read: () => true,
@@ -42,7 +43,7 @@ export const Courses: CollectionConfig = {
     },
     {
       name: 'thumbnail',
-      type: 'relationship',
+      type: 'upload',
       relationTo: 'media',
       required: true,
     },

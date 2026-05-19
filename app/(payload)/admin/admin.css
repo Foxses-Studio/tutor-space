@@ -132,3 +132,101 @@
 .admin-custom-wrapper div[class*="auth"] button:active {
   transform: translateY(0px) !important;
 }
+
+/* ========================================================
+   PREMIUM DASHBOARD UI OVERRIDES
+   ======================================================== */
+
+/* Dashboard Layout */
+.admin-custom-wrapper .dashboard {
+  padding: 3rem 2rem !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+/* Dashboard Header & Title */
+.admin-custom-wrapper .dashboard h1,
+.admin-custom-wrapper .template-default h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  background: linear-gradient(135deg, #0A163A, #615fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem !important;
+}
+
+/* Collection Cards Grid */
+.admin-custom-wrapper .dashboard__card-list,
+.admin-custom-wrapper ul[class*="card-list"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 1.5rem !important;
+  margin-top: 1.5rem !important;
+}
+
+/* Individual Collection Cards */
+.admin-custom-wrapper .card,
+.admin-custom-wrapper li[class*="card"] {
+  background: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+  padding: 1.5rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Card Hover Animation */
+.admin-custom-wrapper .card:hover,
+.admin-custom-wrapper li[class*="card"]:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 20px -5px rgba(97, 95, 255, 0.15), 0 8px 10px -6px rgba(97, 95, 255, 0.1) !important;
+  border-color: #a5a4ff !important;
+}
+
+/* Card Title */
+.admin-custom-wrapper .card h3,
+.admin-custom-wrapper .card h4,
+.admin-custom-wrapper li[class*="card"] h3 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #0A163A !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Create New Button in Card */
+.admin-custom-wrapper .card__actions a,
+.admin-custom-wrapper li[class*="card"] a {
+  display: inline-block !important;
+  color: #615fff !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.admin-custom-wrapper .card__actions a:hover,
+.admin-custom-wrapper li[class*="card"] a:hover {
+  color: #543cdf !important;
+  text-decoration: underline !important;
+}
+
+/* Sidebar Navigation (Left Panel) */
+.admin-custom-wrapper aside,
+.admin-custom-wrapper nav {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e4e4e7 !important;
+}
+
+.admin-custom-wrapper nav a {
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.admin-custom-wrapper nav a:hover {
+  background-color: rgba(97, 95, 255, 0.08) !important;
+  color: #615fff !important;
+  font-weight: 600 !important;
+}

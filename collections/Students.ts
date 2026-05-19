@@ -1,18 +1,18 @@
 import type { CollectionConfig } from 'payload'
 
-export const Users: CollectionConfig = {
-  slug: 'users',
+export const Students: CollectionConfig = {
+  slug: 'students',
   labels: {
-    singular: 'Staff Member',
-    plural: 'Staff & Admins',
+    singular: 'Student',
+    plural: 'Students',
   },
   auth: {
-    tokenExpiration: 7200,
-    verify: false,
+    tokenExpiration: 7200, // 2 hours
+    verify: false, 
   },
   admin: {
     useAsTitle: 'email',
-    group: 'Admin',
+    group: 'LMS',
   },
   fields: [
     {
@@ -32,14 +32,12 @@ export const Users: CollectionConfig = {
       required: false,
     },
     {
-      name: 'role',
+      name: 'status',
       type: 'select',
-      defaultValue: 'staff',
-      required: true,
+      defaultValue: 'active',
       options: [
-        { label: 'Admin', value: 'admin' },
-        { label: 'Staff', value: 'staff' },
-        { label: 'Instructor', value: 'instructor' },
+        { label: 'Active', value: 'active' },
+        { label: 'Suspended', value: 'suspended' },
       ],
     },
   ],

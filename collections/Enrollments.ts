@@ -5,6 +5,7 @@ export const Enrollments: CollectionConfig = {
   admin: {
     useAsTitle: 'id',
     defaultColumns: ['student', 'course', 'paymentStatus', 'createdAt'],
+    group: 'LMS',
   },
   access: {
     // Only logged in users can see their own enrollments, admins see everything
@@ -34,7 +35,7 @@ export const Enrollments: CollectionConfig = {
     {
       name: 'student',
       type: 'relationship',
-      relationTo: 'users',
+      relationTo: 'students',
       required: true,
       admin: {
         description: 'The student who is enrolled in the course.',
