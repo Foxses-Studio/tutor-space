@@ -19,14 +19,14 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
   }, [])
 
   return (
-    <div className="w-full flex flex-col gap-5 relative z-20 my-10">
+    <div className="w-full relative h-44 flex items-center justify-center my-6 overflow-visible">
       
-      {/* Ribbon 1: Brand Purple Background, White Text (Scrolls Right to Left) */}
+      {/* Ribbon 1: Brand Purple Background, White Text (Scrolls Right to Left, Tilts at -5deg) */}
       <motion.div 
         initial={{ clipPath: 'inset(0 0 0 100%)', rotate: 0 }}
         animate={{ clipPath: 'inset(0 0 0 0%)', rotate: -5 }}
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full bg-[#615fff] py-5 overflow-hidden relative select-none border-y border-white/10 shadow-lg shadow-[#615fff]/15 transform-gpu backface-hidden will-change-transform"
+        className="absolute w-[105vw] left-1/2 -translate-x-1/2 bg-[#615fff] py-5 overflow-hidden select-none border-y border-white/10 shadow-lg shadow-[#615fff]/15 z-10 transform-gpu backface-hidden will-change-transform"
         style={{
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
@@ -81,12 +81,12 @@ export default function MarqueeClient({ items }: MarqueeClientProps) {
         </motion.div>
       </motion.div>
 
-      {/* Ribbon 2: White Background, Brand Purple Text (Scrolls Left to Right) */}
+      {/* Ribbon 2: White Background, Brand Purple Text (Scrolls Left to Right, Tilts at +5deg) */}
       <motion.div 
         initial={{ clipPath: 'inset(0 100% 0 0)', rotate: 0 }}
-        animate={{ clipPath: 'inset(0 0 0 0)', rotate: -5 }}
+        animate={{ clipPath: 'inset(0 0 0 0)', rotate: 5 }}
         transition={{ duration: 1.2, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full bg-white py-5 overflow-hidden relative select-none border-y border-[#615fff]/10 shadow-md shadow-zinc-150 transform-gpu backface-hidden will-change-transform -mt-2"
+        className="absolute w-[105vw] left-1/2 -translate-x-1/2 bg-white py-5 overflow-hidden select-none border-y border-[#615fff]/15 shadow-xl shadow-zinc-200/50 z-20 transform-gpu backface-hidden will-change-transform"
         style={{
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
