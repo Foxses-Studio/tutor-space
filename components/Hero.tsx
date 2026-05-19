@@ -11,7 +11,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="text-4xl sm:text-6xl md:text-7xl font-extrabold font-display tracking-tight text-center text-[#0A163A] leading-[1.15] md:leading-[1.12] max-w-5xl mx-auto mb-8 relative"
+        className="text-4xl sm:text-6xl md:text-7xl font-bold font-display tracking-tight text-center text-[#0A163A] leading-[1.15] md:leading-[1.12] max-w-5xl mx-auto mb-8 relative"
       >
         
         {/* Row 1: Learn Easily [Avatar] */}
@@ -108,7 +108,7 @@ export default function Hero() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
       >
-        <button className="px-8 py-4 rounded-2xl bg-[#543CDF] hover:bg-[#543CDF]/95 text-white font-extrabold text-base shadow-lg shadow-[#543CDF]/25 hover:shadow-[#543CDF]/35 transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer">
+        <button className="px-8 py-4 rounded-lg bg-[#543CDF] hover:bg-[#543CDF]/95 text-white font-bold text-base shadow-lg shadow-[#543CDF]/25 hover:shadow-[#543CDF]/35 transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer">
           Start Learning Today
         </button>
       </motion.div>

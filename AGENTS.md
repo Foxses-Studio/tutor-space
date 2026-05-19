@@ -136,3 +136,17 @@ const courses = await payload.find({
 - **Start Dev Environment:** `pnpm dev`
 - **Verify Build Validity:** `pnpm build` (ensures 100% type safety before commits)
 - **Regenerate Dynamic Component Imports:** `npx payload generate:importmap`
+
+---
+
+## 🎨 Global Styling, Typography & Design Tokens
+
+When creating, editing, or refactoring UI components, developers and AI agents MUST adhere to these exact styling boundaries:
+
+1. **Typography & Font Weight Constraints:**
+   - **Maximum Font Weight:** Do NOT use any font weight greater than **700 (bold)** anywhere. `font-extrabold` (800) and `font-black` (900) are strictly PROHIBITED. Always use `font-bold` (700), `font-semibold` (600), `font-medium` (500), or `font-normal` (400).
+   - **Minimum Font Size:** Text, inputs, buttons, and readable body elements must have a minimum font size of **16px** (Tailwind `text-base` or equivalent). Do not use smaller sizes for readable body text or inputs.
+
+2. **Layout & Borders:**
+   - **Maximum Border Radius:** The absolute maximum border radius for cards, buttons, input fields, containers, and boxes is **8px** (Tailwind `rounded-lg` or equivalent). Do not use `rounded-xl`, `rounded-2xl`, `rounded-3xl` etc. (except for circular elements like avatars which can use `rounded-full`).
+
