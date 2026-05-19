@@ -13,6 +13,12 @@ interface User {
   profilePic?: string
 }
 
+const NAV_LINKS = [
+  { label: 'Courses', href: '#courses' },
+  { label: 'Features', href: '#features' },
+  { label: 'Instructors', href: '#instructors' },
+]
+
 export default function Navbar() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -113,15 +119,15 @@ export default function Navbar() {
 
         {/* Middle: Navigation Menu (Desktop) - 16px minimum font size */}
         <nav className="hidden md:flex items-center gap-8 text-base font-semibold">
-          <Link href="#courses" className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200">
-            Courses
-          </Link>
-          <Link href="#features" className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200">
-            Features
-          </Link>
-          <Link href="#instructors" className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200">
-            Instructors
-          </Link>
+          {NAV_LINKS.map((link) => (
+            <Link 
+              key={link.href} 
+              href={link.href} 
+              className="text-zinc-500 hover:text-[#121212] hover:shadow-[0_1.5px_0_0_#615fff] pb-1 transition-all duration-200"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Right Side: User Icon & Mobile Toggle */}
@@ -257,27 +263,16 @@ export default function Navbar() {
             className="md:hidden border-t border-zinc-100 bg-white px-6 py-4 shadow-md overflow-hidden"
           >
             <nav className="flex flex-col gap-4 text-base font-semibold">
-              <Link
-                href="#courses"
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
-              >
-                Courses
-              </Link>
-              <Link
-                onClick={() => setMobileMenuOpen(false)}
-                href="#features"
-                className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
-              >
-                Features
-              </Link>
-              <Link
-                onClick={() => setMobileMenuOpen(false)}
-                href="#instructors"
-                className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
-              >
-                Instructors
-              </Link>
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </nav>
           </motion.div>
         )}
