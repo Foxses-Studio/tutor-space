@@ -25,7 +25,7 @@ export default async function StaffRegisterPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+    <div className="container mx-auto px-6 py-8 space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

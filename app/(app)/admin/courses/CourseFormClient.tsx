@@ -307,7 +307,7 @@ export default function CourseFormClient({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <form onSubmit={handleSubmit} className="container mx-auto px-6 py-8 space-y-6">
       
       {/* Back & Heading panel */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-800/40">

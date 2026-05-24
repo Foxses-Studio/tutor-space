@@ -140,7 +140,7 @@ export default function AdminLayout({
       <aside className="hidden lg:flex flex-col w-64 bg-[#18181b] border-r border-zinc-800 shrink-0 select-none h-full">
         
         {/* Sidebar Brand Header */}
-        <div className="h-20 flex items-center px-6 border-b border-zinc-800 justify-between">
+        <div className="h-20 flex items-center px-6 border-b border-zinc-800">
           <Link href="/" className="flex items-center gap-2.5 group">
             <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
               T
@@ -149,9 +149,6 @@ export default function AdminLayout({
               Tutor Space
             </span>
           </Link>
-          <span className="px-2.5 py-1 text-base font-bold text-[#615fff] bg-[#615fff]/10 rounded-lg border border-[#615fff]/20 uppercase">
-            Admin
-          </span>
         </div>
 
         {/* Sidebar Links */}

@@ -71,7 +71,7 @@ export default function FAQ({ faqs }: FAQProps) {
       {/* Ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-[#615fff]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-3xl mx-auto relative z-10">
+      <div className="container mx-auto relative z-10">
 
         {/* ── Heading ── */}
         <div className="text-center mb-14">

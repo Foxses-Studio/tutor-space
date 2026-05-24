@@ -89,7 +89,7 @@ function FloatAvatar({ src, size, top, left, right, floatY, dur, delay, entrance
 export default function CTASection() {
   return (
     <section className="py-16 md:py-20 px-4 sm:px-6 bg-zinc-100 border-t border-zinc-200/60 select-none">
-      <div className="max-w-6xl mx-auto">
+      <div className="container mx-auto">
 
         {/* White card */}
         <div className="bg-white rounded-lg shadow-sm border border-zinc-100 overflow-visible">
