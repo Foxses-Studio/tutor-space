@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Student } from '@/lib/db/models/Student'
+import { User } from '@/lib/db/models/User'
+import crypto from 'crypto'
 
 export async function POST(request: Request) {
   try {
@@ -14,25 +16,109 @@ export async function POST(request: Request) {
       )
     }
 
-    const payload = await getPayload({ config: configPromise })
+    await connectToDatabase()
 
-    // Trigger forgot password flow
-    const token = await payload.forgotPassword({
-      collection: 'users',
-      data: {
-        email,
-      },
-      overrideAccess: true,
-    })
+    const emailLower = email.toLowerCase()
+    let account: any = null
+    
+    // 1. Check Student first
+    account = await Student.findOne({ email: emailLower })
+    
+    // 2. Check User if not found in Student
+    if (!account) {
+      account = await User.findOne({ email: emailLower })
+    }
 
-    // Return success response
+    if (!account) {
+      return NextResponse.json(
+        { success: false, error: 'This email address is not registered in our database.' },
+        { status: 404 }
+      )
+    }
+
+    // 3. Generate token and set expiration (1 hour)
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiration = new Date(Date.now() + 3600000) // 1 hour
+
+    account.resetPasswordToken = token
+    account.resetPasswordExpiration = expiration
+    await account.save()
+
+    // 4. Send the actual email using Resend API via fetch
+    const host = request.headers.get('host') || 'localhost:3000'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const resetUrl = `${protocol}://${host}/reset-password?token=${token}`
+
+    if (process.env.RESEND_API_KEY && process.env.RESEND_FROM_EMAIL) {
+      try {
+        const mailRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          },
+          body: JSON.stringify({
+            from: `Tutor Space <${process.env.RESEND_FROM_EMAIL}>`,
+            to: emailLower,
+            subject: 'Reset Password Request - Tutor Space',
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <style>
+                  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #070b19; color: #f3f4f6; margin: 0; padding: 40px 20px; }
+                  .container { max-width: 560px; margin: 0 auto; background-color: #121829; border: 1px solid #1f293d; padding: 40px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+                  .logo { display: inline-block; background-color: #615fff; color: #ffffff; font-weight: bold; width: 36px; height: 36px; line-height: 36px; text-align: center; border-radius: 8px; font-size: 18px; margin-bottom: 20px; }
+                  .title { font-size: 24px; font-weight: bold; color: #ffffff; margin-bottom: 16px; }
+                  .text { font-size: 16px; line-height: 1.6; color: #9ca3af; margin-bottom: 24px; }
+                  .btn-container { text-align: center; margin: 32px 0; }
+                  .btn { display: inline-block; background-color: #615fff; color: #ffffff !important; padding: 14px 28px; border-radius: 8px; font-weight: bold; text-decoration: none; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(97,95,255,0.2); }
+                  .footer { font-size: 13px; color: #6b7280; border-top: 1px solid #1f293d; padding-top: 20px; margin-top: 32px; }
+                  .link { color: #615fff; text-decoration: none; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="logo">T</div>
+                  <h2 class="title">Password Recovery</h2>
+                  <p class="text">Hello,</p>
+                  <p class="text">We received a request to reset the password for your Tutor Space account. Click the button below to set a new password and recover your access:</p>
+                  <div class="btn-container">
+                    <a href="${resetUrl}" class="btn" style="color: #ffffff !important;">Reset Password</a>
+                  </div>
+                  <p class="text">Or copy and paste this link in your browser's address bar:</p>
+                  <p class="text" style="word-break: break-all;"><a href="${resetUrl}" class="link">${resetUrl}</a></p>
+                  <div class="footer">
+                    <p>If you did not make this request, you can safely ignore this email. The link will automatically expire in 1 hour.</p>
+                    <p>&copy; 2026 Tutor Space Inc. All rights reserved.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `,
+          }),
+        })
+
+        if (!mailRes.ok) {
+          const mailError = await mailRes.json()
+          console.error('Resend API Mail Error:', mailError)
+        }
+      } catch (mailError) {
+        console.error('Failed to send email via Resend API:', mailError)
+      }
+    } else {
+      console.warn('Resend API credentials missing. Skipping real email dispatch.')
+    }
+
+    // 5. Return success response
     // In development mode, we also return the token to make it easy to test without email setup
     const isDev = process.env.NODE_ENV !== 'production'
     
     return NextResponse.json({
       success: true,
       message: 'If the email exists, a password reset link has been generated.',
-      ...(isDev && token ? { debugToken: token } : {}),
+      ...(isDev ? { debugToken: token } : {}),
     })
 
   } catch (error: any) {
@@ -46,3 +132,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

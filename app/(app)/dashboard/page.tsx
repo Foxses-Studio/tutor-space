@@ -219,9 +219,12 @@ export default function StudentDashboard() {
                       {/* Thumbnail */}
                       <div className="h-44 w-full bg-zinc-100 overflow-hidden relative">
                         <img 
-                          src={thumbnailSrc} 
+                          src={thumbnailSrc === '/placeholder_course.jpg' ? 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop' : thumbnailSrc} 
                           alt={course.title} 
                           className="h-full w-full object-cover" 
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'
+                          }}
                         />
                         <span className="absolute top-3 left-3 bg-[#615fff] text-white px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">
                           {course.category && typeof course.category === 'object' ? course.category.name : 'LMS'}

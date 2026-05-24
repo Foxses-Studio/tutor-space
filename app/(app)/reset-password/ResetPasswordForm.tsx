@@ -3,7 +3,6 @@
 import React, { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { FiLock, FiEye, FiEyeOff, FiArrowLeft, FiArrowRight } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -16,9 +15,11 @@ function ResetPasswordFormContent() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
 
     if (!token) {
       Swal.fire({
@@ -26,27 +27,23 @@ function ResetPasswordFormContent() {
         title: 'Invalid Reset Link',
         text: 'The password reset token is missing. Please request a new link.',
         confirmButtonColor: '#615fff',
+        background: '#1a1a1a',
+        color: '#ffffff',
+        customClass: {
+          popup: 'rounded-lg',
+          confirmButton: 'rounded-lg text-base font-bold px-6 py-2.5 bg-[#615fff]',
+        },
       })
       return
     }
 
     if (!password || !confirmPassword) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Missing Fields',
-        text: 'Please enter both password fields.',
-        confirmButtonColor: '#615fff',
-      })
+      setError('Please fill in both password fields.')
       return
     }
 
     if (password !== confirmPassword) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Mismatch',
-        text: 'Passwords do not match. Please enter identical passwords.',
-        confirmButtonColor: '#615fff',
-      })
+      setError('Passwords do not match. Please enter identical passwords.')
       return
     }
 
@@ -62,70 +59,76 @@ function ResetPasswordFormContent() {
       const data = await res.json()
 
       if (res.ok) {
-        Swal.fire({
+        await Swal.fire({
           icon: 'success',
           title: 'Password Updated!',
           text: 'Your password has been successfully reset. Redirecting to login...',
           timer: 2000,
           showConfirmButton: false,
+          background: '#1a1a1a',
+          color: '#ffffff',
+          customClass: {
+            popup: 'rounded-lg',
+          },
         })
         
-        setTimeout(() => {
-          router.push('/login')
-        }, 2000)
+        // Push user to general login page
+        router.push('/login')
       } else {
         throw new Error(data.message || 'Failed to reset password. Link might be expired.')
       }
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Reset Failed',
-        text: err.message || 'Something went wrong.',
-        confirmButtonColor: '#615fff',
-      })
+      setError(err.message || 'Something went wrong.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="w-full max-w-md bg-white border border-zinc-150 rounded-2xl shadow-xl shadow-zinc-200/50 p-8 sm:p-10 relative z-10"
-    >
-      
-      {/* Branding header */}
-      <div className="flex flex-col items-center mb-8">
-        <Link href="/" className="flex items-center gap-2 mb-4 group">
-          <span className="h-10 w-10 rounded-xl bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-lg">
+    <div className="w-full space-y-8 font-sans">
+      {/* Mobile Top Header (Displays only on small screens) */}
+      <div className="flex items-center justify-between md:hidden mb-6">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="h-8 w-8 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white text-sm">
             T
           </span>
-          <span className="text-2xl font-bold font-display tracking-tight text-zinc-900">
+          <span className="text-lg font-bold text-zinc-900">
             Tutor Space
           </span>
         </Link>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight font-display text-center">
+        <span className="px-2.5 py-0.5 text-base font-bold text-[#615fff] bg-[#615fff]/10 rounded-lg border border-[#615fff]/20 uppercase">
+          Reset
+        </span>
+      </div>
+
+      {/* Form Header */}
+      <div className="space-y-2">
+        <p className="text-[#615fff] text-base font-bold uppercase tracking-wider">
+          Security Update
+        </p>
+        <h2 className="text-3xl font-bold tracking-tight text-zinc-900 font-display">
           New Password
         </h2>
-        <p className="text-zinc-500 font-medium text-base mt-2 text-center">
-          Set your new password to regain access
+        <p className="text-zinc-550 font-semibold text-base leading-relaxed">
+          Set your new password to secure and regain access to your dashboard.
         </p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
-        
-        {/* New Password input - 16px min size & 8px+ border radius */}
-        <div className="space-y-1.5">
+        {error && (
+          <div className="p-3.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 font-semibold text-base">
+            {error}
+          </div>
+        )}
+
+        {/* New Password input */}
+        <div className="flex flex-col gap-1.5">
           <label htmlFor="password" className="text-base font-bold text-zinc-700">
             New Password
           </label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-              <FiLock className="h-5 w-5" />
-            </span>
+            <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
@@ -133,27 +136,25 @@ function ResetPasswordFormContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-11 pr-11 py-3 rounded-xl border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+              className="w-full pl-11 pr-11 py-3.5 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-4 focus:ring-[#615fff]/10 outline-none text-base font-semibold text-zinc-900 bg-white transition-all placeholder-zinc-400"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer flex items-center justify-center"
             >
               {showPassword ? <FiEyeOff className="h-5 w-5" /> : <FiEye className="h-5 w-5" />}
             </button>
           </div>
         </div>
 
-        {/* Confirm Password input - 16px min size & 8px+ border radius */}
-        <div className="space-y-1.5">
+        {/* Confirm Password input */}
+        <div className="flex flex-col gap-1.5">
           <label htmlFor="confirmPassword" className="text-base font-bold text-zinc-700">
             Confirm Password
           </label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-zinc-400">
-              <FiLock className="h-5 w-5" />
-            </span>
+            <FiLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
             <input
               id="confirmPassword"
               type={showPassword ? 'text' : 'password'}
@@ -161,60 +162,100 @@ function ResetPasswordFormContent() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-11 pr-11 py-3 rounded-xl border border-zinc-200 focus:border-[#615fff] focus:ring-3 focus:ring-[#615fff]/10 outline-none text-base transition-all font-medium text-zinc-800 placeholder-zinc-400 bg-white"
+              className="w-full pl-11 pr-11 py-3.5 rounded-lg border border-zinc-200 focus:border-[#615fff] focus:ring-4 focus:ring-[#615fff]/10 outline-none text-base font-semibold text-zinc-900 bg-white transition-all placeholder-zinc-400"
             />
           </div>
         </div>
 
         {/* Submit Button */}
-        <motion.button
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+        <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 py-3.5 mt-2 rounded-xl bg-[#615fff] hover:bg-[#615fff]/95 text-white font-extrabold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 transition-all duration-200 cursor-pointer disabled:opacity-50"
         >
           {loading ? (
             <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
-              Update Password
+              <span>Update Password</span>
               <FiArrowRight className="h-5 w-5" />
             </>
           )}
-        </motion.button>
+        </button>
       </form>
 
       {/* Footer info link */}
-      <div className="mt-8 text-center text-base font-semibold text-zinc-500 border-t border-zinc-100 pt-6">
+      <div className="pt-6 border-t border-zinc-100 flex items-center justify-center">
         <Link 
           href="/login" 
-          className="inline-flex items-center gap-2 text-[#615fff] hover:text-[#543cdf] font-extrabold transition-colors"
+          className="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-800 text-base font-bold transition-colors"
         >
           <FiArrowLeft className="h-4.5 w-4.5" />
-          Cancel & Back
+          <span>Cancel & Back</span>
         </Link>
       </div>
-
-    </motion.div>
+    </div>
   )
 }
 
 export default function ResetPasswordForm() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_#615fff/5,_transparent_50%),_radial-gradient(circle_at_bottom_left,_#543cdf/5,_transparent_50%)] bg-[#fafafa] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col md:flex-row bg-white overflow-hidden font-sans">
       
-      {/* Decorative Blur Blobs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none" />
+      {/* ─── LEFT PANE: BRAND EXPERIENCE & MARKETING COVER (MD+ only) ─── */}
+      <aside className="hidden md:flex md:w-1/2 flex-col justify-between bg-[#070b19] p-12 text-white relative select-none">
+        
+        {/* Subtle Glowing Blur Blob */}
+        <div className="absolute top-1/4 left-10 w-80 h-80 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
 
-      <Suspense fallback={
-        <div className="w-full max-w-md bg-white border border-zinc-150 rounded-2xl shadow-xl p-8 flex items-center justify-center">
-          <div className="h-8 w-8 border-3 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+        {/* Top Brand Logo */}
+        <div className="relative z-10">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+              T
+            </span>
+            <span className="text-xl font-bold font-display tracking-tight text-white">
+              Tutor Space
+            </span>
+          </Link>
         </div>
-      }>
-        <ResetPasswordFormContent />
-      </Suspense>
+
+        {/* Middle Hero Slogan */}
+        <div className="relative z-10 my-auto py-12 space-y-6">
+          <span className="px-3.5 py-1 text-base font-bold text-[#615fff] bg-[#615fff]/10 rounded-lg border border-[#615fff]/20 uppercase tracking-wider w-fit block">
+            Reset Password
+          </span>
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight font-display">
+            Manage your <br />
+            <span className="text-[#615fff]">Learning Journey</span>
+          </h1>
+          <p className="text-zinc-400 font-semibold text-lg leading-relaxed max-w-md">
+            Experience the next generation of online learning. Secure, intuitive, and designed specifically for modern students.
+          </p>
+        </div>
+
+        {/* Bottom Footer Info */}
+        <div className="relative z-10 flex items-center justify-between border-t border-zinc-800/40 pt-6">
+          <p className="text-zinc-500 font-bold text-base">
+            &copy; 2026 Tutor Space Inc. All rights reserved.
+          </p>
+        </div>
+
+      </aside>
+
+      {/* ─── RIGHT PANE: INTERACTIVE NEW PASSWORD FORM ─── */}
+      <main className="flex-1 w-full md:w-1/2 flex items-center justify-center bg-white p-8 sm:p-12 md:p-16 relative">
+        <div className="w-full max-w-md">
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="h-10 w-10 border-4 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+              <p className="text-base font-bold text-zinc-400">Loading Recovery Wizard...</p>
+            </div>
+          }>
+            <ResetPasswordFormContent />
+          </Suspense>
+        </div>
+      </main>
 
     </div>
   )

@@ -1,14 +1,144 @@
 import React from 'react'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Course } from '@/lib/db/models/Course'
+import { Category } from '@/lib/db/models/Category'
+import { Review } from '@/lib/db/models/Review'
+import { Enrollment } from '@/lib/db/models/Enrollment'
+import { FAQ } from '@/lib/db/models/FAQ'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
 import Categories from '@/components/Categories'
+import type { CategoryItem } from '@/components/Categories'
 import Courses from '@/components/Courses'
+import Reviews from '@/components/Reviews'
+import FAQComponent from '@/components/FAQ'
+import CTASection from '@/components/CTASection'
+import type { CourseDoc, CategoryDoc } from '@/components/Courses'
+import type { ReviewDoc } from '@/components/Reviews'
+import type { FAQDoc } from '@/components/FAQ'
 
-export default function Home() {
+export default async function Home() {
+  await connectToDatabase()
+
+  const [coursesDocs, categoriesDocs, reviewsDocs, faqsDocs] = await Promise.all([
+    Course.find({ status: 'published' })
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .populate('category')
+      .populate('thumbnail')
+      .populate('instructor')
+      .lean(),
+    Category.find()
+      .limit(50)
+      .lean(),
+    Review.find({ status: 'approved' })
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .populate({
+        path: 'student',
+        populate: { path: 'profilePic' }
+      })
+      .populate('course')
+      .lean(),
+    FAQ.find({ isActive: true })
+      .sort({ order: 1 })
+      .limit(20)
+      .lean(),
+  ])
+
+  const courseIds = coursesDocs.map((c: any) => c._id)
+
+  const [enrollmentAgg, reviewAgg] = await Promise.all([
+    Enrollment.aggregate([
+      { $match: { course: { $in: courseIds }, paymentStatus: 'completed' } },
+      { $group: { _id: '$course', count: { $sum: 1 } } },
+    ]),
+    Review.aggregate([
+      { $match: { course: { $in: courseIds }, status: 'approved' } },
+      { $group: { _id: '$course', avgRating: { $avg: { $toDouble: '$rating' } }, count: { $sum: 1 } } },
+    ]),
+  ])
+
+  const enrollmentMap: Record<string, number> = {}
+  for (const e of enrollmentAgg) enrollmentMap[e._id.toString()] = e.count
+
+  const ratingMap: Record<string, { avg: number; count: number }> = {}
+  for (const r of reviewAgg) ratingMap[r._id.toString()] = { avg: r.avgRating, count: r.count }
+
+  // Clean serialization for client components to prevent ObjectID or Date serialization errors
+  const courses: CourseDoc[] = coursesDocs.map((doc: any) => {
+    const cid = doc._id.toString()
+    return {
+      id: cid,
+      title: doc.title,
+      slug: doc.slug,
+      summary: doc.summary,
+      price: Number(doc.price || 0),
+      thumbnail: doc.thumbnail ? {
+        id: doc.thumbnail._id.toString(),
+        url: doc.thumbnail.url || null,
+        alt: doc.thumbnail.alt || null,
+        sizes: doc.thumbnail.sizes || null,
+      } : null,
+      category: doc.category ? {
+        id: doc.category._id.toString(),
+        name: doc.category.name,
+        slug: doc.category.slug,
+      } : null,
+      instructor: doc.instructor && typeof doc.instructor === 'object' ? {
+        id: doc.instructor._id.toString(),
+        name: doc.instructor.name || doc.instructor.email || 'Instructor',
+      } : null,
+      duration: doc.duration || null,
+      level: doc.level || 'all',
+      status: doc.status || 'draft',
+      enrollmentCount: enrollmentMap[cid] || 0,
+      avgRating: ratingMap[cid] ? Math.round(ratingMap[cid].avg * 10) / 10 : 0,
+      reviewCount: ratingMap[cid]?.count || 0,
+    }
+  })
+
+  // CategoryItem and CategoryDoc are the same shape (id, name, slug) - satisfies both components
+  const categories = categoriesDocs.map((doc: any) => ({
+    id: doc._id.toString(),
+    name: doc.name,
+    slug: doc.slug,
+  }))
+
+
+  const reviews: ReviewDoc[] = reviewsDocs.map((doc: any) => {
+    const studentPic = doc.student?.profilePic;
+    return {
+      id: doc._id.toString(),
+      rating: doc.rating as '1' | '2' | '3' | '4' | '5',
+      comment: doc.comment,
+      status: doc.status as 'pending' | 'approved' | 'rejected',
+      course: doc.course ? {
+        id: doc.course._id.toString(),
+        title: doc.course.title,
+      } : null,
+      student: doc.student ? {
+        id: doc.student._id.toString(),
+        name: doc.student.name,
+        profilePic: studentPic ? {
+          url: studentPic.url || null,
+        } : null,
+      } : null,
+    };
+  })
+
+  const faqs: FAQDoc[] = faqsDocs.map((doc: any) => ({
+    id: doc._id.toString(),
+    question: doc.question,
+    answer: doc.answer,
+    order: doc.order,
+    isActive: doc.isActive,
+  }))
+
   return (
     <div className="min-h-screen bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden flex flex-col">
-      
+
       {/* Scroll-Adaptive Navbar */}
       <Navbar />
 
@@ -17,11 +147,23 @@ export default function Home() {
         <Marquee />
       </Hero>
 
-      {/* 2nd Section: Course Categories Grid */}
-      <Categories />
+      {/* 2nd Section: Course Categories Grid - real DB data */}
+      <Categories categories={categories} />
 
       {/* 3rd Section: Course Showcase & Filter */}
-      <Courses />
+      <Courses
+        initialCourses={courses}
+        categories={categories}
+      />
+
+      {/* 4th Section: Student Testimonials Carousel */}
+      <Reviews reviews={reviews} />
+
+      {/* 5th Section: FAQ Accordion */}
+      <FAQComponent faqs={faqs} />
+
+      {/* 6th Section: CTA with floating learner avatars */}
+      <CTASection />
 
     </div>
   )

@@ -1,6 +1,6 @@
 import React from 'react'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Category } from '@/lib/db/models/Category'
 import MarqueeClient from './MarqueeClient'
 
 export default async function Marquee() {
@@ -14,14 +14,11 @@ export default async function Marquee() {
   ]
 
   try {
-    const payload = await getPayload({ config: configPromise })
-    const categoriesData = await payload.find({
-      collection: 'categories',
-      limit: 15,
-    })
+    await connectToDatabase()
+    const categoriesDocs = await Category.find().limit(15).lean()
 
-    if (categoriesData.docs && categoriesData.docs.length > 0) {
-      items = categoriesData.docs.map((cat: any) => cat.name).filter(Boolean)
+    if (categoriesDocs && categoriesDocs.length > 0) {
+      items = categoriesDocs.map((cat: any) => cat.name).filter(Boolean)
     }
   } catch (error) {
     console.error('Error fetching categories for marquee:', error)
@@ -40,3 +37,4 @@ export default async function Marquee() {
 
   return <MarqueeClient items={items} />
 }
+

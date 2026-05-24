@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Student } from '@/lib/db/models/Student'
+import { User } from '@/lib/db/models/User'
+import { Media } from '@/lib/db/models/Media'
+import { hashPassword, signToken } from '@/lib/auth/auth'
 
 export async function POST(request: Request) {
   try {
@@ -21,51 +24,87 @@ export async function POST(request: Request) {
       )
     }
 
-    const payload = await getPayload({ config: configPromise })
+    await connectToDatabase()
 
-    // Reset password programmatically
-    const result = await payload.resetPassword({
-      collection: 'users',
-      data: {
-        token,
-        password,
-      },
-      overrideAccess: true,
-    })
+    let account: any = null
+    let targetCollection: 'students' | 'users' = 'students'
+    let role = 'student'
 
-    if (!result.token || !result.user) {
+    // 1. Search for matching token in Student first
+    account = await Student.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiration: { $gt: new Date() },
+    }).populate('profilePic')
+
+    if (account) {
+      targetCollection = 'students'
+      role = 'student'
+    } else {
+      // 2. Try User collection
+      account = await User.findOne({
+        resetPasswordToken: token,
+        resetPasswordExpiration: { $gt: new Date() },
+      }).populate('profilePic')
+      
+      if (account) {
+        targetCollection = 'users'
+        role = account.role || 'staff'
+      }
+    }
+
+    if (!account) {
       return NextResponse.json(
         { success: false, error: 'Failed to reset password. The token may be invalid or expired.' },
         { status: 400 }
       )
     }
 
-    // Automatically log the user in after password reset
+    // 3. Reset the password and clear fields
+    account.password = await hashPassword(password)
+    account.resetPasswordToken = undefined
+    account.resetPasswordExpiration = undefined
+    await account.save()
+
+    // 4. Generate token
+    const jwtToken = signToken({
+      id: account._id.toString(),
+      email: account.email,
+      role: role,
+    })
+
+    // 5. Resolve profile picture URL
+    let profilePicUrl = null
+    if (account.profilePic) {
+      if (typeof account.profilePic === 'object') {
+        profilePicUrl = account.profilePic.url || null
+      }
+    }
+
     const safeUser = {
-      id: result.user.id,
-      name: result.user.name,
-      email: result.user.email,
-      phone: result.user.phone,
-      profilePic: result.user.profilePic,
-      role: result.user.role,
+      id: account._id.toString(),
+      name: account.name,
+      email: account.email,
+      phone: account.phone,
+      profilePic: profilePicUrl,
+      role: role,
     }
 
     const response = NextResponse.json({
       success: true,
       message: 'Password reset successfully and logged in.',
       user: safeUser,
-      token: result.token,
+      token: jwtToken,
     })
 
-    // Set standard Payload JWT cookie
+    // 6. Set standard JWT cookie
     const cookieOptions = {
-      name: 'payload-token',
-      value: result.token,
+      name: targetCollection === 'students' ? 'student-token' : 'payload-token',
+      value: jwtToken,
       httpOnly: true,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      maxAge: 7200,
+      maxAge: 7200, // 2 hours
     }
 
     response.cookies.set(cookieOptions)
@@ -83,3 +122,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

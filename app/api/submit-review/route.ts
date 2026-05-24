@@ -1,0 +1,45 @@
+import { NextResponse } from 'next/server'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Review } from '@/lib/db/models/Review'
+import { verifyToken } from '@/lib/auth/auth'
+import { cookies } from 'next/headers'
+
+export async function POST(request: Request) {
+  try {
+    await connectToDatabase()
+    const cookieStore = await cookies()
+
+    const studentToken = cookieStore.get('student-token')?.value
+    const payloadToken = cookieStore.get('payload-token')?.value
+
+    const token = studentToken || payloadToken
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(token)
+    if (!decoded || !decoded.id) {
+      return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { course, rating, comment } = body
+
+    if (!course || !rating || !comment?.trim()) {
+      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
+    }
+
+    const review = await Review.create({
+      course,
+      student: decoded.id,
+      rating: String(rating) as '1' | '2' | '3' | '4' | '5',
+      comment: comment.trim(),
+      status: 'pending',
+    })
+
+    return NextResponse.json({ doc: review }, { status: 201 })
+  } catch (err: any) {
+    console.error('Submit review error:', err)
+    return NextResponse.json({ error: err.message ?? 'Failed to submit review.' }, { status: 500 })
+  }
+}

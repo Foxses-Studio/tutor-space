@@ -1,65 +1,62 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
-import { headers, cookies } from 'next/headers'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Student } from '@/lib/db/models/Student'
+import { User } from '@/lib/db/models/User'
+import { Media } from '@/lib/db/models/Media'
+import { verifyToken } from '@/lib/auth/auth'
+import { cookies } from 'next/headers'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const payload = await getPayload({ config: configPromise })
-    const reqHeaders = await headers()
-    const cookieStore = await cookies()
+    await connectToDatabase()
     
+    const cookieStore = await cookies()
     const studentToken = cookieStore.get('student-token')?.value
     const payloadToken = cookieStore.get('payload-token')?.value
 
-    const cleanHeaders = new Headers(reqHeaders)
-    if (studentToken) {
-      // Map student-token to payload-token so payload.auth parses it seamlessly
-      cleanHeaders.set('cookie', `payload-token=${studentToken}`)
-    } else if (payloadToken) {
-      cleanHeaders.set('cookie', `payload-token=${payloadToken}`)
-    }
-    
-    // Read user auth session using Payload auth helper
-    const authResult = await payload.auth({
-      headers: cleanHeaders,
-    })
+    let verifiedDoc: any = null
+    let role = 'student'
 
-    if (!authResult.user) {
+    // 1. Try student token first
+    if (studentToken) {
+      const decoded = verifyToken(studentToken)
+      if (decoded && decoded.id) {
+        verifiedDoc = await Student.findById(decoded.id).populate('profilePic')
+        role = 'student'
+      }
+    }
+
+    // 2. Try staff/admin token if student not resolved
+    if (!verifiedDoc && payloadToken) {
+      const decoded = verifyToken(payloadToken)
+      if (decoded && decoded.id) {
+        verifiedDoc = await User.findById(decoded.id).populate('profilePic')
+        role = verifiedDoc?.role || 'staff'
+      }
+    }
+
+    if (!verifiedDoc) {
       return NextResponse.json(
         { success: false, authenticated: false, error: 'Not authenticated.' },
         { status: 401 }
       )
     }
 
+    // 3. Resolve profile picture URL
     let profilePicUrl = null
-    if (authResult.user.profilePic) {
-      if (typeof authResult.user.profilePic === 'object' && (authResult.user.profilePic as any).url) {
-        profilePicUrl = (authResult.user.profilePic as any).url
-      } else if (typeof authResult.user.profilePic === 'string') {
-        if (authResult.user.profilePic.startsWith('/') || authResult.user.profilePic.startsWith('http')) {
-          profilePicUrl = authResult.user.profilePic
-        } else {
-          try {
-            const mediaDoc = await payload.findByID({
-              collection: 'media',
-              id: authResult.user.profilePic,
-            })
-            profilePicUrl = mediaDoc?.url || null
-          } catch (e) {
-            console.error('Error resolving profile pic in auth check:', e)
-          }
-        }
+    if (verifiedDoc.profilePic) {
+      if (typeof verifiedDoc.profilePic === 'object') {
+        profilePicUrl = verifiedDoc.profilePic.url || null
       }
     }
 
     const safeUser = {
-      id: authResult.user.id,
-      name: authResult.user.name,
-      email: authResult.user.email,
-      phone: authResult.user.phone,
+      id: verifiedDoc._id.toString(),
+      name: verifiedDoc.name,
+      email: verifiedDoc.email,
+      phone: verifiedDoc.phone,
       profilePic: profilePicUrl,
-      role: authResult.user.role || 'student',
+      role: role,
     }
 
     return NextResponse.json({

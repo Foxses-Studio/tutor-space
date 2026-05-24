@@ -3,18 +3,19 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { 
-  FiUser, 
-  FiLogOut, 
-  FiLayout, 
-  FiBookOpen, 
-  FiAward, 
-  FiMenu, 
-  FiX, 
-  FiBell, 
-  FiSearch, 
+import {
+  FiUser,
+  FiLogOut,
+  FiLayout,
+  FiBookOpen,
+  FiAward,
+  FiMenu,
+  FiX,
+  FiBell,
+  FiSearch,
   FiHome,
-  FiBook
+  FiBook,
+  FiStar,
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -109,6 +110,7 @@ export default function DashboardLayout({
     { label: 'Overview', href: '/dashboard', icon: FiLayout },
     { label: 'My Courses', href: '/dashboard#courses', icon: FiBookOpen },
     { label: 'Study Hub', href: '/dashboard#study-hub', icon: FiBook },
+    { label: 'My Reviews', href: '/dashboard/reviews', icon: FiStar },
     { label: 'Profile Settings', href: '/dashboard/profile', icon: FiUser },
   ]
 

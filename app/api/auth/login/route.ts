@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Student } from '@/lib/db/models/Student'
+import { User } from '@/lib/db/models/User'
+import { Media } from '@/lib/db/models/Media'
+import { comparePasswords, signToken } from '@/lib/auth/auth'
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { email, password } = body
 
-    // 1. Basic validation
     if (!email || !password) {
       return NextResponse.json(
         { success: false, error: 'Email and password are required.' },
@@ -15,87 +17,83 @@ export async function POST(request: Request) {
       )
     }
 
-    const payload = await getPayload({ config: configPromise })
+    await connectToDatabase()
 
-    // 2. Determine which auth collection to authenticate against (users or students)
-    let collectionSlug: 'users' | 'students' = 'users'
-    const studentQuery = await payload.find({
-      collection: 'students',
-      where: {
-        email: {
-          equals: email.toLowerCase(),
-        },
-      },
-      limit: 1,
-    })
+    let verifiedDoc: any = null
+    let collectionSlug: 'students' | 'users' = 'users'
+    let role = 'student'
 
-    if (studentQuery.docs && studentQuery.docs.length > 0) {
-      collectionSlug = 'students'
+    // 1. Try to find student first
+    const student = await Student.findOne({ email: email.toLowerCase() }).populate('profilePic')
+    if (student) {
+      const isMatch = await comparePasswords(password, student.password || '')
+      if (isMatch) {
+        verifiedDoc = student
+        collectionSlug = 'students'
+        role = 'student'
+      }
     }
 
-    // 3. Perform authentication using Payload login
-    const result = await payload.login({
-      collection: collectionSlug,
-      data: {
-        email,
-        password,
-      },
-    })
+    // 2. If not found or password mismatch, try staff/admin
+    if (!verifiedDoc) {
+      const user = await User.findOne({ email: email.toLowerCase() }).populate('profilePic')
+      if (user) {
+        const isMatch = await comparePasswords(password, user.password || '')
+        if (isMatch) {
+          verifiedDoc = user
+          collectionSlug = 'users'
+          role = user.role || 'staff'
+        }
+      }
+    }
 
-    if (!result.token || !result.user) {
+    if (!verifiedDoc) {
       return NextResponse.json(
         { success: false, error: 'Authentication failed. Invalid email or password.' },
         { status: 401 }
       )
     }
 
-    // 4. Prepare response and set cookie
+    // 3. Generate token
+    const token = signToken({
+      id: verifiedDoc._id.toString(),
+      email: verifiedDoc.email,
+      role: role,
+    })
+
+    // 4. Resolve profile picture URL
     let profilePicUrl = null
-    if (result.user.profilePic) {
-      if (typeof result.user.profilePic === 'object' && (result.user.profilePic as any).url) {
-        profilePicUrl = (result.user.profilePic as any).url
-      } else if (typeof result.user.profilePic === 'string') {
-        if (result.user.profilePic.startsWith('/') || result.user.profilePic.startsWith('http')) {
-          profilePicUrl = result.user.profilePic
-        } else {
-          try {
-            const mediaDoc = await payload.findByID({
-              collection: 'media',
-              id: result.user.profilePic,
-            })
-            profilePicUrl = mediaDoc?.url || null
-          } catch (e) {
-            console.error('Error resolving profile pic in login:', e)
-          }
-        }
+    if (verifiedDoc.profilePic) {
+      if (typeof verifiedDoc.profilePic === 'object') {
+        profilePicUrl = verifiedDoc.profilePic.url || null
       }
     }
 
     const safeUser = {
-      id: result.user.id,
-      name: result.user.name,
-      email: result.user.email,
-      phone: result.user.phone,
+      id: verifiedDoc._id.toString(),
+      name: verifiedDoc.name,
+      email: verifiedDoc.email,
+      phone: verifiedDoc.phone,
       profilePic: profilePicUrl,
-      role: result.user.role || 'student',
+      role: role,
     }
 
     const response = NextResponse.json({
       success: true,
       message: 'Logged in successfully.',
       user: safeUser,
-      token: result.token,
+      token: token,
     })
 
-    // Set standard Payload JWT cookie dynamically
+    // Set standard JWT cookie
     const cookieOptions = {
       name: collectionSlug === 'students' ? 'student-token' : 'payload-token',
-      value: result.token,
+      value: token,
       httpOnly: true,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax' as const,
-      maxAge: result.exp ? result.exp - Math.floor(Date.now() / 1000) : 7200,
+      maxAge: 7200, // 2 hours
     }
 
     response.cookies.set(cookieOptions)

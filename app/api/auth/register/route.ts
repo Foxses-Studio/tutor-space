@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
-import { headers } from 'next/headers'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Student } from '@/lib/db/models/Student'
+import { User } from '@/lib/db/models/User'
+import { Media } from '@/lib/db/models/Media'
+import { hashPassword, verifyToken } from '@/lib/auth/auth'
+import { cookies } from 'next/headers'
+import fs from 'fs/promises'
+import path from 'path'
 
 export async function POST(request: Request) {
   try {
@@ -23,121 +28,127 @@ export async function POST(request: Request) {
       )
     }
 
-    const payload = await getPayload({ config: configPromise })
+    await connectToDatabase()
 
-    // 2. Role Security Verification
+    // 2. Check for duplicate emails across both collections
+    const emailLower = email.toLowerCase()
+    const existingStudent = await Student.findOne({ email: emailLower })
+    const existingUser = await User.findOne({ email: emailLower })
+
+    if (existingStudent || existingUser) {
+      return NextResponse.json(
+        { success: false, error: 'Email is already registered.' },
+        { status: 400 }
+      )
+    }
+
+    // 3. Role Security Verification
     let targetRole = role || 'student'
     const sensitiveRoles = ['admin', 'staff', 'instructor']
 
     if (sensitiveRoles.includes(targetRole)) {
-      // Check X-Admin-Secret header
-      const adminSecretHeader = request.headers.get('x-admin-secret')
-      const isSecretValid = adminSecretHeader && adminSecretHeader === process.env.ADMIN_REGISTRATION_SECRET
+      const adminCount = await User.countDocuments({ role: 'admin' })
 
-      if (!isSecretValid) {
-        // Fallback: check if currently logged-in user is an Admin
-        const reqHeaders = await headers()
-        const authResult = await payload.auth({ headers: reqHeaders })
-        const isCurrentAdmin = authResult.user && authResult.user.role === 'admin'
+      // If no admin exists in the system yet, allow creating the first admin
+      if (adminCount > 0) {
+        const adminSecretHeader = request.headers.get('x-admin-secret')
+        const isSecretValid = adminSecretHeader && adminSecretHeader === process.env.ADMIN_REGISTRATION_SECRET
 
-        if (!isCurrentAdmin) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Forbidden: You do not have permissions to register users with sensitive roles. Provide a valid x-admin-secret header or authenticate as Admin.',
-            },
-            { status: 403 }
-          )
-        }
-      }
-    }
+        if (!isSecretValid) {
+          // Fallback: check if currently logged-in user is an Admin
+          const cookieStore = await cookies()
+          const token = cookieStore.get('payload-token')?.value
+          const decoded = token ? verifyToken(token) : null
+          const isCurrentAdmin = decoded && decoded.role === 'admin'
 
-    // 3. Process base64 profile picture upload if provided
-    let profilePicId: string | number | undefined = undefined
-    if (profilePic && typeof profilePic === 'object' && profilePic.base64) {
-      try {
-        const base64Data = profilePic.base64.split(';base64,').pop() || profilePic.base64
-        const buffer = Buffer.from(base64Data, 'base64')
-        const fileName = profilePic.name || `${email.replace(/[@.]/g, '_')}_profile.jpg`
-        const mimeType = profilePic.mimeType || 'image/jpeg'
-
-        const mediaDoc = await payload.create({
-          collection: 'media',
-          data: {
-            alt: `${name} Profile Picture`,
-          },
-          file: {
-            data: buffer,
-            name: fileName,
-            mimetype: mimeType,
-            size: buffer.length,
-          },
-        })
-        profilePicId = mediaDoc.id
-      } catch (uploadError) {
-        console.error('Failed to upload profile picture:', uploadError)
-      }
-    }
-
-    // 4. Register using Payload Local API under the correct collection
-    let user: any
-    if (targetRole === 'student') {
-      user = await payload.create({
-        collection: 'students',
-        data: {
-          name,
-          email,
-          password,
-          phone: phone || undefined,
-          profilePic: profilePicId || undefined,
-          status: 'active',
-        },
-      })
-    } else {
-      user = await payload.create({
-        collection: 'users',
-        data: {
-          name,
-          email,
-          password,
-          phone: phone || undefined,
-          profilePic: profilePicId || undefined,
-          role: targetRole,
-        },
-      })
-    }
-
-    // Return registered details safely (excluding password field)
-    let profilePicUrl = null
-    if (user.profilePic) {
-      if (typeof user.profilePic === 'object' && (user.profilePic as any).url) {
-        profilePicUrl = (user.profilePic as any).url
-      } else if (typeof user.profilePic === 'string') {
-        if (user.profilePic.startsWith('/') || user.profilePic.startsWith('http')) {
-          profilePicUrl = user.profilePic
-        } else {
-          try {
-            const mediaDoc = await payload.findByID({
-              collection: 'media',
-              id: user.profilePic,
-            })
-            profilePicUrl = mediaDoc?.url || null
-          } catch (e) {
-            console.error('Error resolving profile pic in register:', e)
+          if (!isCurrentAdmin) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Forbidden: You do not have permissions to register users with sensitive roles. Provide a valid x-admin-secret header or authenticate as Admin.',
+              },
+              { status: 403 }
+            )
           }
         }
       }
     }
 
+
+    // 4. Process base64 profile picture upload if provided
+    let profilePicId: string | undefined = undefined
+    if (profilePic && typeof profilePic === 'object' && profilePic.base64) {
+      try {
+        const base64Data = profilePic.base64.split(';base64,').pop() || profilePic.base64
+        const buffer = Buffer.from(base64Data, 'base64')
+        const rawFileName = profilePic.name || `${emailLower.replace(/[@.]/g, '_')}_profile.jpg`
+        
+        // Ensure a unique filename using timestamp
+        const ext = path.extname(rawFileName) || '.jpg'
+        const base = path.basename(rawFileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_')
+        const fileName = `${base}_${Date.now()}${ext}`
+        const mimeType = profilePic.mimeType || 'image/jpeg'
+
+        // Save file to public/media folder
+        const mediaDir = path.join(process.cwd(), 'public', 'media')
+        await fs.mkdir(mediaDir, { recursive: true })
+        const filePath = path.join(mediaDir, fileName)
+        await fs.writeFile(filePath, buffer)
+
+        // Create Media Document in MongoDB
+        const mediaDoc = await Media.create({
+          filename: fileName,
+          mimeType: mimeType,
+          filesize: buffer.length,
+          alt: `${name} Profile Picture`,
+          url: `/media/${fileName}`,
+        })
+        profilePicId = mediaDoc._id.toString()
+      } catch (uploadError) {
+        console.error('Failed to upload profile picture:', uploadError)
+      }
+    }
+
+    // 5. Hash Password & Register User in appropriate collection
+    const hashedPassword = await hashPassword(password)
+    let newUser: any
+
+    if (targetRole === 'student') {
+      newUser = await Student.create({
+        name,
+        email: emailLower,
+        password: hashedPassword,
+        phone: phone || undefined,
+        profilePic: profilePicId || undefined,
+        status: 'active',
+      })
+    } else {
+      newUser = await User.create({
+        name,
+        email: emailLower,
+        password: hashedPassword,
+        phone: phone || undefined,
+        profilePic: profilePicId || undefined,
+        role: targetRole,
+      })
+    }
+
+    // 6. Resolve profile pic URL for response
+    let profilePicUrl = null
+    if (profilePicId) {
+      const media = await Media.findById(profilePicId)
+      profilePicUrl = media?.url || null
+    }
+
     const safeUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
+      id: newUser._id.toString(),
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
       profilePic: profilePicUrl,
-      role: 'role' in user ? user.role : 'student',
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      role: targetRole === 'student' ? 'student' : newUser.role,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
     }
 
     return NextResponse.json({
@@ -151,7 +162,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'An error occurred during registration. The email might already be registered.',
+        error: error.message || 'An error occurred during registration.',
       },
       { status: 400 }
     )

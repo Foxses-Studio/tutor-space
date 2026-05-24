@@ -78,9 +78,13 @@ export default function Navbar() {
     }
   }, [])
 
+
   const handleLogout = async () => {
     try {
-      await fetch('/api/users/logout', { method: 'POST' })
+      const logoutEndpoint = user?.role === 'student'
+        ? '/api/students/logout'
+        : '/api/users/logout'
+      await fetch(logoutEndpoint, { method: 'POST' })
       setUser(null)
       setUserMenuOpen(false)
       window.location.reload()

@@ -1,49 +1,49 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import configPromise from '@payload-config'
-import { headers, cookies } from 'next/headers'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Student } from '@/lib/db/models/Student'
+import { User } from '@/lib/db/models/User'
+import { Media } from '@/lib/db/models/Media'
+import { verifyToken, comparePasswords, hashPassword } from '@/lib/auth/auth'
+import { cookies } from 'next/headers'
+import fs from 'fs/promises'
+import path from 'path'
 
 export async function POST(request: Request) {
   try {
-    const payload = await getPayload({ config: configPromise })
-    const reqHeaders = await headers()
-    const cookieStore = await cookies()
+    await connectToDatabase()
     
+    const cookieStore = await cookies()
     const studentToken = cookieStore.get('student-token')?.value
     const payloadToken = cookieStore.get('payload-token')?.value
 
-    const cleanHeaders = new Headers(reqHeaders)
-    if (studentToken) {
-      // Map student-token to payload-token so payload.auth parses it seamlessly
-      cleanHeaders.set('cookie', `payload-token=${studentToken}`)
-    } else if (payloadToken) {
-      cleanHeaders.set('cookie', `payload-token=${payloadToken}`)
-    }
-    
-    // 1. Authenticate user session
-    const authResult = await payload.auth({
-      headers: cleanHeaders,
-    })
+    let authUser: any = null
+    let targetCollection: 'students' | 'users' = 'students'
+    let role = 'student'
 
-    if (!authResult.user) {
+    // 1. Authenticate user session using JWT tokens
+    if (studentToken) {
+      const decoded = verifyToken(studentToken)
+      if (decoded && decoded.id) {
+        authUser = await Student.findById(decoded.id).populate('profilePic')
+        targetCollection = 'students'
+        role = 'student'
+      }
+    }
+
+    if (!authUser && payloadToken) {
+      const decoded = verifyToken(payloadToken)
+      if (decoded && decoded.id) {
+        authUser = await User.findById(decoded.id).populate('profilePic')
+        targetCollection = 'users'
+        role = authUser?.role || 'staff'
+      }
+    }
+
+    if (!authUser) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Please log in first.' },
         { status: 401 }
       )
-    }
-
-    // Determine collection slug safely by checking if user exists in students
-    let targetCollection: 'students' | 'users' = 'students'
-    try {
-      const studentCheck = await payload.findByID({
-        collection: 'students',
-        id: authResult.user.id,
-      })
-      if (studentCheck) {
-        targetCollection = 'students'
-      }
-    } catch (e) {
-      targetCollection = 'users'
     }
 
     const body = await request.json()
@@ -58,28 +58,35 @@ export async function POST(request: Request) {
     }
 
     // 3. Process new profile picture upload if base64 is provided
-    let profilePicId: string | number | undefined = undefined
+    let profilePicId: string | undefined = undefined
     if (profilePic && typeof profilePic === 'object' && profilePic.base64) {
       try {
         const base64Data = profilePic.base64.split(';base64,').pop() || profilePic.base64
         const buffer = Buffer.from(base64Data, 'base64')
-        const userEmail = authResult.user.email || 'student'
-        const fileName = profilePic.name || `${userEmail.replace(/[@.]/g, '_')}_profile.jpg`
+        const userEmail = authUser.email || 'student'
+        const rawFileName = profilePic.name || `${userEmail.replace(/[@.]/g, '_')}_profile.jpg`
+        
+        // Ensure a unique filename using timestamp
+        const ext = path.extname(rawFileName) || '.jpg'
+        const base = path.basename(rawFileName, ext).replace(/[^a-zA-Z0-9_-]/g, '_')
+        const fileName = `${base}_${Date.now()}${ext}`
         const mimeType = profilePic.mimeType || 'image/jpeg'
 
-        const mediaDoc = await payload.create({
-          collection: 'media',
-          data: {
-            alt: `${name} Profile Picture`,
-          },
-          file: {
-            data: buffer,
-            name: fileName,
-            mimetype: mimeType,
-            size: buffer.length,
-          },
+        // Save file to public/media folder
+        const mediaDir = path.join(process.cwd(), 'public', 'media')
+        await fs.mkdir(mediaDir, { recursive: true })
+        const filePath = path.join(mediaDir, fileName)
+        await fs.writeFile(filePath, buffer)
+
+        // Create Media Document in MongoDB
+        const mediaDoc = await Media.create({
+          filename: fileName,
+          mimeType: mimeType,
+          filesize: buffer.length,
+          alt: `${name} Profile Picture`,
+          url: `/media/${fileName}`,
         })
-        profilePicId = mediaDoc.id
+        profilePicId = mediaDoc._id.toString()
       } catch (uploadError: any) {
         console.error('Failed to upload profile picture:', uploadError)
         return NextResponse.json(
@@ -89,76 +96,52 @@ export async function POST(request: Request) {
       }
     }
 
-    // 4. Update user/student details
-    const updateData: any = {
-      name,
-      phone: phone || undefined,
+    // 4. Update details
+    authUser.name = name
+    if (phone !== undefined) {
+      authUser.phone = phone || undefined
     }
 
     if (profilePicId) {
-      updateData.profilePic = profilePicId
+      authUser.profilePic = profilePicId
     }
 
+    // 5. Handle password updates
     if (currentPassword && newPassword) {
-      if (!authResult.user.email) {
+      if (newPassword.length < 6) {
         return NextResponse.json(
-          { success: false, error: 'User email is not set. Cannot verify password change.' },
+          { success: false, error: 'New password must be at least 6 characters long.' },
           { status: 400 }
         )
       }
 
-      try {
-        await payload.login({
-          collection: targetCollection,
-          data: {
-            email: authResult.user.email,
-            password: currentPassword,
-          },
-        })
-      } catch (loginError) {
+      const isMatch = await comparePasswords(currentPassword, authUser.password || '')
+      if (!isMatch) {
         return NextResponse.json(
           { success: false, error: 'Incorrect current password. Please try again.' },
           { status: 400 }
         )
       }
-      updateData.password = newPassword
+
+      authUser.password = await hashPassword(newPassword)
     }
 
-    const updatedUser = await payload.update({
-      collection: targetCollection,
-      id: authResult.user.id,
-      data: updateData,
-    })
+    await authUser.save()
 
-    // 5. Resolve new profile pic URL cleanly
+    // 6. Resolve updated profile pic URL cleanly
     let profilePicUrl = null
-    if (updatedUser.profilePic) {
-      if (typeof updatedUser.profilePic === 'object' && (updatedUser.profilePic as any).url) {
-        profilePicUrl = (updatedUser.profilePic as any).url
-      } else if (typeof updatedUser.profilePic === 'string') {
-        if (updatedUser.profilePic.startsWith('/') || updatedUser.profilePic.startsWith('http')) {
-          profilePicUrl = updatedUser.profilePic
-        } else {
-          try {
-            const mediaDoc = await payload.findByID({
-              collection: 'media',
-              id: updatedUser.profilePic,
-            })
-            profilePicUrl = mediaDoc?.url || null
-          } catch (e) {
-            console.error('Error resolving profile pic in update route:', e)
-          }
-        }
-      }
+    if (authUser.profilePic) {
+      const resolvedMedia = await Media.findById(authUser.profilePic)
+      profilePicUrl = resolvedMedia?.url || null
     }
 
     const safeUser = {
-      id: updatedUser.id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      phone: updatedUser.phone,
+      id: authUser._id.toString(),
+      name: authUser.name,
+      email: authUser.email,
+      phone: authUser.phone,
       profilePic: profilePicUrl,
-      role: (updatedUser as any).role || 'student',
+      role: role,
     }
 
     return NextResponse.json({
@@ -175,3 +158,4 @@ export async function POST(request: Request) {
     )
   }
 }
+

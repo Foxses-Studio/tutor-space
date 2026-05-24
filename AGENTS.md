@@ -150,3 +150,13 @@ When creating, editing, or refactoring UI components, developers and AI agents M
 2. **Layout & Borders:**
    - **Maximum Border Radius:** The absolute maximum border radius for cards, buttons, input fields, containers, and boxes is **8px** (Tailwind `rounded-lg` or equivalent). Do not use `rounded-xl`, `rounded-2xl`, `rounded-3xl` etc. (except for circular elements like avatars which can use `rounded-full`).
 
+---
+
+## 🚫 Direct Execution Rule (No Planning Mode)
+
+All AI agents (including Antigravity, Claude, Cursor, Copilot, etc.) working on this codebase MUST follow these direct execution instructions:
+1. **No Planning Documents:** Do NOT create `implementation_plan.md`, `task.md`, or `walkthrough.md` files.
+2. **Direct Action:** Do NOT ask for plan approval or wait for planning feedback before proceeding.
+3. **Immediate Implementation:** Analyze requests, identify the target files, and proceed directly with modifying the codebase or running necessary commands immediately.
+
+
