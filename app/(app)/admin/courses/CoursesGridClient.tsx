@@ -168,9 +168,49 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
     }
   }
 
+  const totalCourses = courses.length
+  const publishedCourses = courses.filter((c) => c.status === 'published').length
+  const draftCourses = courses.filter((c) => c.status === 'draft').length
+
   return (
     <div className="space-y-5">
       
+      {/* Metrics Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {/* Card 1: Total Courses */}
+        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 flex items-center justify-between shadow-sm">
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-zinc-450 uppercase tracking-wider select-none">Total Courses</p>
+            <p className="text-3xl font-bold text-white tracking-tight">{totalCourses}</p>
+          </div>
+          <div className="h-12 w-12 rounded-lg bg-[#615fff]/15 flex items-center justify-center select-none">
+            <FiBookOpen className="h-6 w-6 text-[#615fff]" />
+          </div>
+        </div>
+
+        {/* Card 2: Published Courses */}
+        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 flex items-center justify-between shadow-sm">
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-zinc-450 uppercase tracking-wider select-none">Published</p>
+            <p className="text-3xl font-bold text-emerald-400 tracking-tight">{publishedCourses}</p>
+          </div>
+          <div className="h-12 w-12 rounded-lg bg-emerald-500/15 flex items-center justify-center select-none">
+            <FiZap className="h-6 w-6 text-emerald-400" />
+          </div>
+        </div>
+
+        {/* Card 3: Draft Courses */}
+        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 flex items-center justify-between shadow-sm">
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-zinc-450 uppercase tracking-wider select-none">Drafts</p>
+            <p className="text-3xl font-bold text-zinc-350 tracking-tight">{draftCourses}</p>
+          </div>
+          <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center border border-zinc-700/50 select-none">
+            <FiList className="h-6 w-6 text-zinc-400" />
+          </div>
+        </div>
+      </div>
+
       {/* Search and Filters panel */}
       <div className="flex flex-col md:flex-row md:items-center gap-4 bg-[#121829] border border-zinc-800 p-4 rounded-lg shadow-sm">
         

@@ -1,10 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiPlus, FiTrash2, FiUploadCloud, FiCheck, FiX, FiInfo } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiUploadCloud, FiCheck, FiX, FiInfo, FiImage, FiVideo, FiRadio, FiEdit2 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import RichTextEditor from '@/components/RichTextEditor'
+import MediaPickerModal from '@/components/MediaPickerModal'
+import type { MediaItem } from '@/components/MediaPickerModal'
 
 interface CategoryOption {
   id: string
@@ -69,6 +72,8 @@ export default function CourseFormClient({
     initialData?.thumbnail?.alt || ''
   )
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [showMediaPicker, setShowMediaPicker] = useState(false)
+  const thumbnailFileRef = useRef<HTMLInputElement>(null)
 
   // Outcomes & Prerequisites Lists
   const [whatYouWillLearn, setWhatYouWillLearn] = useState<Array<{ outcome: string }>>(
@@ -83,6 +88,33 @@ export default function CourseFormClient({
   const [metaDescription, setMetaDescription] = useState(initialData?.seo?.metaDescription || '')
   const [keywords, setKeywords] = useState(initialData?.seo?.keywords || '')
   const [seoOpen, setSeoOpen] = useState(false)
+
+
+
+  // Curriculum lessons (edit mode only)
+  interface LessonSummary { id: string; title: string; order: number; lessonType: 'recorded' | 'live'; duration: number }
+  const [lessons, setLessons] = useState<LessonSummary[]>([])
+  const [lessonsLoading, setLessonsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isEditMode || !initialData?._id) return
+    setLessonsLoading(true)
+    fetch(`/api/admin/lessons?courseId=${initialData._id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.lessons) {
+          setLessons(data.lessons.map((l: any) => ({
+            id: l._id,
+            title: l.title,
+            order: l.order,
+            lessonType: l.lessonType,
+            duration: l.duration,
+          })).sort((a: LessonSummary, b: LessonSummary) => a.order - b.order))
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLessonsLoading(false))
+  }, [isEditMode, initialData?._id])
 
   // Slug states
   const [slugChecking, setSlugChecking] = useState(false)
@@ -180,7 +212,7 @@ export default function CourseFormClient({
     setRequirements(requirements.filter((_, i) => i !== index))
   }
 
-  // Direct Mongoose Image Upload
+  // Direct file upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -191,40 +223,26 @@ export default function CourseFormClient({
     formData.append('alt', title ? `Cover for ${title}` : '')
 
     try {
-      const res = await fetch('/api/admin/media/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
+      const res = await fetch('/api/admin/media/upload', { method: 'POST', body: formData })
       const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to upload image.')
-      }
-
+      if (!res.ok) throw new Error(data.error || 'Failed to upload image.')
       setThumbnailId(data.media.id)
       setThumbnailUrl(data.media.url)
       setThumbnailAlt(data.media.alt)
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Image Uploaded',
-        text: 'Course cover photo processed and registered.',
-        timer: 1500,
-        showConfirmButton: false,
-        background: '#121829',
-        color: '#ffffff',
-      })
+      Swal.fire({ icon: 'success', title: 'Image Uploaded', text: 'Cover photo processed.', timer: 1500, showConfirmButton: false, background: '#121829', color: '#ffffff' })
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Upload Failed',
-        text: err.message || 'Could not upload media.',
-        background: '#121829',
-        color: '#ffffff',
-      })
+      Swal.fire({ icon: 'error', title: 'Upload Failed', text: err.message || 'Could not upload media.', background: '#121829', color: '#ffffff' })
     } finally {
       setUploadingImage(false)
+      if (thumbnailFileRef.current) thumbnailFileRef.current.value = ''
     }
+  }
+
+  // Pick from media library
+  function handleMediaPickerSelect(item: MediaItem) {
+    setThumbnailId(item.id)
+    setThumbnailUrl(item.url)
+    setThumbnailAlt(item.alt)
   }
 
   // Form Submit handler
@@ -495,54 +513,71 @@ export default function CourseFormClient({
             )}
           </div>
 
-          {/* SEO Accordion block */}
-          <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setSeoOpen(!seoOpen)}
-              className="w-full px-6 py-4 flex items-center justify-between font-bold text-white text-xl hover:bg-zinc-800/10 transition-colors select-none"
-            >
-              <span>Search Engine Optimization (SEO) parameters</span>
-              <span className="text-zinc-500">{seoOpen ? '▲' : '▼'}</span>
-            </button>
-
-            {seoOpen && (
-              <div className="p-6 border-t border-zinc-850 space-y-4.5 bg-[#0e1322]">
-                <div className="flex flex-col gap-2">
-                  <label className="text-base font-bold text-zinc-300">SEO Meta Title</label>
-                  <input
-                    type="text"
-                    value={metaTitle}
-                    onChange={(e) => setMetaTitle(e.target.value)}
-                    placeholder="Search snippet header title"
-                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-base font-bold text-zinc-300">SEO Meta Description</label>
-                  <textarea
-                    rows={3}
-                    value={metaDescription}
-                    onChange={(e) => setMetaDescription(e.target.value)}
-                    placeholder="Search snippet summary block (160 characters max recommendation)"
-                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors resize-none"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-base font-bold text-zinc-300">Keywords (Comma separated)</label>
-                  <input
-                    type="text"
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    placeholder="e.g. Next.js, Mongoose, MongoDB, Course"
-                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
-                  />
-                </div>
+          {/* ── Course Curriculum (edit mode only) ────────────────────── */}
+          {isEditMode && (
+            <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+                <h2 className="text-xl font-bold text-white tracking-tight">Course Curriculum</h2>
+                <Link
+                  href={`/admin/lessons/new?courseId=${initialData._id}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#615fff]/15 hover:bg-[#615fff]/25 text-[#615fff] border border-[#615fff]/20 rounded-lg text-base font-bold transition-colors"
+                >
+                  <FiPlus className="h-4 w-4" /> Add Lesson
+                </Link>
               </div>
-            )}
-          </div>
+
+              {lessonsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 border-2 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : lessons.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+                  <FiVideo className="h-10 w-10 text-zinc-700" />
+                  <p className="text-base font-semibold text-zinc-500">No lessons yet. Add your first lesson to build the curriculum.</p>
+                  <Link
+                    href={`/admin/lessons/new?courseId=${initialData._id}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white rounded-lg font-bold text-base transition-all"
+                  >
+                    <FiPlus className="h-4 w-4" /> Add First Lesson
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {lessons.map((lesson, idx) => (
+                    <div key={lesson.id} className="flex items-center gap-3 bg-[#0e1422] border border-zinc-800 rounded-lg px-4 py-3 hover:border-zinc-700 transition-colors">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-zinc-800 text-zinc-400 font-bold text-sm">
+                        {lesson.order}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-bold text-base truncate">{lesson.title}</p>
+                        <p className="text-zinc-500 text-sm font-semibold">{lesson.duration} min</p>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-bold ${
+                        lesson.lessonType === 'live'
+                          ? 'bg-rose-500/15 text-rose-400'
+                          : 'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {lesson.lessonType === 'live' ? <FiRadio className="h-3 w-3" /> : <FiVideo className="h-3 w-3" />}
+                        {lesson.lessonType === 'live' ? 'Live' : 'Video'}
+                      </span>
+                      <Link
+                        href={`/admin/lessons/${lesson.id}`}
+                        className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all"
+                        title="Edit lesson"
+                      >
+                        <FiEdit2 className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  ))}
+                  <p className="text-sm font-semibold text-zinc-600 text-right pt-1">
+                    {lessons.length} lesson{lessons.length !== 1 ? 's' : ''} — {lessons.reduce((a, l) => a + l.duration, 0)} min total
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+
 
         </div>
 
@@ -552,55 +587,92 @@ export default function CourseFormClient({
           {/* Thumbnail media box */}
           <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4">
             <h3 className="text-xl font-bold text-white tracking-tight border-b border-zinc-850 pb-2.5">Course Thumbnail Cover</h3>
-            
+
             {thumbnailUrl ? (
               <div className="space-y-3">
-                <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-zinc-800 bg-[#070b16] flex items-center justify-center">
+                <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-zinc-800 bg-[#070b16]">
                   <img src={thumbnailUrl} alt={thumbnailAlt} className="w-full h-full object-cover" />
                   <button
                     type="button"
-                    onClick={() => {
-                      setThumbnailId('')
-                      setThumbnailUrl('')
-                      setThumbnailAlt('')
-                    }}
-                    className="absolute top-2 right-2 p-1.5 rounded bg-black/70 hover:bg-red-650 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    onClick={() => { setThumbnailId(''); setThumbnailUrl(''); setThumbnailAlt('') }}
+                    className="absolute top-2 right-2 p-1.5 rounded bg-black/70 hover:bg-rose-500 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                     title="Remove cover"
                   >
                     <FiX className="h-4.5 w-4.5" />
                   </button>
                 </div>
-                <div className="text-xs text-zinc-500 font-semibold">
-                  <span className="font-bold text-zinc-400">Alt tag:</span> &ldquo;{thumbnailAlt}&rdquo;
+                <p className="text-xs font-semibold text-zinc-500"><span className="font-bold text-zinc-400">Alt:</span> &ldquo;{thumbnailAlt}&rdquo;</p>
+                {/* Change buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => thumbnailFileRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="flex items-center justify-center gap-2 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-sm cursor-pointer transition-all disabled:opacity-50"
+                  >
+                    <FiUploadCloud className="h-4 w-4" /> Upload New
+                  </button>
+                  <button type="button" onClick={() => setShowMediaPicker(true)}
+                    className="flex items-center justify-center gap-2 py-2 rounded-lg bg-[#615fff]/15 hover:bg-[#615fff]/25 border border-[#615fff]/20 text-[#615fff] font-bold text-sm cursor-pointer transition-all">
+                    <FiImage className="h-4 w-4" /> From Library
+                  </button>
                 </div>
               </div>
             ) : (
-              <div className="relative">
-                <label className={`flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 hover:border-[#615fff]/60 rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  uploadingImage ? 'pointer-events-none opacity-50' : ''
-                }`}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                  {uploadingImage ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="h-8 w-8 border-2 border-[#615fff] border-t-transparent rounded-full animate-spin" />
-                      <p className="text-base font-semibold text-zinc-400">Processing cover with Sharp...</p>
+              <div className="space-y-3">
+                {uploadingImage ? (
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#615fff]/40 rounded-lg p-8 gap-3 bg-[#615fff]/5">
+                    <div className="h-8 w-8 border-2 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-base font-semibold text-zinc-400">Processing with Sharp...</p>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => thumbnailFileRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="w-full flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 hover:border-[#615fff]/60 rounded-lg p-6 text-center cursor-pointer transition-colors group disabled:opacity-50"
+                    >
+                      <FiUploadCloud className="h-9 w-9 text-zinc-600 group-hover:text-[#615fff] transition-colors mb-2" />
+                      <p className="text-base font-bold text-white">Upload New File</p>
+                      <p className="text-sm font-semibold text-zinc-500">PNG, JPEG, WEBP — auto-resized</p>
+                    </button>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-zinc-800" />
+                      <span className="text-sm font-bold text-zinc-600">or</span>
+                      <div className="flex-1 h-px bg-zinc-800" />
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <FiUploadCloud className="h-10 w-10 text-zinc-550 mx-auto" />
-                      <p className="text-base font-bold text-white">Select Cover Photo</p>
-                      <p className="text-sm font-semibold text-zinc-500">Supports PNG, JPEG, WEBP. Resizes automatically.</p>
-                    </div>
-                  )}
-                </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(true)}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff]/10 hover:bg-[#615fff]/20 border border-[#615fff]/20 hover:border-[#615fff]/40 text-[#615fff] font-bold text-base transition-all cursor-pointer"
+                    >
+                      <FiImage className="h-5 w-5" /> Pick from Media Library
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
+
+          {/* Hidden file input — triggered programmatically to avoid browser tooltip */}
+          <input
+            ref={thumbnailFileRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+
+          {/* Media Picker Modal */}
+          <MediaPickerModal
+            open={showMediaPicker}
+            onClose={() => setShowMediaPicker(false)}
+            onSelect={handleMediaPickerSelect}
+            title="Pick Course Thumbnail"
+          />
+
+
 
           {/* Pricing & Status controls */}
           <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4">
@@ -709,6 +781,55 @@ export default function CourseFormClient({
                 className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
               />
             </div>
+          </div>
+
+          {/* SEO Accordion block */}
+          <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setSeoOpen(!seoOpen)}
+              className="w-full px-6 py-4 flex items-center justify-between font-bold text-white text-xl hover:bg-zinc-800/10 transition-colors select-none"
+            >
+              <span>SEO Parameters</span>
+              <span className="text-zinc-500">{seoOpen ? '▲' : '▼'}</span>
+            </button>
+
+            {seoOpen && (
+              <div className="p-6 border-t border-zinc-850 space-y-4.5 bg-[#0e1322]">
+                <div className="flex flex-col gap-2">
+                  <label className="text-base font-bold text-zinc-300">SEO Meta Title</label>
+                  <input
+                    type="text"
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    placeholder="Search snippet header title"
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-base font-bold text-zinc-300">SEO Meta Description</label>
+                  <textarea
+                    rows={3}
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    placeholder="Search snippet summary block (160 characters max recommendation)"
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-base font-bold text-zinc-300">Keywords (Comma separated)</label>
+                  <input
+                    type="text"
+                    value={keywords}
+                    onChange={(e) => setKeywords(e.target.value)}
+                    placeholder="e.g. Next.js, Mongoose, MongoDB, Course"
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit Action block */}

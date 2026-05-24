@@ -114,7 +114,7 @@ export default function RichTextEditor({
   const applyLink = useCallback(() => {
     if (!editor) return
     if (!linkUrl) {
-      editor.chain().focus().extendMarkToLink({ href: '' }).unsetLink().run()
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
     } else {
       editor.chain().focus().setLink({ href: linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}` }).run()
     }

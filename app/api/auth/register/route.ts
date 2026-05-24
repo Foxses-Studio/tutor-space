@@ -11,7 +11,7 @@ import path from 'path'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, password, phone, profilePic, role } = body
+    const { name, email, password, phone, profilePic, role, permissions } = body
 
     // 1. Basic validation
     if (!name || !email || !password) {
@@ -130,7 +130,16 @@ export async function POST(request: Request) {
         phone: phone || undefined,
         profilePic: profilePicId || undefined,
         role: targetRole,
+        permissions: permissions || [],
       })
+
+      // Send onboarding email notification to new staff member
+      try {
+        const { sendStaffRegistrationEmail } = await import('@/lib/email')
+        await sendStaffRegistrationEmail(emailLower, name, targetRole, password)
+      } catch (emailErr) {
+        console.error('Failed to send registration email to staff:', emailErr)
+      }
     }
 
     // 6. Resolve profile pic URL for response

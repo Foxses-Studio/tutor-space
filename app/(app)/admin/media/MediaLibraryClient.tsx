@@ -1,7 +1,11 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
-import { FiUploadCloud, FiImage, FiSearch, FiCopy, FiTrash2, FiX, FiCheck } from 'react-icons/fi'
+import React, { useState } from 'react'
+import Link from 'next/link'
+import {
+  FiUploadCloud, FiImage, FiSearch, FiCopy, FiTrash2, FiX, FiCheck,
+  FiExternalLink, FiChevronUp, FiChevronDown,
+} from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface MediaItem {
@@ -25,126 +29,113 @@ function formatBytes(bytes: number) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
+function formatDate(iso: string) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+type SortKey = 'filename' | 'filesize' | 'mimeType' | 'createdAt'
+type SortDir = 'asc' | 'desc'
+
 export default function MediaLibraryClient({ initialMedia }: { initialMedia: MediaItem[] }) {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>(initialMedia)
   const [search, setSearch] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [selected, setSelected] = useState<MediaItem | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [sortKey, setSortKey] = useState<SortKey>('createdAt')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [previewItem, setPreviewItem] = useState<MediaItem | null>(null)
 
+  // Filter
   const filtered = mediaItems.filter(m =>
     m.filename.toLowerCase().includes(search.toLowerCase()) ||
-    m.alt.toLowerCase().includes(search.toLowerCase())
+    m.alt?.toLowerCase().includes(search.toLowerCase())
   )
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-    setUploading(true)
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    let av: any = a[sortKey]
+    let bv: any = b[sortKey]
+    if (sortKey === 'createdAt') { av = new Date(av).getTime(); bv = new Date(bv).getTime() }
+    if (sortKey === 'filesize') { av = Number(av); bv = Number(bv) }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1
+    if (av > bv) return sortDir === 'asc' ? 1 : -1
+    return 0
+  })
 
-    const uploaded: MediaItem[] = []
-    for (const file of Array.from(files)) {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('alt', file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '))
-      try {
-        const res = await fetch('/api/admin/media/upload', { method: 'POST', body: formData })
-        const data = await res.json()
-        if (res.ok && data.media) {
-          uploaded.push({
-            id: data.media.id,
-            filename: data.media.filename,
-            url: data.media.url,
-            alt: data.media.alt,
-            mimeType: file.type,
-            filesize: file.size,
-            width: null,
-            height: null,
-            thumbnailUrl: data.media.sizes?.thumbnail?.url || data.media.url,
-            createdAt: new Date().toISOString(),
-          })
-        }
-      } catch (err) {
-        console.error('Upload error:', err)
-      }
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
     }
-
-    if (uploaded.length > 0) {
-      setMediaItems(prev => [...uploaded, ...prev])
-      Swal.fire({
-        icon: 'success',
-        title: `${uploaded.length} file${uploaded.length > 1 ? 's' : ''} uploaded`,
-        timer: 1400,
-        showConfirmButton: false,
-        background: '#121829',
-        color: '#fff',
-      })
-    }
-    setUploading(false)
-    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  async function handleCopyUrl(item: MediaItem) {
+  function SortIcon({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <span className="ml-1 text-zinc-600">↕</span>
+    return sortDir === 'asc'
+      ? <FiChevronUp className="ml-1 inline h-4 w-4 text-[#615fff]" />
+      : <FiChevronDown className="ml-1 inline h-4 w-4 text-[#615fff]" />
+  }
+
+  // Copy URL
+  async function handleCopyUrl(item: MediaItem, e: React.MouseEvent) {
+    e.stopPropagation()
     await navigator.clipboard.writeText(item.url)
     setCopiedId(item.id)
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  async function handleDelete(item: MediaItem) {
+  // Delete
+  async function handleDelete(item: MediaItem, e: React.MouseEvent) {
+    e.stopPropagation()
     const result = await Swal.fire({
-      title: 'Delete this media asset?',
-      text: `"${item.filename}" will be removed from the registry. The physical file on disk may need manual cleanup.`,
+      title: 'Delete this asset?',
+      text: `"${item.filename}" will be removed permanently.`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Delete from DB',
+      confirmButtonText: 'Delete',
       background: '#121829',
       color: '#fff',
     })
     if (!result.isConfirmed) return
-
-    // We'll do a simple DELETE to a general media cleanup endpoint
-    // For now remove from local state only (file stays on disk but DB cleaned)
     try {
-      const res = await fetch(`/api/admin/media`, {
+      await fetch('/api/admin/media', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id }),
       })
-      if (res.ok || res.status === 404) {
-        setMediaItems(prev => prev.filter(m => m.id !== item.id))
-        if (selected?.id === item.id) setSelected(null)
-      }
-    } catch {
-      // Optimistic UI — remove from view
-      setMediaItems(prev => prev.filter(m => m.id !== item.id))
-      if (selected?.id === item.id) setSelected(null)
-    }
+    } catch { /* optimistic */ }
+    setMediaItems(prev => prev.filter(m => m.id !== item.id))
+    if (previewItem?.id === item.id) setPreviewItem(null)
   }
+
+  const thClass = 'px-4 py-3 text-left text-sm font-bold text-zinc-400 uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-white transition-colors'
+  const tdClass = 'px-4 py-3 text-base font-semibold text-zinc-300 align-middle'
 
   return (
     <div className="px-6 py-8 space-y-6 container mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-display text-white">Media Library</h1>
-          <p className="text-base font-semibold text-zinc-450 mt-1">
-            {mediaItems.length} asset{mediaItems.length !== 1 ? 's' : ''} registered — upload, browse and copy URLs
+          <h1 className="text-3xl font-bold text-white">Media Library</h1>
+          <p className="text-base font-semibold text-zinc-500 mt-1">
+            {mediaItems.length} asset{mediaItems.length !== 1 ? 's' : ''} — browse, copy URLs, manage files
           </p>
         </div>
-        <label className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-md shadow-[#615fff]/20 transition-all cursor-pointer ${uploading ? 'opacity-60 pointer-events-none' : ''}`}>
-          <input ref={fileInputRef} type="file" accept="image/*,video/*,application/pdf" multiple onChange={handleUpload} className="hidden" />
-          {uploading ? (
-            <><div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Uploading...</span></>
-          ) : (
-            <><FiUploadCloud className="h-5 w-5" /><span>Upload Files</span></>
-          )}
-        </label>
+
+        <Link
+          href="/admin/media/upload"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-md shadow-[#615fff]/25 transition-all"
+        >
+          <FiUploadCloud className="h-5 w-5" />
+          Upload File / Photo
+        </Link>
       </div>
 
-      {/* Search & Dropzone zone */}
-      <div className="flex items-center gap-2.5 bg-[#121829] border border-zinc-800 px-4 py-3 rounded-lg focus-within:border-[#615fff]/50 transition-colors">
+      {/* Search */}
+      <div className="flex items-center gap-2.5 bg-[#121829] border border-zinc-800 px-4 py-3 rounded-lg focus-within:border-[#615fff]/50 transition-colors max-w-md">
         <FiSearch className="h-5 w-5 text-zinc-500 shrink-0" />
         <input
           type="text"
@@ -155,164 +146,225 @@ export default function MediaLibraryClient({ initialMedia }: { initialMedia: Med
         />
         {search && (
           <button onClick={() => setSearch('')} className="text-zinc-500 hover:text-white cursor-pointer shrink-0">
-            <FiX className="h-4.5 w-4.5" />
+            <FiX className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      <div className="flex gap-6">
-        {/* Media Grid */}
-        <div className={`flex-1 min-w-0 ${selected ? 'lg:max-w-[calc(100%-320px)]' : ''}`}>
-          {filtered.length === 0 ? (
-            <div className="bg-[#121829] border-2 border-dashed border-zinc-800 rounded-lg p-20 text-center space-y-4">
-              <FiImage className="h-12 w-12 text-zinc-700 mx-auto" />
-              <p className="text-base font-semibold text-zinc-500">
-                {search ? 'No assets match your search.' : 'No media assets yet. Upload your first file above.'}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {filtered.map(item => {
-                const isImg = item.mimeType.startsWith('image/')
-                const isSelected = selected?.id === item.id
-                const isCopied = copiedId === item.id
+      {/* Table */}
+      {sorted.length === 0 ? (
+        <div className="flex flex-col items-center justify-center bg-[#121829] border-2 border-dashed border-zinc-800 rounded-lg p-20 text-center space-y-4">
+          <FiImage className="h-12 w-12 text-zinc-700 mx-auto" />
+          <div>
+            <p className="text-base font-bold text-zinc-400">
+              {search ? 'No assets match your search.' : 'No media yet — upload your first file'}
+            </p>
+            {!search && (
+              <Link href="/admin/media/upload" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all">
+                <FiUploadCloud className="h-5 w-5" /> Upload File / Photo
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-[#0e1422]">
+                  <th className={`${thClass} w-14`}>Preview</th>
+                  <th className={thClass} onClick={() => toggleSort('filename')}>
+                    Filename <SortIcon col="filename" />
+                  </th>
+                  <th className={thClass} onClick={() => toggleSort('mimeType')}>
+                    Type <SortIcon col="mimeType" />
+                  </th>
+                  <th className={thClass} onClick={() => toggleSort('filesize')}>
+                    Size <SortIcon col="filesize" />
+                  </th>
+                  <th className={thClass}>Dimensions</th>
+                  <th className={thClass} onClick={() => toggleSort('createdAt')}>
+                    Uploaded <SortIcon col="createdAt" />
+                  </th>
+                  <th className={`${thClass} text-right`}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((item, idx) => {
+                  const isImg = item.mimeType.startsWith('image/')
+                  const isCopied = copiedId === item.id
 
-                return (
-                  <div
-                    key={item.id}
-                    onClick={() => setSelected(isSelected ? null : item)}
-                    className={`group relative cursor-pointer rounded-lg overflow-hidden border transition-all duration-200 ${
-                      isSelected
-                        ? 'border-[#615fff] shadow-lg shadow-[#615fff]/20 ring-1 ring-[#615fff]/40'
-                        : 'border-zinc-800 hover:border-zinc-600'
-                    }`}
-                  >
-                    {/* Thumbnail */}
-                    <div className="aspect-square bg-[#0e1322] flex items-center justify-center overflow-hidden">
-                      {isImg ? (
-                        <img
-                          src={item.thumbnailUrl || item.url}
-                          alt={item.alt}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center p-3 text-center">
-                          <FiImage className="h-8 w-8 text-zinc-600 mb-1" />
-                          <span className="text-xs font-bold text-zinc-600 uppercase">
-                            {item.mimeType.split('/')[1]?.slice(0, 4) || 'file'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Quick copy button on hover */}
-                    <button
-                      onClick={e => { e.stopPropagation(); handleCopyUrl(item) }}
-                      title="Copy URL"
-                      className="absolute top-1.5 right-1.5 p-1.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  return (
+                    <tr
+                      key={item.id}
+                      onClick={() => setPreviewItem(prev => prev?.id === item.id ? null : item)}
+                      className={`border-b border-zinc-800/60 cursor-pointer transition-colors hover:bg-[#1a2236] ${previewItem?.id === item.id ? 'bg-[#1a2236] border-l-2 border-l-[#615fff]' : ''} ${idx === sorted.length - 1 ? 'border-b-0' : ''}`}
                     >
-                      {isCopied ? <FiCheck className="h-3.5 w-3.5 text-emerald-400" /> : <FiCopy className="h-3.5 w-3.5" />}
-                    </button>
+                      {/* Thumbnail */}
+                      <td className="px-4 py-3 align-middle">
+                        <div className="h-10 w-10 rounded-lg bg-[#0e1322] border border-zinc-800 overflow-hidden flex items-center justify-center shrink-0">
+                          {isImg ? (
+                            <img
+                              src={item.thumbnailUrl || item.url}
+                              alt={item.alt}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FiImage className="h-5 w-5 text-zinc-600" />
+                          )}
+                        </div>
+                      </td>
 
-                    {/* Selected indicator */}
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-[#615fff]/10 pointer-events-none" />
-                    )}
+                      {/* Filename */}
+                      <td className={tdClass}>
+                        <div className="max-w-xs">
+                          <p className="text-white font-bold text-base truncate">{item.filename}</p>
+                          {item.alt && (
+                            <p className="text-zinc-500 text-sm font-semibold truncate mt-0.5">{item.alt}</p>
+                          )}
+                        </div>
+                      </td>
 
-                    {/* Filename label */}
-                    <div className="p-2 bg-[#0e1322]">
-                      <p className="text-xs font-bold text-zinc-400 truncate">{item.filename}</p>
+                      {/* Type */}
+                      <td className={tdClass}>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded bg-zinc-800 text-zinc-300 text-sm font-bold uppercase tracking-wide">
+                          {item.mimeType.split('/')[1]?.slice(0, 6) || item.mimeType.split('/')[0]}
+                        </span>
+                      </td>
+
+                      {/* Size */}
+                      <td className={tdClass}>{formatBytes(item.filesize)}</td>
+
+                      {/* Dimensions */}
+                      <td className={tdClass}>
+                        {item.width && item.height ? (
+                          <span>{item.width} × {item.height}</span>
+                        ) : (
+                          <span className="text-zinc-600">—</span>
+                        )}
+                      </td>
+
+                      {/* Uploaded */}
+                      <td className={tdClass}>{formatDate(item.createdAt)}</td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 align-middle">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={e => handleCopyUrl(item, e)}
+                            title="Copy URL"
+                            className="p-2 rounded-lg bg-zinc-800/60 hover:bg-[#615fff]/20 border border-zinc-700 hover:border-[#615fff]/40 text-zinc-400 hover:text-[#615fff] transition-all cursor-pointer"
+                          >
+                            {isCopied ? <FiCheck className="h-4 w-4 text-emerald-400" /> : <FiCopy className="h-4 w-4" />}
+                          </button>
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            title="Open in new tab"
+                            className="p-2 rounded-lg bg-zinc-800/60 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 hover:text-white transition-all"
+                          >
+                            <FiExternalLink className="h-4 w-4" />
+                          </a>
+                          <button
+                            onClick={e => handleDelete(item, e)}
+                            title="Delete"
+                            className="p-2 rounded-lg bg-zinc-800/60 hover:bg-rose-500/20 border border-zinc-700 hover:border-rose-500/40 text-zinc-400 hover:text-rose-400 transition-all cursor-pointer"
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Expandable preview row */}
+          {previewItem && (
+            <div className="border-t border-[#615fff]/30 bg-[#0e1422] p-6">
+              <div className="flex flex-col sm:flex-row gap-6">
+                {/* Image preview */}
+                <div className="h-48 w-48 shrink-0 rounded-lg bg-[#121829] border border-zinc-800 overflow-hidden flex items-center justify-center">
+                  {previewItem.mimeType.startsWith('image/') ? (
+                    <img src={previewItem.url} alt={previewItem.alt} className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <FiImage className="h-10 w-10 text-zinc-600" />
+                      <span className="text-sm font-bold text-zinc-600 uppercase">{previewItem.mimeType.split('/')[1]}</span>
                     </div>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <h3 className="text-white font-bold text-base break-all pr-4">{previewItem.filename}</h3>
+                    <button onClick={() => setPreviewItem(null)} className="text-zinc-500 hover:text-white cursor-pointer shrink-0">
+                      <FiX className="h-5 w-5" />
+                    </button>
                   </div>
-                )
-              })}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { label: 'Alt Text', value: previewItem.alt || '—' },
+                      { label: 'File Size', value: formatBytes(previewItem.filesize) },
+                      { label: 'MIME Type', value: previewItem.mimeType },
+                      { label: 'Dimensions', value: previewItem.width && previewItem.height ? `${previewItem.width} × ${previewItem.height}` : '—' },
+                      { label: 'Uploaded', value: formatDate(previewItem.createdAt) },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="bg-[#121829] border border-zinc-800 rounded-lg px-3 py-2">
+                        <p className="text-zinc-500 text-sm font-bold">{label}</p>
+                        <p className="text-white text-base font-semibold mt-0.5 truncate">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* URL Copy */}
+                  <div className="flex gap-2 items-center">
+                    <input
+                      readOnly
+                      value={previewItem.url}
+                      className="flex-1 min-w-0 bg-[#070b16] border border-zinc-800 text-zinc-400 rounded-lg px-3 py-2 text-base font-semibold outline-none truncate"
+                    />
+                    <button
+                      onClick={e => handleCopyUrl(previewItem, e)}
+                      className="px-4 py-2 rounded-lg bg-[#615fff]/15 hover:bg-[#615fff] border border-[#615fff]/30 hover:border-[#615fff] text-[#615fff] hover:text-white font-bold text-base transition-all cursor-pointer flex items-center gap-2 shrink-0"
+                    >
+                      {copiedId === previewItem.id ? <FiCheck className="h-4 w-4 text-emerald-400" /> : <FiCopy className="h-4 w-4" />}
+                      {copiedId === previewItem.id ? 'Copied!' : 'Copy URL'}
+                    </button>
+                    <a
+                      href={previewItem.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 hover:text-white font-bold text-base transition-all flex items-center gap-2 shrink-0"
+                    >
+                      <FiExternalLink className="h-4 w-4" /> Open
+                    </a>
+                    <button
+                      onClick={e => handleDelete(previewItem, e)}
+                      className="px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 text-rose-400 hover:text-white font-bold text-base transition-all cursor-pointer flex items-center gap-2 shrink-0"
+                    >
+                      <FiTrash2 className="h-4 w-4" /> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
+      )}
 
-        {/* Detail sidebar */}
-        {selected && (
-          <div className="hidden lg:flex flex-col w-80 shrink-0">
-            <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden sticky top-6">
-              {/* Preview */}
-              <div className="aspect-square bg-[#0e1322] flex items-center justify-center overflow-hidden">
-                {selected.mimeType.startsWith('image/') ? (
-                  <img src={selected.url} alt={selected.alt} className="w-full h-full object-contain" />
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <FiImage className="h-12 w-12 text-zinc-600" />
-                    <span className="text-sm font-bold text-zinc-600 uppercase">{selected.mimeType.split('/')[1]}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Metadata */}
-              <div className="p-5 space-y-3 border-t border-zinc-800">
-                <div className="flex items-start justify-between">
-                  <p className="font-bold text-white text-base leading-snug flex-1 min-w-0 pr-2 break-all">{selected.filename}</p>
-                  <button onClick={() => setSelected(null)} className="text-zinc-500 hover:text-white cursor-pointer shrink-0">
-                    <FiX className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-2 text-sm font-semibold">
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Alt text</span>
-                    <span className="text-zinc-300 truncate max-w-[60%] text-right">{selected.alt}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Size</span>
-                    <span className="text-zinc-300">{formatBytes(selected.filesize)}</span>
-                  </div>
-                  {selected.width && selected.height && (
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Dimensions</span>
-                      <span className="text-zinc-300">{selected.width} × {selected.height}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Type</span>
-                    <span className="text-zinc-300">{selected.mimeType}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Uploaded</span>
-                    <span className="text-zinc-300">
-                      {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* URL field */}
-                <div className="mt-2 space-y-1.5">
-                  <p className="text-sm font-bold text-zinc-500">Public URL</p>
-                  <div className="flex gap-2">
-                    <input
-                      readOnly
-                      value={selected.url}
-                      className="flex-1 min-w-0 bg-[#070b16] border border-zinc-800 text-zinc-400 rounded-lg px-3 py-2 text-sm font-semibold outline-none truncate"
-                    />
-                    <button
-                      onClick={() => handleCopyUrl(selected)}
-                      className="px-3 py-2 rounded-lg bg-[#615fff]/15 hover:bg-[#615fff] border border-[#615fff]/25 hover:border-[#615fff] text-[#615fff] hover:text-white transition-all cursor-pointer shrink-0"
-                    >
-                      {copiedId === selected.id ? <FiCheck className="h-4.5 w-4.5 text-emerald-400" /> : <FiCopy className="h-4.5 w-4.5" />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Delete button */}
-                <button
-                  onClick={() => handleDelete(selected)}
-                  className="w-full mt-2 py-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 text-rose-400 hover:text-white font-bold text-base transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <FiTrash2 className="h-4.5 w-4.5" />
-                  Remove from Library
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Footer count */}
+      {sorted.length > 0 && (
+        <p className="text-sm font-semibold text-zinc-600 text-right">
+          Showing {sorted.length} of {mediaItems.length} asset{mediaItems.length !== 1 ? 's' : ''}
+        </p>
+      )}
     </div>
   )
 }

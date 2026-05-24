@@ -57,6 +57,7 @@ export async function GET() {
       phone: verifiedDoc.phone,
       profilePic: profilePicUrl,
       role: role,
+      permissions: verifiedDoc.permissions || [],
     }
 
     return NextResponse.json({

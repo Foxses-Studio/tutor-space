@@ -12,6 +12,7 @@ export interface ICourse extends Document {
   status: 'draft' | 'published'
   duration?: string
   level: 'all' | 'beginner' | 'intermediate' | 'advanced'
+  meetingLink?: string
   whatYouWillLearn?: Array<{ outcome: string }>
   requirements?: Array<{ requirement: string }>
   seo?: {
@@ -34,6 +35,7 @@ const CourseSchema = new Schema<ICourse>(
     status: { type: String, enum: ['draft', 'published'], default: 'draft', required: true },
     duration: { type: String },
     level: { type: String, enum: ['all', 'beginner', 'intermediate', 'advanced'], default: 'all', required: true },
+    meetingLink: { type: String },
     whatYouWillLearn: [
       {
         outcome: { type: String, required: true },

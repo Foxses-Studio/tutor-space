@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifyToken } from '@/lib/auth/auth'
 import { FiUserPlus } from 'react-icons/fi'
-import StaffRegisterFormClient from './StaffRegisterFormClient'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { User } from '@/lib/db/models/User'
+import StaffListPageClient from './StaffListPageClient'
 
 export const metadata = {
   title: 'Staff Registry - Tutor Space Admin',
@@ -24,6 +26,23 @@ export default async function StaffRegisterPage() {
     redirect('/admin')
   }
 
+  await connectToDatabase()
+  const staffDocs = await User.find({})
+    .populate('profilePic')
+    .sort({ createdAt: -1 })
+    .lean()
+
+  // Serialize MongoDB documents for client component
+  const staff = staffDocs.map((member: any) => ({
+    id: member._id.toString(),
+    name: member.name,
+    email: member.email,
+    phone: member.phone || '',
+    role: member.role,
+    profilePic: member.profilePic ? { url: member.profilePic.url } : undefined,
+    createdAt: member.createdAt ? new Date(member.createdAt).toISOString() : '',
+  }))
+
   return (
     <div className="container mx-auto px-6 py-8 space-y-6">
       {/* Page Header */}
@@ -34,15 +53,13 @@ export default async function StaffRegisterPage() {
             Staff & Faculty Registry
           </h1>
           <p className="text-base font-semibold text-zinc-400 mt-1">
-            Create new administrator, staff, or instructor profiles with defined security privileges.
+            Register and manage administrative, teaching, and support accounts.
           </p>
         </div>
       </div>
 
-      {/* Render the Client-Side Staff Form */}
-      <div className="bg-[#18181b] border border-zinc-800 rounded-lg p-6 shadow-sm">
-        <StaffRegisterFormClient />
-      </div>
+      {/* Render the Client-Side Staff List */}
+      <StaffListPageClient initialStaff={staff} />
     </div>
   )
 }

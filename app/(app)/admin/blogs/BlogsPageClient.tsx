@@ -1,9 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FiPlus, FiEdit, FiTrash2, FiFileText, FiX, FiSave, FiUploadCloud } from 'react-icons/fi'
+import { FiPlus, FiEdit, FiTrash2, FiFileText, FiX, FiSave, FiUploadCloud, FiImage } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import RichTextEditor from '@/components/RichTextEditor'
+import MediaPickerModal from '@/components/MediaPickerModal'
+import type { MediaItem } from '@/components/MediaPickerModal'
 
 interface BlogItem {
   id: string; title: string; content: string
@@ -22,6 +24,7 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [showMediaPicker, setShowMediaPicker] = useState(false)
 
   function openNew() {
     setEditingId(null); setTitle(''); setContent(''); setTagsInput(''); setCoverImageId(''); setCoverImageUrl(''); setShowForm(true)
@@ -45,6 +48,11 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
     } catch (err: any) {
       Swal.fire({ icon: 'error', title: 'Upload Failed', text: err.message, background: '#121829', color: '#fff' })
     } finally { setUploading(false) }
+  }
+
+  function handleMediaPickerSelect(item: MediaItem) {
+    setCoverImageId(item.id)
+    setCoverImageUrl(item.url)
   }
 
   async function handleSave() {
@@ -126,16 +134,37 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
             <div className="flex flex-col gap-1.5">
               <label className="text-base font-bold text-zinc-300">Cover Image</label>
               {coverImageUrl ? (
-                <div className="flex items-center gap-3">
-                  <img src={coverImageUrl} alt="Cover" className="h-12 w-20 object-cover rounded border border-zinc-800" />
-                  <button onClick={() => { setCoverImageId(''); setCoverImageUrl('') }} className="text-zinc-500 hover:text-red-400 cursor-pointer"><FiX className="h-4.5 w-4.5" /></button>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <img src={coverImageUrl} alt="Cover" className="w-full h-28 object-cover rounded-lg border border-zinc-800" />
+                    <button onClick={() => { setCoverImageId(''); setCoverImageUrl('') }}
+                      className="absolute top-1.5 right-1.5 p-1.5 rounded bg-black/70 hover:bg-rose-500 text-zinc-400 hover:text-white transition-all cursor-pointer">
+                      <FiX className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className={`flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-sm cursor-pointer transition-all ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                      <FiUploadCloud className="h-4 w-4" /> Upload New
+                    </label>
+                    <button type="button" onClick={() => setShowMediaPicker(true)}
+                      className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#615fff]/15 hover:bg-[#615fff]/25 border border-[#615fff]/20 text-[#615fff] font-bold text-sm cursor-pointer transition-all">
+                      <FiImage className="h-4 w-4" /> From Library
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <label className={`flex items-center gap-2 px-3 py-3 bg-[#070b16] border border-zinc-800 hover:border-[#615fff]/60 rounded-lg cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  <FiUploadCloud className="h-5 w-5 text-zinc-500" />
-                  <span className="text-base font-semibold text-zinc-500">{uploading ? 'Uploading...' : 'Select cover image'}</span>
-                </label>
+                <div className="space-y-2">
+                  <label className={`flex items-center gap-2 px-3 py-3 bg-[#070b16] border border-zinc-800 hover:border-[#615fff]/60 rounded-lg cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    <FiUploadCloud className="h-5 w-5 text-zinc-500" />
+                    <span className="text-base font-semibold text-zinc-500">{uploading ? 'Uploading...' : 'Upload new image'}</span>
+                  </label>
+                  <button type="button" onClick={() => setShowMediaPicker(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#615fff]/10 hover:bg-[#615fff]/20 border border-[#615fff]/20 text-[#615fff] font-bold text-base transition-all cursor-pointer">
+                    <FiImage className="h-4.5 w-4.5" /> Pick from Media Library
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -143,6 +172,14 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all cursor-pointer disabled:opacity-50">
             <FiSave className="h-4.5 w-4.5" /> {saving ? 'Publishing...' : editingId ? 'Save Changes' : 'Publish Blog Post'}
           </button>
+
+          {/* Media Picker Modal */}
+          <MediaPickerModal
+            open={showMediaPicker}
+            onClose={() => setShowMediaPicker(false)}
+            onSelect={handleMediaPickerSelect}
+            title="Pick Blog Cover Image"
+          />
         </div>
       )}
 

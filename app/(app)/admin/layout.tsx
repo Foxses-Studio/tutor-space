@@ -27,6 +27,7 @@ interface AdminSessionUser {
   email: string
   role: 'admin' | 'staff' | 'instructor'
   profilePic?: string | null
+  permissions?: string[]
 }
 
 export default function AdminLayout({
@@ -120,18 +121,30 @@ export default function AdminLayout({
       .substring(0, 2)
   }
 
-  // Filter links based on role authorization
+  // Filter links based on custom permissions and role authorization
   const sidebarLinks = [
-    { label: 'Overview', href: '/admin', icon: FiLayout, roles: ['admin', 'staff', 'instructor'] },
-    { label: 'Courses', href: '/admin/courses', icon: FiBookOpen, roles: ['admin', 'instructor'] },
-    { label: 'Lessons Syllabus', href: '/admin/lessons', icon: FiList, roles: ['admin', 'instructor'] },
-    { label: 'Reviews Moderate', href: '/admin/reviews', icon: FiStar, roles: ['admin', 'staff'] },
-    { label: 'Categories', href: '/admin/categories', icon: FiBookmark, roles: ['admin', 'staff'] },
-    { label: 'FAQs Landing', href: '/admin/faqs', icon: FiHelpCircle, roles: ['admin', 'staff'] },
-    { label: 'Blog Posts', href: '/admin/blogs', icon: FiFileText, roles: ['admin', 'staff'] },
-    { label: 'Media Library', href: '/admin/media', icon: FiImage, roles: ['admin', 'staff'] },
-    { label: 'Staff Registry', href: '/admin/staff-register', icon: FiUserPlus, roles: ['admin'] },
-  ].filter((link) => link.roles.includes(user.role))
+    { label: 'Overview', href: '/admin', icon: FiLayout, roles: ['admin', 'staff', 'instructor'], permission: 'overview' },
+    { label: 'Courses', href: '/admin/courses', icon: FiBookOpen, roles: ['admin', 'instructor'], permission: 'courses' },
+    { label: 'Lessons Syllabus', href: '/admin/lessons', icon: FiList, roles: ['admin', 'instructor'], permission: 'lessons' },
+    { label: 'Reviews Moderate', href: '/admin/reviews', icon: FiStar, roles: ['admin', 'staff'], permission: 'reviews' },
+    { label: 'Categories', href: '/admin/categories', icon: FiBookmark, roles: ['admin', 'staff'], permission: 'categories' },
+    { label: 'FAQs Landing', href: '/admin/faqs', icon: FiHelpCircle, roles: ['admin', 'staff'], permission: 'faqs' },
+    { label: 'Blog Posts', href: '/admin/blogs', icon: FiFileText, roles: ['admin', 'staff'], permission: 'blogs' },
+    { label: 'Media Library', href: '/admin/media', icon: FiImage, roles: ['admin', 'staff'], permission: 'media' },
+    { label: 'Staff Registry', href: '/admin/staff-register', icon: FiUserPlus, roles: ['admin'], permission: 'staff-register' },
+  ].filter((link) => {
+    // 1. Root admin has access to everything
+    if (user.role === 'admin') return true
+
+    // 2. If user has custom permissions array, check if it contains the permission key
+    if (user.permissions && user.permissions.length > 0) {
+      if (link.permission === 'overview') return true
+      return user.permissions.includes(link.permission)
+    }
+
+    // 3. Fallback: Role-based authorization if permissions array is empty or undefined
+    return link.roles.includes(user.role)
+  })
 
   return (
     <div className="h-screen bg-[#121212] flex font-sans overflow-hidden text-zinc-100">
