@@ -18,6 +18,7 @@ import {
   FiClock,
   FiBook,
   FiChevronRight,
+  FiList,
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -633,30 +634,47 @@ export default function AdminDashboardPage() {
                 No courses assigned to your profile yet.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {courses?.map((c) => (
-                  <div key={c.id} className="bg-[#121212] border border-zinc-800 p-5 rounded-lg flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-white text-base">{c.title}</p>
-                      <p className="text-base font-semibold text-zinc-500 mt-1">Price: {formatCurrency(c.price)}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2.5 py-1 rounded-lg text-base font-bold uppercase ${
-                        c.status === 'published' 
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                          : 'bg-zinc-850 text-zinc-400 border border-zinc-800'
-                      }`}>
-                        {c.status}
-                      </span>
-                      <Link
-                        href={`/admin/lessons?courseId=${c.id}`}
-                        className="py-2 px-3.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-colors text-center"
-                      >
-                        Syllabus
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-base">
+                  <thead>
+                    <tr className="bg-[#121212] border-b border-zinc-800 text-zinc-400 font-bold text-sm uppercase tracking-wider">
+                      <th className="px-6 py-3.5">Course Title</th>
+                      <th className="px-6 py-3.5">Price</th>
+                      <th className="px-4 py-3.5 text-center">Visibility</th>
+                      <th className="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60 font-semibold text-zinc-200">
+                    {courses?.map((c) => (
+                      <tr key={c.id} className="hover:bg-zinc-800/20 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-white text-base leading-snug">{c.title}</p>
+                        </td>
+                        <td className="px-6 py-4 text-base text-[#615fff] font-bold">
+                          {formatCurrency(c.price)}
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <span className={`inline-flex px-2.5 py-1 rounded text-xs font-bold uppercase select-none ${
+                            c.status === 'published' 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-zinc-850 text-zinc-450 border border-zinc-800'
+                          }`}>
+                            {c.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Link
+                            href={`/admin/lessons?courseId=${c.id}`}
+                            className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-colors"
+                          >
+                            <FiList className="h-4.5 w-4.5" />
+                            <span>Manage Syllabus</span>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
