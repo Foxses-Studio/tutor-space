@@ -65,6 +65,8 @@ interface DashboardData {
     status: string
     price: number
     thumbnail?: string | null
+    level: string
+    duration: string
   }>
 }
 
@@ -651,15 +653,18 @@ export default function AdminDashboardPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
                             {/* Thumbnail */}
-                            <div className="h-10 w-16 rounded overflow-hidden bg-[#070b16] border border-zinc-800 shrink-0 relative flex items-center justify-center select-none">
+                            <div className="h-12 w-20 rounded-md overflow-hidden bg-[#070b16] border border-zinc-800 shrink-0 relative flex items-center justify-center select-none">
                               {c.thumbnail ? (
                                 <img src={c.thumbnail} alt={c.title} className="w-full h-full object-cover" />
                               ) : (
-                                <span className="text-[10px] font-bold text-zinc-500">Tutor</span>
+                                <span className="text-xs font-bold text-zinc-650">Tutor</span>
                               )}
                             </div>
                             <div>
                               <p className="font-bold text-white text-base leading-snug line-clamp-1">{c.title}</p>
+                              <p className="text-xs font-bold text-zinc-500 mt-1 uppercase tracking-wider">
+                                {c.level} • {c.duration}
+                              </p>
                             </div>
                           </div>
                         </td>

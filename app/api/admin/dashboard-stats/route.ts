@@ -194,6 +194,8 @@ export async function GET() {
             status: c.status,
             price: c.price,
             thumbnail: thumbnailUrl,
+            level: c.level,
+            duration: c.duration || 'N/A',
           }
         }),
       })
