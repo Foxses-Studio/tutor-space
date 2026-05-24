@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function Features() {
   return (
-    <section id="features" className="py-24 max-w-7xl mx-auto px-6">
+    <section id="features" className="py-24 container mx-auto px-6">
       <div className="text-center max-w-2xl mx-auto mb-16">
         <h2 className="text-3xl md:text-4xl font-bold font-display text-white tracking-tight mb-4">Why Tutor Space?</h2>
         <p className="text-zinc-400">A learning experience crafted to give you the highest industry outcomes.</p>

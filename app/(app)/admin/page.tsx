@@ -281,7 +281,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+    <div className="container mx-auto px-6 py-8 space-y-8">
       
       {/* Top Welcome Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

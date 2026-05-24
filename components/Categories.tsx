@@ -236,7 +236,7 @@ export default function Categories({ categories }: CategoriesProps) {
           style={{ bottom: '6%', right: '3%' }} />
       </div>
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="container mx-auto relative z-10">
 
         {/* ── Heading ── */}
         <div className="text-center mb-16 space-y-4 relative z-30 py-2">

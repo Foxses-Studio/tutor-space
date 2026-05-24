@@ -149,7 +149,7 @@ export default function Reviews({ reviews }: ReviewsProps) {
       {/* Ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#615fff]/3 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="container mx-auto relative z-10">
 
         {/* Heading */}
         <div className="text-center mb-14">

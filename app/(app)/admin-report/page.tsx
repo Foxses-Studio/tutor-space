@@ -163,7 +163,7 @@ export default function AdminReportPage() {
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="container mx-auto px-6 py-8 space-y-8">
 
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

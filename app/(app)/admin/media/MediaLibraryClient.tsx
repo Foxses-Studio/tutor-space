@@ -124,7 +124,7 @@ export default function MediaLibraryClient({ initialMedia }: { initialMedia: Med
   }
 
   return (
-    <div className="px-6 py-8 space-y-6 max-w-7xl mx-auto">
+    <div className="px-6 py-8 space-y-6 container mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

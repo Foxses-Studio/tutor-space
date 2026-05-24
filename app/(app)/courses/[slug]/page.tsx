@@ -105,7 +105,7 @@ export default async function CourseDetailPage({ params }: Props) {
 
       {/* ── Breadcrumb bar ── */}
       <div className="border-b border-zinc-100 bg-zinc-50/70">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-2 text-base font-semibold text-zinc-500">
+        <div className="container mx-auto px-6 py-4 flex items-center gap-2 text-base font-semibold text-zinc-500">
           <Link href="/" className="hover:text-[#615fff] transition-colors">Home</Link>
           <span>/</span>
           <Link href="/#courses" className="hover:text-[#615fff] transition-colors">Courses</Link>
@@ -119,7 +119,7 @@ export default async function CourseDetailPage({ params }: Props) {
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#543cdf]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+        <div className="container mx-auto px-6 py-16 md:py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
 
           {/* Left: course info */}
           <div className="lg:col-span-7 space-y-6">
@@ -218,7 +218,7 @@ export default async function CourseDetailPage({ params }: Props) {
       </div>
 
       {/* ── Main content ── */}
-      <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="container mx-auto px-6 py-14 grid grid-cols-1 lg:grid-cols-12 gap-12">
 
         {/* Left: detailed content */}
         <div className="lg:col-span-8 space-y-12">

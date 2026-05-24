@@ -179,7 +179,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
       <div className="absolute top-1/3 right-0 w-112.5 h-112.5 bg-[#615fff]/5 rounded-full blur-[130px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-0 w-112.5 h-112.5 bg-[#615fff]/4 rounded-full blur-[150px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="container mx-auto relative z-10">
 
         {/* Section Title */}
         <div className="text-center mb-12" ref={headRef}>

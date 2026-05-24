@@ -149,6 +149,7 @@ When creating, editing, or refactoring UI components, developers and AI agents M
 
 2. **Layout & Borders:**
    - **Maximum Border Radius:** The absolute maximum border radius for cards, buttons, input fields, containers, and boxes is **8px** (Tailwind `rounded-lg` or equivalent). Do not use `rounded-xl`, `rounded-2xl`, `rounded-3xl` etc. (except for circular elements like avatars which can use `rounded-full`).
+   - **Layout Containers & Max Widths:** Always use the standard Tailwind `container mx-auto` class wrappers for page-level structural margins and maximum boundaries. Using hardcoded max-width utilities (like `max-w-7xl` or custom max widths) on layout containers is strictly prohibited.
 
 ---
 
