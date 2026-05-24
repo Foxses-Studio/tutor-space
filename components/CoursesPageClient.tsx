@@ -1,0 +1,611 @@
+'use client'
+
+import React, { useState, useMemo } from 'react'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  FiSearch, FiX, FiClock, FiUsers, FiStar,
+  FiArrowUpRight, FiUser, FiGrid, FiList, FiChevronDown, FiChevronRight
+} from 'react-icons/fi'
+import type { CourseDoc, CategoryDoc } from '@/components/Courses'
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getImageUrl(thumbnail: CourseDoc['thumbnail']): string {
+  if (!thumbnail || typeof thumbnail === 'string') return ''
+  return (thumbnail as any).sizes?.card?.url ?? (thumbnail as any).url ?? ''
+}
+
+function formatPrice(price: number): string {
+  if (price === 0) return 'Free'
+  return `${price.toLocaleString()}৳`
+}
+
+// Capitalize helper to prevent text sizing/case styling conflicts
+function getLevelLabel(level: string): string {
+  const map: Record<string, string> = {
+    all: 'All Levels', beginner: 'Beginner',
+    intermediate: 'Intermediate', advanced: 'Advanced',
+  }
+  return map[level] ?? 'All Levels'
+}
+
+function getCategoryName(category: CourseDoc['category']): string {
+  if (!category || typeof category === 'string') return 'Course'
+  return (category as any).name
+}
+
+function getCategorySlug(category: CourseDoc['category']): string {
+  if (!category || typeof category === 'string') return ''
+  return (category as any).slug
+}
+
+const LEVELS = [
+  { value: 'beginner',     label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced',     label: 'Advanced' },
+]
+
+const PRICE_TIERS = [
+  { value: 'all',  label: 'All' },
+  { value: 'subscription', label: 'Subscription (Mock)' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'free', label: 'Free' },
+]
+
+const LANGUAGES = [
+  { value: 'english', label: 'English' },
+  { value: 'bengali', label: 'Bengali' },
+]
+
+// ─── Course Card ──────────────────────────────────────────────────────────────
+
+function CourseCard({ course, view }: { course: CourseDoc; view: 'grid' | 'list' }) {
+  const imgUrl = getImageUrl(course.thumbnail)
+
+  if (view === 'list') {
+    return (
+      <Link
+        href={`/courses/${course.slug}`}
+        className="flex flex-col md:flex-row gap-6 bg-white rounded-lg p-5 border border-zinc-200 hover:border-[#615fff] transition-all duration-300 group hover:-translate-y-1 w-full"
+      >
+        {/* Aspect-ratio constrained image wrapper */}
+        <div className="shrink-0 w-full md:w-60 aspect-[16/10] rounded-lg overflow-hidden bg-zinc-50 relative">
+          {imgUrl ? (
+            <img 
+              src={imgUrl} 
+              alt={course.title} 
+              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" 
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#0A163A] to-[#1e1b4b] flex items-center justify-center">
+              <span className="h-10 w-10 rounded-lg bg-[#615fff]/30 flex items-center justify-center font-bold text-white text-base">T</span>
+            </div>
+          )}
+          
+          {/* Dynamic Hover Overlay with Arrow */}
+          <div className="absolute inset-0 bg-[#0A163A]/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="p-3 rounded-full bg-white text-[#615fff] border border-zinc-200 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+              <FiArrowUpRight className="h-6 w-6" />
+            </span>
+          </div>
+
+          {/* Level Badge Overlay (Glassmorphism, border-only visual separation) */}
+          <span className="absolute top-3 left-3 px-3 py-1 bg-white/95 backdrop-blur-md rounded-lg text-zinc-700 font-bold text-base border border-zinc-200/40">
+            {getLevelLabel(course.level)}
+          </span>
+        </div>
+        
+        {/* Info */}
+        <div className="flex-grow min-w-0 flex flex-col justify-between py-1 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-base">
+              <span className="font-bold text-[#615fff] bg-[#615fff]/8 px-3 py-1 rounded-lg text-base uppercase">
+                {getCategoryName(course.category)}
+              </span>
+              {(course.enrollmentCount ?? 0) > 0 && (
+                <span className="flex items-center gap-1.5 text-zinc-500 font-bold text-base">
+                  <FiUsers className="h-5 w-5 text-zinc-400" /> 
+                  <span>{course.enrollmentCount} students</span>
+                </span>
+              )}
+            </div>
+            <h3 className="font-bold text-[#0A163A] text-xl leading-snug group-hover:text-[#615fff] transition-colors line-clamp-2">
+              {course.title}
+            </h3>
+            {course.instructor && (
+              <p className="text-base text-zinc-500 flex items-center gap-2 pt-0.5 font-semibold">
+                <FiUser className="h-4.5 w-4.5 text-zinc-400" /> 
+                <span>{course.instructor.name}</span>
+              </p>
+            )}
+            <p className="text-base text-zinc-500 line-clamp-2 leading-relaxed">
+              {course.summary}
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-between pt-4">
+            <span className={`text-2xl font-bold ${course.price === 0 ? 'text-emerald-600 font-bold' : 'text-[#615fff]'}`}>
+              {formatPrice(course.price)}
+            </span>
+            <span className="flex items-center gap-1.5 text-base text-zinc-650 font-bold">
+              <FiStar className={`h-5 w-5 ${(course.avgRating ?? 0) > 0 ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'}`} />
+              <span className="text-[#0A163A]">{(course.avgRating ?? 0).toFixed(1)}</span>
+              {(course.reviewCount ?? 0) > 0 && (
+                <span className="text-zinc-450 font-semibold">({course.reviewCount})</span>
+              )}
+            </span>
+          </div>
+        </div>
+      </Link>
+    )
+  }
+
+  // Grid card — Border outline based visual design (completely shadowless)
+  return (
+    <div className="w-full flex justify-center sm:justify-start">
+      <Link
+        href={`/courses/${course.slug}`}
+        className="bg-white rounded-lg overflow-hidden border border-zinc-200 hover:border-[#615fff] hover:-translate-y-1.5 transition-all duration-300 group flex flex-col h-full w-full max-w-[340px]"
+      >
+        {/* Aspect-ratio constrained image wrapper */}
+        <div className="relative aspect-[16/10] bg-zinc-50 overflow-hidden">
+          {imgUrl ? (
+            <img 
+              src={imgUrl} 
+              alt={course.title} 
+              className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" 
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#0A163A] to-[#1e1b4b] flex flex-col items-center justify-center">
+              <span className="h-12 w-12 rounded-lg bg-[#615fff]/25 flex items-center justify-center font-bold text-white mb-2 text-lg">T</span>
+              <span className="text-base font-bold text-zinc-400 uppercase tracking-wider">Tutor Space</span>
+            </div>
+          )}
+          
+          {/* Dynamic Hover Overlay with Arrow */}
+          <div className="absolute inset-0 bg-[#0A163A]/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="p-3 rounded-full bg-white text-[#615fff] border border-zinc-200 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+              <FiArrowUpRight className="h-6 w-6" />
+            </span>
+          </div>
+
+          {/* Level Badge Overlay */}
+          <span className="absolute top-3 left-3 px-3 py-1 bg-white/95 backdrop-blur-md rounded-lg text-zinc-700 font-bold text-base border border-zinc-200/40">
+            {getLevelLabel(course.level)}
+          </span>
+        </div>
+
+        {/* Content Details */}
+        <div className="p-5 flex-grow flex flex-col justify-between gap-4">
+          <div className="space-y-3">
+            {/* Category + enrollment */}
+            <div className="flex items-center justify-between text-base">
+              <span className="font-bold text-[#615fff] bg-[#615fff]/8 px-3 py-0.5 rounded-lg text-base uppercase">
+                {getCategoryName(course.category)}
+              </span>
+              <span className="flex items-center gap-1 text-zinc-500 font-bold text-base">
+                <FiUsers className="h-4.5 w-4.5 text-zinc-400" /> 
+                <span>{course.enrollmentCount ?? 0}</span>
+              </span>
+            </div>
+
+            {/* Title */}
+            <h3 className="font-bold text-[#0A163A] text-lg leading-snug group-hover:text-[#615fff] transition-colors line-clamp-2">
+              {course.title}
+            </h3>
+            
+            {/* Instructor */}
+            {course.instructor && (
+              <p className="text-base text-zinc-500 font-semibold truncate pt-0.5">
+                by {course.instructor.name}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {/* Price + Rating */}
+            <div className="flex items-center justify-between pt-3 border-t-0">
+              <span className={`text-xl font-bold ${course.price === 0 ? 'text-emerald-600 font-bold' : 'text-[#615fff]'}`}>
+                {formatPrice(course.price)}
+              </span>
+              <span className="flex items-center gap-1.5 text-base text-zinc-650 font-bold">
+                <FiStar className={`h-5 w-5 ${(course.avgRating ?? 0) > 0 ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'}`} />
+                <span className="text-[#0A163A]">{(course.avgRating ?? 0).toFixed(1)}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+}
+
+// ─── Sidebar Section ──────────────────────────────────────────────────────────
+
+function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true)
+  return (
+    <div className="py-1">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between text-base font-bold text-[#0A163A] cursor-pointer hover:text-[#615fff] transition-colors py-1"
+      >
+        <span>{title}</span>
+        <FiChevronDown className={`h-5 w-5 text-zinc-400 transition-transform duration-200 ${open ? '' : '-rotate-90'}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="mt-3 overflow-hidden"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── Main Client Page ─────────────────────────────────────────────────────────
+
+export default function CoursesPageClient({
+  courses,
+  categories,
+}: {
+  courses: CourseDoc[]
+  categories: CategoryDoc[]
+}) {
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [activeLevels, setActiveLevels] = useState<string[]>([])
+  const [priceTier, setPriceTier] = useState('all')
+  const [activeLanguages, setActiveLanguages] = useState<string[]>([])
+  const [view, setView] = useState<'grid' | 'list'>('grid')
+  
+  // Category list pagination toggle (Show More / Show Less)
+  const [showAllCategories, setShowAllCategories] = useState(false)
+
+  const toggleLevel = (lvl: string) => {
+    setActiveLevels((prev) =>
+      prev.includes(lvl) ? prev.filter((l) => l !== lvl) : [...prev, lvl]
+    )
+  }
+
+  const toggleLanguage = (lang: string) => {
+    setActiveLanguages((prev) =>
+      prev.includes(lang) ? prev.filter((l) => l !== lang) : [...prev, lang]
+    )
+  }
+
+  const filtered = useMemo(() => {
+    let result = [...courses]
+
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(
+        (c) =>
+          c.title.toLowerCase().includes(q) ||
+          c.summary.toLowerCase().includes(q) ||
+          getCategoryName(c.category).toLowerCase().includes(q)
+      )
+    }
+
+    if (activeCategory !== 'all') {
+      result = result.filter((c) => getCategorySlug(c.category) === activeCategory)
+    }
+
+    if (activeLevels.length > 0) {
+      result = result.filter((c) => activeLevels.includes(c.level))
+    }
+
+    if (priceTier === 'free') {
+      result = result.filter((c) => c.price === 0)
+    } else if (priceTier === 'paid') {
+      result = result.filter((c) => c.price > 0)
+    }
+
+    if (activeLanguages.length > 0) {
+      // Mock filtering support for languages
+      result = result.filter((c) => {
+        return activeLanguages.some((lang) => {
+          if (lang === 'bengali') {
+            return /[\u0980-\u09FF]/.test(c.title + c.summary)
+          }
+          if (lang === 'english') {
+            return !/[\u0980-\u09FF]/.test(c.title + c.summary)
+          }
+          return true
+        })
+      })
+    }
+
+    return result
+  }, [courses, search, activeCategory, activeLevels, priceTier, activeLanguages])
+
+  const hasFilters = search || activeCategory !== 'all' || activeLevels.length > 0 || priceTier !== 'all' || activeLanguages.length > 0
+
+  const clearAll = () => {
+    setSearch('')
+    setActiveCategory('all')
+    setActiveLevels([])
+    setPriceTier('all')
+    setActiveLanguages([])
+  }
+
+  // Decide how many categories to list initially
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 5)
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#ffffff] via-[#fbfcff] to-[#f5f8ff] font-sans pb-20 relative flex flex-col pt-22">
+      {/* Background glow accents (confined to absolute layer to prevent sticky scroll breaking) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] bg-[#615fff]/3 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] bg-[#FDBF2D]/3 rounded-full blur-[120px]" />
+      </div>
+
+      {/* ── Page Layout Container ── */}
+      <div className="container mx-auto px-6 py-8 flex flex-col gap-8 relative z-10 flex-grow">
+        
+        {/* ── Content Grid with Sidebar & Cards ── */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start relative mt-4">
+          
+          {/* ── STICKY SIDEBAR (Left Column, border-based design without shadow) ── */}
+          <aside className="w-full lg:w-72 shrink-0 space-y-6 lg:sticky lg:top-28 z-20">
+            
+            {/* Browse Categories Box */}
+            <div className="bg-white rounded-lg p-6 border border-zinc-200 space-y-4">
+              <h3 className="text-xl font-bold text-[#0A163A]">Browse Categories</h3>
+              
+              <div className="space-y-1 mt-2">
+                <button
+                  onClick={() => setActiveCategory('all')}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-lg text-base font-bold transition-all cursor-pointer ${
+                    activeCategory === 'all'
+                      ? 'bg-[#615fff] text-white'
+                      : 'text-zinc-650 hover:text-[#0A163A] hover:bg-[#615fff]/5'
+                  }`}
+                >
+                  <span>All Categories</span>
+                  <span className={`text-base font-bold rounded-lg px-2.5 py-0.5 ${activeCategory === 'all' ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'}`}>
+                    {courses.length}
+                  </span>
+                </button>
+
+                {displayedCategories.map((cat) => {
+                  const count = courses.filter((c) => getCategorySlug(c.category) === cat.slug).length
+                  const active = activeCategory === cat.slug
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.slug)}
+                      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-lg text-base font-semibold transition-all cursor-pointer capitalize ${
+                        active 
+                          ? 'text-[#615fff] font-bold bg-[#615fff]/8' 
+                          : 'text-zinc-650 hover:text-[#0A163A] hover:bg-[#615fff]/5'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        <FiChevronRight className={`h-4.5 w-4.5 transition-transform ${active ? 'text-[#615fff] translate-x-0.5' : 'text-zinc-400'}`} />
+                        <span className="truncate">{cat.name}</span>
+                      </span>
+                      <span className={`text-base font-bold rounded-lg px-2.5 py-0.5 ${active ? 'bg-[#615fff]/15 text-[#615fff]' : 'bg-zinc-150 text-zinc-500'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
+
+                {/* Show More toggle button */}
+                {categories.length > 5 && (
+                  <button
+                    onClick={() => setShowAllCategories(!showAllCategories)}
+                    className="w-full text-left px-3.5 py-3 text-base font-bold text-[#615fff] hover:text-[#543cdf] transition-colors cursor-pointer mt-1"
+                  >
+                    {showAllCategories ? 'Show Less' : 'Show More'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Filters Box */}
+            <div className="bg-white rounded-lg p-6 border border-zinc-200 space-y-6">
+              <h3 className="text-xl font-bold text-[#0A163A]">Filters</h3>
+              
+              {/* Price Tier Filter */}
+              <div className="space-y-3">
+                <p className="text-base font-bold text-[#0A163A] uppercase tracking-wider">Tier</p>
+                <div className="space-y-2.5">
+                  {PRICE_TIERS.map((tier) => (
+                    <label key={tier.value} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="tier"
+                        value={tier.value}
+                        checked={priceTier === tier.value || (tier.value === 'all' && priceTier === 'all')}
+                        onChange={() => {
+                          if (tier.value === 'subscription') return
+                          setPriceTier(tier.value)
+                        }}
+                        disabled={tier.value === 'subscription'}
+                        className="w-5 h-5 accent-[#615fff] cursor-pointer"
+                      />
+                      <span className={`text-base font-semibold transition-colors duration-200 ${
+                        priceTier === tier.value ? 'text-[#615fff] font-bold' : 'text-zinc-650 group-hover:text-zinc-800'
+                      } ${tier.value === 'subscription' ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {tier.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Language Filter */}
+              <div className="space-y-3">
+                <p className="text-base font-bold text-[#0A163A] uppercase tracking-wider">Language</p>
+                <div className="space-y-2.5">
+                  {LANGUAGES.map((lang) => (
+                    <label key={lang.value} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        value={lang.value}
+                        checked={activeLanguages.includes(lang.value)}
+                        onChange={() => toggleLanguage(lang.value)}
+                        className="w-5 h-5 accent-[#615fff] cursor-pointer rounded"
+                      />
+                      <span className={`text-base font-semibold transition-colors duration-200 ${
+                        activeLanguages.includes(lang.value) ? 'text-[#615fff] font-bold' : 'text-zinc-650 group-hover:text-zinc-800'
+                      }`}>
+                        {lang.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Levels Filter */}
+              <div className="space-y-3">
+                <p className="text-base font-bold text-[#0A163A] uppercase tracking-wider">Level</p>
+                <div className="space-y-2.5">
+                  {LEVELS.map((lvl) => (
+                    <label key={lvl.value} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        value={lvl.value}
+                        checked={activeLevels.includes(lvl.value)}
+                        onChange={() => toggleLevel(lvl.value)}
+                        className="w-5 h-5 accent-[#615fff] cursor-pointer rounded"
+                      />
+                      <span className={`text-base font-semibold transition-colors duration-200 ${
+                        activeLevels.includes(lvl.value) ? 'text-[#615fff] font-bold' : 'text-zinc-650 group-hover:text-zinc-800'
+                      }`}>
+                        {lvl.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clear filters trigger */}
+              {hasFilters && (
+                <button
+                  onClick={clearAll}
+                  className="mt-6 w-full text-base font-bold text-rose-500 hover:text-white hover:bg-rose-500 bg-rose-50 rounded-lg py-3 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <FiX className="h-5 w-5" />
+                  <span>Clear All Filters</span>
+                </button>
+              )}
+            </div>
+          </aside>
+
+          {/* ── MAIN CONTENT (Right Column) ── */}
+          <main className="flex-grow min-w-0 w-full space-y-6">
+            
+            {/* Search + View Toggle bar matching design (completely shadowless) */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center bg-white rounded-lg p-3 border border-zinc-200">
+              <div className="flex-grow flex items-center gap-3 pl-3 w-full">
+                <FiSearch className="h-5 w-5 text-zinc-400 shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search courses, instructors, or topics..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-transparent outline-none text-base text-[#0A163A] placeholder:text-zinc-400 font-semibold"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="text-zinc-400 hover:text-zinc-700 cursor-pointer">
+                    <FiX className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex items-center bg-zinc-100/80 rounded-lg p-1.5 gap-1.5 shrink-0">
+                <button
+                  onClick={() => setView('grid')}
+                  className={`p-2.5 rounded-lg cursor-pointer transition-all duration-200 ${view === 'grid' ? 'bg-white text-[#615fff] font-bold border border-zinc-200' : 'bg-transparent text-zinc-500 hover:text-[#0A163A]'}`}
+                >
+                  <FiGrid className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setView('list')}
+                  className={`p-2.5 rounded-lg cursor-pointer transition-all duration-200 ${view === 'list' ? 'bg-white text-[#615fff] font-bold border border-zinc-200' : 'bg-transparent text-zinc-500 hover:text-[#0A163A]'}`}
+                >
+                  <FiList className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Title / Counter Row */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+              <div>
+                <h1 className="text-2xl font-bold font-display text-[#0A163A]">
+                  All Courses
+                </h1>
+                <p className="text-base text-zinc-550 font-semibold mt-1">
+                  Showing <span className="font-bold text-[#615fff]">{filtered.length}</span> courses found
+                </p>
+              </div>
+              
+              {hasFilters && (
+                <button
+                  onClick={clearAll}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-50 text-rose-500 hover:text-white hover:bg-rose-500 text-base font-bold rounded-lg transition-all cursor-pointer"
+                >
+                  <FiX className="h-5 w-5" />
+                  <span>Clear Filters</span>
+                </button>
+              )}
+            </div>
+
+            {/* Course Grid / List View */}
+            <AnimatePresence mode="wait">
+              {filtered.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center justify-center py-28 text-center bg-white rounded-lg border border-zinc-200"
+                >
+                  <div className="h-14 w-14 rounded-lg bg-[#615fff]/8 flex items-center justify-center mb-4">
+                    <FiSearch className="h-6 w-6 text-[#615fff]" />
+                  </div>
+                  <h3 className="text-lg font-bold text-zinc-800 mb-1">No courses found</h3>
+                  <p className="text-base text-zinc-450 max-w-xs mb-6 font-semibold">Try adjusting filters or searching different keywords.</p>
+                  <button
+                    onClick={clearAll}
+                    className="px-6 py-3.5 bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base rounded-lg transition-all duration-300 cursor-pointer"
+                  >
+                    Clear All Filters
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={view + activeCategory}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className={
+                    view === 'grid'
+                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-start'
+                      : 'flex flex-col gap-5'
+                  }
+                >
+                  {filtered.map((course) => (
+                    <CourseCard key={course.id} course={course} view={view} />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
+    </div>
+  )
+}

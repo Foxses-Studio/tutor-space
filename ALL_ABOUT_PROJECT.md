@@ -155,4 +155,5 @@ pnpm dev
    ```
 4. **Core UI Style & Spacing Rules:**
    - **Minimum Font Size:** All body copy, labels, paragraphs, and list items must have a minimum font size of **16px** (equivalent to Tailwind's `text-base`) to maintain a clean, readable layout.
-   - **Minimum Border Radius:** All cards, buttons, input fields, badges, and user-interface element wrappers must have a border-radius of at least **8px** (equivalent to Tailwind's `rounded-lg` or larger: `rounded-xl`, `rounded-2xl`, etc.) to ensure a friendly, modern design.
+   - **Maximum Border Radius:** All cards, buttons, input fields, badges, and user-interface element wrappers must have a border-radius of **8px** (equivalent to Tailwind's `rounded-lg`) to ensure a friendly, modern design.
+   - **No Borders on Public Pages:** Do NOT use visible borders (e.g., `border`, `border-zinc-200`, `border-white/5`) on cards, buttons, input fields, headers, sidebars, or containers on the public, user-facing pages (`app/(app)/*`). Instead, use elegant shadow hierarchies (`shadow-sm`, `shadow-md`, `shadow-xl`) and subtle background color differences (`bg-white`, `bg-zinc-50/50`, etc.) to group content beautifully and keep the layout feeling borderless, modern, and high-end.

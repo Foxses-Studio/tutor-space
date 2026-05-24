@@ -28,7 +28,7 @@ export default function ClientNavbarFooterWrapper({ children }: { children: Reac
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative">
       <Navbar />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />

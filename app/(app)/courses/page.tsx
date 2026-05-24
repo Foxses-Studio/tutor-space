@@ -5,7 +5,7 @@ import { Category } from '@/lib/db/models/Category'
 import { Review } from '@/lib/db/models/Review'
 import { Enrollment } from '@/lib/db/models/Enrollment'
 import type { CourseDoc, CategoryDoc } from '@/components/Courses'
-import CoursesPageClient from './CoursesPageClient'
+import CoursesPageClient from '@/components/CoursesPageClient'
 
 export const metadata = {
   title: 'All Courses - Tutor Space',

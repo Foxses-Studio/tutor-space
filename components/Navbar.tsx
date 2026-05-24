@@ -86,7 +86,6 @@ export default function Navbar() {
     }
   }, [])
 
-
   const handleLogout = async () => {
     try {
       const logoutEndpoint = user?.role === 'student'
@@ -111,29 +110,31 @@ export default function Navbar() {
   }
 
   return (
-    <motion.header 
+    <motion.header
       initial={{ y: -70, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/90 backdrop-blur-md border-b border-zinc-100 shadow-sm py-0' 
-          : 'bg-transparent border-b border-transparent py-1'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-md shadow-zinc-200/30 py-0'
+          : 'bg-transparent py-1'
       }`}
     >
       <div className="container mx-auto px-6 h-22 flex items-center justify-between">
-        
+
         {/* Left Side: Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+          <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/35 transition-transform group-hover:scale-105 duration-300 text-base">
             T
           </span>
-          <span className="text-xl font-bold font-display tracking-tight text-zinc-900 transition-all">
+          <span className={`text-xl font-bold font-display tracking-tight transition-colors duration-300 ${
+            isScrolled ? 'text-zinc-900' : 'text-[#0A163A]'
+          }`}>
             Tutor Space
           </span>
         </Link>
 
-        {/* Middle: Navigation Menu (Desktop) - 16px minimum font size */}
+        {/* Middle: Navigation Menu (Desktop) */}
         <nav className="hidden md:flex items-center gap-8 text-base font-semibold">
           {NAV_LINKS.map((link) => {
             const active = isActive(link.match)
@@ -142,11 +143,14 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`relative pb-1.5 pt-1 transition-colors duration-200 group ${
-                  active ? 'text-[#615fff]' : 'text-zinc-500 hover:text-[#121212]'
+                  active
+                    ? 'text-[#615fff]'
+                    : isScrolled
+                      ? 'text-zinc-500 hover:text-zinc-900'
+                      : 'text-[#0A163A]/80 hover:text-[#0A163A]'
                 }`}
               >
                 <span>{link.label}</span>
-                {/* Active underline — always full when active, expands on hover otherwise */}
                 <span
                   className={`absolute bottom-0 left-0 h-[2px] bg-[#615fff] transition-all duration-300 origin-left ${
                     active ? 'w-full' : 'w-0 group-hover:w-full'
@@ -164,7 +168,7 @@ export default function Navbar() {
           {!loading && user && (
             <Link
               href={user.role === 'student' ? '/dashboard' : '/admin'}
-              className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-[#615fff] bg-[#615fff]/5 hover:bg-[#615fff] text-[#615fff] hover:text-white font-semibold text-base transition-all duration-300 cursor-pointer gap-2"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#615fff]/10 hover:bg-[#615fff] text-[#615fff] hover:text-white font-bold text-base transition-all duration-300 cursor-pointer gap-2 shadow-sm shadow-[#615fff]/5"
             >
               <FiLayout className="h-4.5 w-4.5" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -174,14 +178,14 @@ export default function Navbar() {
           {/* User Profile / Login Menu (User icon acts as Login trigger) */}
           <div className="relative" ref={dropdownRef}>
             {loading ? (
-              <div className="h-8 w-8 rounded-full border border-zinc-200 bg-zinc-50 animate-pulse" />
+              <div className="h-8 w-8 rounded-full bg-zinc-100 animate-pulse" />
             ) : user ? (
               // Authenticated User Avatar Trigger
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-1.5 focus:outline-none group cursor-pointer"
               >
-                <div className="h-8 w-8 rounded-full border border-[#615fff]/30 bg-zinc-50 flex items-center justify-center text-xs font-bold text-[#615fff] shadow-md shadow-[#615fff]/10 group-hover:border-[#615fff] transition-all overflow-hidden">
+                <div className="h-8 w-8 rounded-full bg-zinc-50 flex items-center justify-center text-xs font-bold text-[#615fff] shadow-md shadow-[#615fff]/10 transition-all overflow-hidden">
                   {user.profilePic ? (
                     <img 
                       src={typeof user.profilePic === 'object' && (user.profilePic as any).url ? (user.profilePic as any).url : user.profilePic} 
@@ -198,13 +202,15 @@ export default function Navbar() {
               // Anonymous User Trigger (Takes them directly to /login page)
               <Link
                 href="/login"
-                className="p-2 text-zinc-500 hover:text-[#121212] transition-colors duration-200 group cursor-pointer flex items-center justify-center"
+                className={`p-2 transition-colors duration-200 group cursor-pointer flex items-center justify-center ${
+                  isScrolled ? 'text-zinc-500 hover:text-zinc-900' : 'text-[#0A163A]/70 hover:text-[#0A163A]'
+                }`}
               >
                 <FiUser className="h-5 w-5 group-hover:scale-105 transition-transform" />
               </Link>
             )}
 
-            {/* Framer Motion Profile Dropdown Menu - 16px minimum font size & 8px max border radius */}
+            {/* Framer Motion Profile Dropdown Menu - Borderless Premium design */}
             <AnimatePresence>
               {userMenuOpen && (
                 <motion.div
@@ -212,16 +218,16 @@ export default function Navbar() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 15, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="absolute right-0 mt-3 w-64 rounded-lg border border-zinc-150 bg-white p-2.5 shadow-xl shadow-zinc-200/50 z-50 text-zinc-800"
+                  className="absolute right-0 mt-3 w-64 rounded-lg bg-white p-3 shadow-2xl shadow-zinc-300/60 z-50 text-zinc-800"
                 >
                   {user ? (
                     // Logged In Options
                     <>
-                      <div className="px-3 py-2 border-b border-zinc-100 mb-1">
-                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Signed in as</p>
+                      <div className="px-3 py-2.5 bg-zinc-50/70 rounded-lg mb-2">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Signed in as</p>
                         <p className="text-base font-bold text-zinc-800 truncate">{user.name}</p>
                         <p className="text-base text-zinc-500 truncate">{user.email}</p>
-                        <span className="inline-block mt-2 px-2.5 py-0.5 rounded-lg bg-[#615fff]/10 border border-[#615fff]/20 text-xs font-bold text-[#615fff] uppercase">
+                        <span className="inline-block mt-2 px-2.5 py-0.5 rounded-lg bg-[#615fff]/10 text-xs font-bold text-[#615fff] uppercase">
                           {user.role}
                         </span>
                       </div>
@@ -229,7 +235,7 @@ export default function Navbar() {
                       <Link
                         href={user.role === 'student' ? '/dashboard' : '/admin'}
                         onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-base font-semibold text-zinc-600 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
+                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-semibold text-zinc-650 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
                       >
                         <FiLayout className="h-4.5 w-4.5 text-[#615fff]" />
                         Dashboard
@@ -237,7 +243,7 @@ export default function Navbar() {
 
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-base font-semibold text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 text-left cursor-pointer"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-semibold text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-200 text-left cursor-pointer"
                       >
                         <FiLogOut className="h-4.5 w-4.5" />
                         Sign Out
@@ -246,9 +252,9 @@ export default function Navbar() {
                   ) : (
                     // Logged Out Options
                     <>
-                      <div className="px-3 py-2 border-b border-zinc-100 mb-3">
-                        <p className="text-base font-bold text-zinc-800">Welcome</p>
-                        <p className="text-base text-zinc-500 font-medium">Join Tutor Space to access premium courses.</p>
+                      <div className="px-3 py-2.5 bg-zinc-50/70 rounded-lg mb-3">
+                        <p className="text-base font-bold text-[#0A163A]">Welcome</p>
+                        <p className="text-base text-zinc-550 font-semibold mt-0.5">Join Tutor Space to access premium courses.</p>
                       </div>
 
                       <Link
@@ -262,7 +268,7 @@ export default function Navbar() {
                       <Link
                         href="/register"
                         onClick={() => setUserMenuOpen(false)}
-                        className="block w-full text-center px-3 py-2.5 rounded-lg text-base font-bold border border-zinc-200 hover:border-zinc-350 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all"
+                        className="block w-full text-center px-3 py-2.5 rounded-lg text-base font-bold bg-zinc-50 hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 transition-all"
                       >
                         Create Account
                       </Link>
@@ -286,7 +292,9 @@ export default function Navbar() {
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-zinc-500 hover:text-[#121212] md:hidden transition-colors"
+            className={`p-2 md:hidden transition-colors ${
+              isScrolled ? 'text-zinc-500 hover:text-zinc-900' : 'text-[#0A163A]/70 hover:text-[#0A163A]'
+            }`}
           >
             {mobileMenuOpen ? <FiX className="h-6 w-6" /> : <FiMenu className="h-6 w-6" />}
           </button>
@@ -294,7 +302,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Framer Motion Mobile Drawer Menu - 16px minimum font size & 8px+ border radius */}
+      {/* Framer Motion Mobile Drawer Menu - Borderless Pill Navigation */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -302,9 +310,9 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden border-t border-zinc-100 bg-white px-6 py-4 shadow-md overflow-hidden"
+            className="md:hidden bg-white px-6 py-4 shadow-2xl shadow-zinc-200/50 overflow-hidden"
           >
-            <nav className="flex flex-col gap-4 text-base font-semibold">
+            <nav className="flex flex-col gap-2 text-base font-semibold">
               {NAV_LINKS.map((link) => {
                 const active = isActive(link.match)
                 return (
@@ -312,10 +320,10 @@ export default function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`py-1 transition-colors border-l-2 pl-3 ${
+                    className={`py-2.5 px-4 transition-all rounded-lg ${
                       active
-                        ? 'text-[#615fff] border-[#615fff] font-bold'
-                        : 'text-zinc-500 hover:text-zinc-900 border-transparent'
+                        ? 'text-[#615fff] bg-[#615fff]/8 font-bold'
+                        : 'text-zinc-600 hover:text-[#0A163A]'
                     }`}
                   >
                     {link.label}

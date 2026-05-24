@@ -5,6 +5,8 @@ import { connectToDatabase } from '@/lib/db/mongodb'
 import { Course } from '@/lib/db/models/Course'
 import { Lesson } from '@/lib/db/models/Lesson'
 import { Review } from '@/lib/db/models/Review'
+import '@/lib/db/models/Student'
+import '@/lib/db/models/Media'
 import {
   FiArrowLeft, FiClock, FiBookOpen, FiUsers, FiCheck,
   FiStar, FiZap, FiList, FiAward,
@@ -81,15 +83,13 @@ export default async function CourseDetailPage({ params }: Props) {
 
   if (!course) notFound()
 
-  // Parallel: lessons count + approved reviews for this course
+  // Parallel: lessons + approved reviews
   const [lessonsDocs, reviewsDocs] = await Promise.all([
     Lesson.find({ course: course._id }).lean(),
     Review.find({ course: course._id, status: 'approved' })
-      .populate({
-        path: 'student',
-        populate: { path: 'profilePic' }
-      })
-      .lean(),
+      .populate('student')
+      .lean()
+      .catch(() => []),
   ])
 
   const lessonCount = lessonsDocs.length
@@ -295,7 +295,10 @@ export default async function CourseDetailPage({ params }: Props) {
                 {reviews.map((review: any) => {
                   const studentName = review.student && typeof review.student === 'object'
                     ? review.student.name : 'Anonymous'
-                  const picUrl = review.student?.profilePic?.url ?? null
+                  const picRaw = review.student?.profilePic
+                  const picUrl = picRaw
+                    ? (typeof picRaw === 'object' ? picRaw.url ?? null : null)
+                    : null
                   const initials = studentName.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
 
                   return (
