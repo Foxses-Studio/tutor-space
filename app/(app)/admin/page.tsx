@@ -101,7 +101,7 @@ export default function AdminDashboardPage() {
   async function fetchStats() {
     setError(null)
     try {
-      const res = await fetch('/api/admin/dashboard-stats')
+      const res = await fetch('/api/admin/dashboard-stats', { cache: 'no-store' })
       if (!res.ok) {
         throw new Error('Failed to load dashboard metrics.')
       }
