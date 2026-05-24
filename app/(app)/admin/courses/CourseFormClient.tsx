@@ -88,6 +88,15 @@ export default function CourseFormClient({
   const [slugStatus, setSlugStatus] = useState<'idle' | 'valid' | 'invalid'>('idle')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Dynamic host detection state
+  const [domainOrigin, setDomainOrigin] = useState('tutorspace.com')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setDomainOrigin(window.location.host)
+    }
+  }, [])
+
   // Automatic title-to-slug generator
   const slugify = (text: string) => {
     return text
@@ -355,7 +364,7 @@ export default function CourseFormClient({
             <div className="flex flex-col gap-2">
               <label className="text-base font-bold text-zinc-300">URL path suffix (Slug) *</label>
               <div className="flex items-center gap-2">
-                <span className="text-zinc-500 font-semibold select-none hidden sm:inline">tutorspace.com/courses/</span>
+                <span className="text-zinc-500 font-semibold select-none hidden sm:inline">{domainOrigin}/courses/</span>
                 <input
                   type="text"
                   required

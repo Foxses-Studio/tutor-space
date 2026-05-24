@@ -32,7 +32,50 @@ export async function POST(request: Request) {
     const user = await authCheck(['admin', 'staff'])
     if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
 
-    const { name, slug } = await request.json()
+    const body = await request.json()
+    
+    // Support bulk insertion
+    if (body.categories && Array.isArray(body.categories)) {
+      const { categories } = body
+      if (categories.length === 0) {
+        return NextResponse.json({ error: 'No categories provided.' }, { status: 400 })
+      }
+
+      // Validate all items
+      for (const cat of categories) {
+        if (!cat.name?.trim() || !cat.slug?.trim()) {
+          return NextResponse.json({ error: 'All categories must have a name and slug.' }, { status: 400 })
+        }
+      }
+
+      // Check conflicts
+      const names = categories.map((c: any) => c.name.trim())
+      const slugs = categories.map((c: any) => c.slug.trim())
+
+      const existing = await Category.find({
+        $or: [
+          { name: { $in: names } },
+          { slug: { $in: slugs } }
+        ]
+      }).lean()
+
+      if (existing.length > 0) {
+        const conflictNames = existing.map((e: any) => e.name).join(', ')
+        return NextResponse.json({ error: `Conflict: Some categories already exist: ${conflictNames}` }, { status: 400 })
+      }
+
+      const inserted = await Category.insertMany(
+        categories.map((c: any) => ({
+          name: c.name.trim(),
+          slug: c.slug.trim()
+        }))
+      )
+
+      return NextResponse.json({ success: true, categories: inserted }, { status: 201 })
+    }
+
+    // Support single insertion
+    const { name, slug } = body
     if (!name || !slug) return NextResponse.json({ error: 'Name and slug are required.' }, { status: 400 })
 
     const existing = await Category.findOne({ $or: [{ name }, { slug }] }).lean()

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FiSave, FiX } from 'react-icons/fi'
+import { FiSave, FiX, FiPlus, FiTrash2 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface CategoryFormProps {
@@ -11,6 +11,11 @@ interface CategoryFormProps {
     name: string
     slug: string
   }
+}
+
+interface CategoryRow {
+  name: string
+  slug: string
 }
 
 function slugify(text: string) {
@@ -26,38 +31,97 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
   const router = useRouter()
   const isEditMode = !!initialData
 
+  // Single category states for edit mode
   const [name, setName] = useState(initialData?.name || '')
   const [slug, setSlug] = useState(initialData?.slug || '')
+
+  // Multiple category rows state for creation mode
+  const [categoryRows, setCategoryRows] = useState<CategoryRow[]>([
+    { name: '', slug: '' }
+  ])
+
   const [saving, setSaving] = useState(false)
 
+  // Edit Mode: single row generator
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     setName(val)
-    if (!isEditMode) {
-      setSlug(slugify(val))
-    }
+    setSlug(slugify(val))
+  }
+
+  // Create Mode: multiple rows generator
+  const handleRowNameChange = (index: number, val: string) => {
+    const updated = [...categoryRows]
+    updated[index].name = val
+    updated[index].slug = slugify(val)
+    setCategoryRows(updated)
+  }
+
+  const handleRowSlugChange = (index: number, val: string) => {
+    const updated = [...categoryRows]
+    updated[index].slug = slugify(val)
+    setCategoryRows(updated)
+  }
+
+  const addCategoryRow = () => {
+    setCategoryRows([...categoryRows, { name: '', slug: '' }])
+  }
+
+  const removeCategoryRow = (index: number) => {
+    if (categoryRows.length === 1) return
+    setCategoryRows(categoryRows.filter((_, i) => i !== index))
   }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!name.trim() || !slug.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Validation Error',
-        text: 'Category name and slug are required.',
-        background: '#121829',
-        color: '#fff',
-      })
-      return
+    if (isEditMode) {
+      if (!name.trim() || !slug.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Validation Error',
+          text: 'Category name and slug are required.',
+          background: '#121829',
+          color: '#fff',
+        })
+        return
+      }
+    } else {
+      // Validate all bulk rows
+      for (const row of categoryRows) {
+        if (!row.name.trim() || !row.slug.trim()) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'All categories must have a name and slug.',
+            background: '#121829',
+            color: '#fff',
+          })
+          return
+        }
+      }
     }
 
     setSaving(true)
     try {
-      const method = isEditMode ? 'PUT' : 'POST'
-      const body = isEditMode ? { id: initialData?.id, name, slug } : { name, slug }
+      const url = '/api/admin/categories'
+      let method = 'POST'
+      let body: any
 
-      const res = await fetch('/api/admin/categories', {
+      if (isEditMode) {
+        method = 'PUT'
+        body = { id: initialData?.id, name: name.trim(), slug: slug.trim() }
+      } else {
+        // Bulk creation payload
+        body = {
+          categories: categoryRows.map(row => ({
+            name: row.name.trim(),
+            slug: row.slug.trim()
+          }))
+        }
+      }
+
+      const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -67,11 +131,11 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
 
       await Swal.fire({
         icon: 'success',
-        title: isEditMode ? 'Category Updated' : 'Category Created',
+        title: isEditMode ? 'Category Updated' : 'Categories Created',
         text: isEditMode
           ? 'Category has been updated successfully.'
-          : 'Category has been created successfully.',
-        timer: 1200,
+          : `${categoryRows.length} categories have been created successfully.`,
+        timer: 1500,
         showConfirmButton: false,
         background: '#121829',
         color: '#fff',
@@ -83,7 +147,7 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: err.message || 'Failed to save category.',
+        text: err.message || 'Failed to save categories.',
         background: '#121829',
         color: '#fff',
       })
@@ -99,10 +163,12 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-zinc-800/40">
         <div>
           <h1 className="text-3xl font-bold font-display text-white">
-            {isEditMode ? 'Edit Category' : 'New Category'}
+            {isEditMode ? 'Edit Category' : 'New Categories (Bulk)'}
           </h1>
           <p className="text-base font-semibold text-zinc-450 mt-1">
-            Build and optimize syllabus catalog category classifications
+            {isEditMode 
+              ? 'Modify syllabus catalog category classification' 
+              : 'Create and register multiple course categories simultaneously'}
           </p>
         </div>
         <button
@@ -119,33 +185,92 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
         {/* Main Content */}
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-5">
-            <h2 className="text-xl font-bold text-white tracking-tight border-b border-zinc-850 pb-3">Category Classification</h2>
-
-            {/* Name */}
-            <div className="flex flex-col gap-2">
-              <label className="text-base font-bold text-zinc-300">Category Name *</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={handleNameChange}
-                placeholder="e.g. Web Development"
-                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
-              />
+            <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
+              <h2 className="text-xl font-bold text-white tracking-tight">Category Classifications</h2>
+              {!isEditMode && (
+                <button
+                  type="button"
+                  onClick={addCategoryRow}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#615fff]/15 hover:bg-[#615fff]/25 text-[#615fff] border border-[#615fff]/20 rounded-lg text-base font-bold transition-colors cursor-pointer animate-fadeIn"
+                >
+                  <FiPlus className="h-4.5 w-4.5" /> Add Category Row
+                </button>
+              )}
             </div>
 
-            {/* Slug */}
-            <div className="flex flex-col gap-2">
-              <label className="text-base font-bold text-zinc-300">URL path suffix (Slug) *</label>
-              <input
-                type="text"
-                required
-                value={slug}
-                onChange={(e) => setSlug(slugify(e.target.value))}
-                placeholder="e.g. web-development"
-                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
-              />
-            </div>
+            {isEditMode ? (
+              /* Single Edit Mode Form */
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-base font-bold text-zinc-300">Category Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={handleNameChange}
+                    placeholder="e.g. Web Development"
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-base font-bold text-zinc-300">URL path suffix (Slug) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={slug}
+                    onChange={(e) => setSlug(slugify(e.target.value))}
+                    placeholder="e.g. web-development"
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
+                  />
+                </div>
+              </div>
+            ) : (
+              /* Bulk Create Mode Form */
+              <div className="space-y-5">
+                {categoryRows.map((row, idx) => (
+                  <div key={idx} className="p-4 bg-[#070b16] border border-zinc-850 rounded-lg space-y-4 relative animate-fadeIn">
+                    <div className="flex items-center justify-between border-b border-zinc-850/50 pb-2">
+                      <span className="text-sm font-bold text-[#615fff]">Category #{idx + 1}</span>
+                      {categoryRows.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeCategoryRow(idx)}
+                          className="text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-zinc-800/20 transition-colors cursor-pointer"
+                          title="Remove row"
+                        >
+                          <FiTrash2 className="h-4.5 w-4.5" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-bold text-zinc-400">Category Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={row.name}
+                          onChange={(e) => handleRowNameChange(idx, e.target.value)}
+                          placeholder="e.g. Graphic Design"
+                          className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-bold text-zinc-400">URL path suffix (Slug) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={row.slug}
+                          onChange={(e) => handleRowSlugChange(idx, e.target.value)}
+                          placeholder="graphic-design"
+                          className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
           </div>
         </div>
@@ -163,10 +288,10 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
               {saving ? (
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Saving category...</span>
+                  <span>Saving category structures...</span>
                 </div>
               ) : (
-                'Save Category'
+                'Save Categories'
               )}
             </button>
           </div>
