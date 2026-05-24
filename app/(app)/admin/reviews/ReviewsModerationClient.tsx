@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FiStar, FiCheck, FiX, FiClock, FiSearch } from 'react-icons/fi'
+import { FiStar, FiCheck, FiX, FiClock, FiSearch, FiPlus } from 'react-icons/fi'
 import Swal from 'sweetalert2'
+import Link from 'next/link'
 
 interface ReviewItem {
   _id: string
@@ -78,12 +79,18 @@ export default function ReviewsModerationClient({ initialReviews }: { initialRev
           <h1 className="text-3xl font-bold font-display text-white">Reviews Moderation</h1>
           <p className="text-base font-semibold text-zinc-450 mt-1">Review student feedback before it appears on course pages</p>
         </div>
-        {pendingCount > 0 && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 font-bold text-base">
-            <FiClock className="h-5 w-5" />
-            {pendingCount} awaiting review
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {pendingCount > 0 && (
+            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 font-bold text-base">
+              <FiClock className="h-5 w-5" />
+              {pendingCount} awaiting review
+            </div>
+          )}
+          <Link href="/admin/reviews/new"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-md shadow-[#615fff]/20 transition-all cursor-pointer">
+            <FiPlus className="h-5 w-5" /> Add New Review
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
