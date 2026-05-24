@@ -165,7 +165,9 @@ export async function GET() {
     // ─── INSTRUCTOR ROLE DATA ─────────────────────────────────────────────────
     if (role === 'instructor') {
       // Find courses where this instructor is assigned
-      const instructorCourses = await Course.find({ instructor: user._id }).lean()
+      const instructorCourses = await Course.find({ instructor: user._id })
+        .populate('thumbnail')
+        .lean()
       const courseIds = instructorCourses.map((c) => c._id)
 
       const [totalLessons, totalStudentEnrollments] = await Promise.all([
@@ -180,13 +182,20 @@ export async function GET() {
           totalLessons,
           totalStudents: totalStudentEnrollments,
         },
-        courses: instructorCourses.map((c) => ({
-          id: c._id.toString(),
-          title: c.title,
-          slug: c.slug,
-          status: c.status,
-          price: c.price,
-        })),
+        courses: instructorCourses.map((c: any) => {
+          let thumbnailUrl = null
+          if (c.thumbnail && typeof c.thumbnail === 'object') {
+            thumbnailUrl = c.thumbnail.url || null
+          }
+          return {
+            id: c._id.toString(),
+            title: c.title,
+            slug: c.slug,
+            status: c.status,
+            price: c.price,
+            thumbnail: thumbnailUrl,
+          }
+        }),
       })
     }
 

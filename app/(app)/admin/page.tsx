@@ -64,6 +64,7 @@ interface DashboardData {
     slug: string
     status: string
     price: number
+    thumbnail?: string | null
   }>
 }
 
@@ -648,7 +649,19 @@ export default function AdminDashboardPage() {
                     {courses?.map((c) => (
                       <tr key={c.id} className="hover:bg-zinc-800/20 transition-colors">
                         <td className="px-6 py-4">
-                          <p className="font-bold text-white text-base leading-snug">{c.title}</p>
+                          <div className="flex items-center gap-4">
+                            {/* Thumbnail */}
+                            <div className="h-10 w-16 rounded overflow-hidden bg-[#070b16] border border-zinc-800 shrink-0 relative flex items-center justify-center select-none">
+                              {c.thumbnail ? (
+                                <img src={c.thumbnail} alt={c.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-[10px] font-bold text-zinc-500">Tutor</span>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-bold text-white text-base leading-snug line-clamp-1">{c.title}</p>
+                            </div>
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-base text-[#615fff] font-bold">
                           {formatCurrency(c.price)}
