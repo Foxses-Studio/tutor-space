@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FiPlus, FiTrash2, FiUploadCloud, FiCheck, FiX, FiInfo } from 'react-icons/fi'
 import Swal from 'sweetalert2'
+import RichTextEditor from '@/components/RichTextEditor'
 
 interface CategoryOption {
   id: string
@@ -399,17 +400,14 @@ export default function CourseFormClient({
             </div>
 
             {/* Detailed Description */}
-            <div className="flex flex-col gap-2">
-              <label className="text-base font-bold text-zinc-300">Detailed Description *</label>
-              <textarea
-                required
-                rows={8}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Write an absolute premium, highly structured syllabus overview detailing modules, targets, tools, and schedules..."
-                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
-              />
-            </div>
+            <RichTextEditor
+              label="Detailed Description"
+              required
+              rows={8}
+              value={description}
+              onChange={setDescription}
+              placeholder="Write an absolute premium, highly structured syllabus overview detailing modules, targets, tools, and schedules..."
+            />
 
           </div>
 

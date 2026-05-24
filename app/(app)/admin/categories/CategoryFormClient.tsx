@@ -229,7 +229,7 @@ export default function CategoryFormClient({ initialData }: CategoryFormProps) {
               /* Bulk Create Mode Form */
               <div className="space-y-5">
                 {categoryRows.map((row, idx) => (
-                  <div key={idx} className="p-4 bg-[#070b16] border border-zinc-850 rounded-lg space-y-4 relative animate-fadeIn">
+                  <div key={idx} className="p-4 bg-[#070b16] rounded-lg space-y-4 relative animate-fadeIn">
                     <div className="flex items-center justify-between border-b border-zinc-850/50 pb-2">
                       <span className="text-sm font-bold text-[#615fff]">Category #{idx + 1}</span>
                       {categoryRows.length > 1 && (

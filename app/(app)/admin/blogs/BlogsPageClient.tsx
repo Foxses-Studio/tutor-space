@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { FiPlus, FiEdit, FiTrash2, FiFileText, FiX, FiSave, FiUploadCloud } from 'react-icons/fi'
 import Swal from 'sweetalert2'
+import RichTextEditor from '@/components/RichTextEditor'
 
 interface BlogItem {
   id: string; title: string; content: string
@@ -107,12 +108,14 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
               placeholder="Write an engaging, SEO-friendly title..."
               className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/70 text-white rounded-lg p-3 text-base font-semibold outline-none" />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-base font-bold text-zinc-300">Content *</label>
-            <textarea rows={10} value={content} onChange={e => setContent(e.target.value)}
-              placeholder="Write your full blog content here. Use clear paragraphs and structure your content well..."
-              className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/70 text-white rounded-lg p-3 text-base font-semibold outline-none resize-none" />
-          </div>
+          <RichTextEditor
+            label="Content"
+            required
+            rows={10}
+            value={content}
+            onChange={setContent}
+            placeholder="Write your full blog content here. Use clear paragraphs and structure your content well..."
+          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-base font-bold text-zinc-300">Tags (comma-separated)</label>
