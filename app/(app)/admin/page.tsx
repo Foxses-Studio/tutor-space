@@ -19,6 +19,9 @@ import {
   FiBook,
   FiChevronRight,
   FiList,
+  FiTrash2,
+  FiSearch,
+  FiX,
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -108,6 +111,9 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
+  const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[] | null>(null)
+  const [searchingEnrollments, setSearchingEnrollments] = useState(false)
 
   async function fetchStats() {
     setError(null)
@@ -123,6 +129,102 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false)
       setRefreshing(false)
+    }
+  }
+
+  const handleEnrollmentSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!enrollmentSearchQuery.trim()) {
+      setSearchResults(null)
+      return
+    }
+    setSearchingEnrollments(true)
+    try {
+      const res = await fetch(`/api/admin/enrollments?search=${encodeURIComponent(enrollmentSearchQuery)}`)
+      if (!res.ok) throw new Error('Search failed')
+      const json = await res.json()
+      if (json.success) {
+        setSearchResults(json.enrollments)
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Search Error',
+        text: err.message || 'Failed to search enrollments',
+        background: '#1a1a1a',
+        color: '#ffffff',
+      })
+    } finally {
+      setSearchingEnrollments(false)
+    }
+  }
+
+  const handleClearEnrollmentSearch = () => {
+    setEnrollmentSearchQuery('')
+    setSearchResults(null)
+  }
+
+  const handleRemoveEnrollment = async (enrollmentId: string, studentName: string, courseTitle: string) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `This will completely remove/unenroll ${studentName} from the course "${courseTitle}". The student will lose all access immediately!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, remove enrollment',
+      cancelButtonText: 'Cancel',
+      background: '#1a1a1a',
+      color: '#ffffff',
+    })
+
+    if (!result.isConfirmed) return
+
+    try {
+      const res = await fetch(`/api/admin/enrollments?id=${enrollmentId}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) {
+        const errJson = await res.json()
+        throw new Error(errJson.error || 'Failed to unenroll student')
+      }
+
+      const json = await res.json()
+      if (json.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Unenrolled Successfully',
+          text: `${studentName} has been removed from "${courseTitle}".`,
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+          background: '#1a1a1a',
+          color: '#ffffff',
+        })
+
+        // Refresh stats
+        fetchStats()
+        // If showing search results, refresh search results
+        if (enrollmentSearchQuery.trim()) {
+          const searchRes = await fetch(`/api/admin/enrollments?search=${encodeURIComponent(enrollmentSearchQuery)}`)
+          if (searchRes.ok) {
+            const searchJson = await searchRes.json()
+            if (searchJson.success) {
+              setSearchResults(searchJson.enrollments)
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Action Failed',
+        text: err.message || 'Failed to remove enrollment',
+        background: '#1a1a1a',
+        color: '#ffffff',
+      })
     }
   }
 
@@ -449,20 +551,44 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Recent Sales (8 cols) */}
-            <div className="lg:col-span-8 bg-[#18181b] border border-zinc-800 rounded-lg shadow-sm overflow-hidden">
-              <div className="px-6 py-5 border-b border-zinc-850 flex items-center justify-between">
+            <div id="enrollments" className="lg:col-span-8 bg-[#18181b] border border-zinc-800 rounded-lg shadow-sm overflow-hidden scroll-mt-24">
+              <div className="px-6 py-5 border-b border-zinc-850 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Recent Sales</h2>
-                  <p className="text-base font-semibold text-zinc-400 mt-0.5">Last 5 transaction logs</p>
+                  <h2 className="text-lg font-bold text-white">
+                    {searchResults !== null ? 'Enrollment Search Results' : 'Recent Sales'}
+                  </h2>
+                  <p className="text-base font-semibold text-zinc-400 mt-0.5">
+                    {searchResults !== null 
+                      ? `Found ${searchResults.length} matching enrollments` 
+                      : 'Last 5 transaction logs'}
+                  </p>
                 </div>
-                <Link href="/admin-report" className="text-base font-bold text-[#615fff] hover:underline">
-                  Detailed Financial Report
-                </Link>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <form onSubmit={handleEnrollmentSearch} className="relative flex items-center w-full sm:w-auto">
+                    <input
+                      type="text"
+                      placeholder="Search student or course..."
+                      value={enrollmentSearchQuery}
+                      onChange={(e) => setEnrollmentSearchQuery(e.target.value)}
+                      className="w-full sm:w-64 pl-9 pr-8 py-1.5 bg-[#121212] border border-zinc-800 hover:border-zinc-700 focus:border-[#615fff] rounded-lg text-white text-base font-semibold focus:outline-none placeholder-zinc-500 transition-colors"
+                    />
+                    <FiSearch className="absolute left-3 text-zinc-500 h-4.5 w-4.5" />
+                    {enrollmentSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={handleClearEnrollmentSearch}
+                        className="absolute right-3 text-zinc-500 hover:text-white cursor-pointer flex items-center justify-center"
+                      >
+                        <FiX className="h-4.5 w-4.5" />
+                      </button>
+                    )}
+                  </form>
+                </div>
               </div>
 
-              {recentEnrollments && recentEnrollments.length === 0 ? (
+              {((searchResults !== null ? searchResults : recentEnrollments) || []).length === 0 ? (
                 <div className="p-12 text-center text-zinc-550 font-semibold text-base">
-                  No enrollment records found.
+                  {searchResults !== null ? 'No matching enrollment records found.' : 'No enrollment records found.'}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -472,11 +598,12 @@ export default function AdminDashboardPage() {
                         <th className="px-6 py-3.5">Student</th>
                         <th className="px-6 py-3.5">Course</th>
                         <th className="px-4 py-3.5 text-center">Status</th>
-                        <th className="px-6 py-3.5 text-right">Paid</th>
+                        <th className="px-4 py-3.5 text-right">Paid</th>
+                        <th className="px-6 py-3.5 text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-850">
-                      {recentEnrollments?.map((e) => (
+                      {((searchResults !== null ? searchResults : recentEnrollments) || []).map((e) => (
                         <tr key={e.id} className="hover:bg-zinc-800/40 transition-colors">
                           <td className="px-6 py-4">
                             <p className="font-bold text-white">{e.studentName}</p>
@@ -492,6 +619,16 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="px-6 py-4 text-right font-bold text-emerald-400">
                             {formatCurrency(e.pricePaid)}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveEnrollment(e.id, e.studentName, e.courseTitle)}
+                              className="p-2 text-rose-450 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg cursor-pointer transition-colors"
+                              title="Remove Course (Unenroll)"
+                            >
+                              <FiTrash2 className="h-5 w-5" />
+                            </button>
                           </td>
                         </tr>
                       ))}

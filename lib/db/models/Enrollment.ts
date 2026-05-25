@@ -6,6 +6,10 @@ export interface IEnrollment extends Document {
   paymentStatus: 'pending' | 'completed' | 'refunded'
   pricePaid: number
   paymentReference?: string
+  billingName?: string
+  billingPhone?: string
+  billingAddress?: string
+  couponCode?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -17,6 +21,10 @@ const EnrollmentSchema = new Schema<IEnrollment>(
     paymentStatus: { type: String, enum: ['pending', 'completed', 'refunded'], default: 'pending', required: true },
     pricePaid: { type: Number, required: true, min: 0 },
     paymentReference: String,
+    billingName: String,
+    billingPhone: String,
+    billingAddress: String,
+    couponCode: String,
   },
   { collection: 'enrollments', timestamps: true }
 )

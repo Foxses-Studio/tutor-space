@@ -381,17 +381,17 @@ export default function CoursesPageClient({
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="relative bg-gradient-to-br from-[#F5F3FF] via-[#FAF9FF] to-[#F5F3FF] border-b border-[#E9E6FF] py-12 md:py-16 text-center overflow-hidden shadow-[0_12px_40px_rgba(97,95,255,0.03)] select-text w-full z-10"
+        className="relative bg-[#615fff] py-12 md:py-16 text-center overflow-hidden shadow-lg select-text w-full z-10 border-none"
       >
         {/* Glowing gradient circles behind */}
-        <div className="absolute -top-12 -left-12 w-48 h-48 bg-[#615fff]/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-[#615fff]/6 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Premium Dot grid background inside the card */}
         <div
-          className="absolute inset-0 opacity-[0.25] pointer-events-none"
+          className="absolute inset-0 opacity-[0.2] pointer-events-none"
           style={{ 
-            backgroundImage: 'radial-gradient(#615fff 1.2px, transparent 1.2px)', 
+            backgroundImage: 'radial-gradient(white 1.2px, transparent 1.2px)', 
             backgroundSize: '24px 24px',
             maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)',
             WebkitMaskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
@@ -404,9 +404,9 @@ export default function CoursesPageClient({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-3 py-1 bg-[#615fff]/8 border border-[#615fff]/15 rounded-lg text-base font-bold text-[#615fff] uppercase tracking-wide mb-4"
+            className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 rounded-lg text-base font-bold text-white uppercase tracking-wide mb-4 border-none"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#615fff] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             <span>Our Courses</span>
           </motion.div>
           
@@ -415,7 +415,7 @@ export default function CoursesPageClient({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0A163A] tracking-tight leading-[1.2] font-display max-w-4xl"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.2] font-display max-w-4xl"
           >
             Our Popular Courses
           </motion.h1>
@@ -425,7 +425,7 @@ export default function CoursesPageClient({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-4 text-base sm:text-lg text-zinc-500 max-w-3xl mx-auto leading-relaxed"
+            className="mt-4 text-base sm:text-lg text-white/85 max-w-3xl mx-auto leading-relaxed font-semibold"
           >
             Grow your skills with expert-led lessons designed to help you achieve your goals — anytime, anywhere.
           </motion.p>
@@ -442,7 +442,7 @@ export default function CoursesPageClient({
           <aside className="w-full lg:w-72 shrink-0 space-y-6 lg:sticky lg:top-28 z-20">
             
             {/* Browse Categories Box */}
-            <div className="bg-white rounded-lg p-6 border border-zinc-200 space-y-4">
+            <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow space-y-4 border-none">
               <h3 className="text-xl font-bold text-[#0A163A]">Browse Categories</h3>
               
               <div className="space-y-1 mt-2">
@@ -497,7 +497,7 @@ export default function CoursesPageClient({
             </div>
 
             {/* Filters Box */}
-            <div className="bg-white rounded-lg p-6 border border-zinc-200 space-y-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow space-y-6 border-none">
               <h3 className="text-xl font-bold text-[#0A163A]">Filters</h3>
               
               {/* Price Tier Filter */}

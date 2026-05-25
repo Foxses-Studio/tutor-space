@@ -39,7 +39,7 @@ export default function StudentProfile() {
         const res = await fetch('/api/auth/me')
         const data = await res.json()
 
-        if (!res.ok || !data.authenticated || data.user.role !== 'student') {
+        if (!res.ok || !data.authenticated || (data.user.role !== 'student' && data.user.role !== 'admin')) {
           router.push('/login')
           return
         }

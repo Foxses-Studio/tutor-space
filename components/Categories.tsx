@@ -248,9 +248,9 @@ export default function Categories({ categories }: CategoriesProps) {
             className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight leading-[1.2] max-w-4xl mx-auto"
           >
             Explore diverse learning paths within our course{' '}
-            <span className="relative inline-block text-[#FF6B2C] whitespace-nowrap">
+            <span className="relative inline-block text-[#615fff] whitespace-nowrap">
               categories
-              {/* Wavy orange underline */}
+              {/* Wavy brand underline */}
               <motion.svg
                 variants={underlineVariants}
                 initial="hidden"
@@ -264,7 +264,7 @@ export default function Categories({ categories }: CategoriesProps) {
                 <path
                   d="M0,6 C25,0 50,12 75,6 C100,0 125,12 150,6 C175,0 200,10 200,6"
                   fill="none"
-                  stroke="#FF6B2C"
+                  stroke="#615fff"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 />

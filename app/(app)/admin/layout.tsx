@@ -19,6 +19,9 @@ import {
   FiUser,
   FiUserPlus,
   FiRadio,
+  FiTag,
+  FiUsers,
+  FiTrendingUp,
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -44,26 +47,41 @@ export default function AdminLayout({
   const isPublicAdminRoute = pathname === '/admin/login' || pathname.startsWith('/admin/super-admin')
 
   useEffect(() => {
-    if (isPublicAdminRoute) {
-      setLoading(false)
-      return
-    }
-
     async function verifyAdminSession() {
       try {
         const res = await fetch('/api/auth/me')
         const data = await res.json()
 
-        if (!res.ok || !data.authenticated || !['admin', 'staff', 'instructor'].includes(data.user.role)) {
-          // If not authenticated or not staff/admin/instructor, boot to admin login
-          router.push('/admin/login')
-          return
-        }
+        if (res.ok && data.authenticated) {
+          if (data.user.role === 'student') {
+            // Students are strictly blocked from all admin routes and sent to their dashboard
+            router.push('/dashboard')
+            return
+          }
 
-        setUser(data.user)
+          if (isPublicAdminRoute) {
+            // Logged-in admin/staff/instructor shouldn't see the admin login page, send to admin dashboard
+            router.push('/admin')
+            return
+          }
+
+          if (!['admin', 'staff', 'instructor'].includes(data.user.role)) {
+            router.push('/admin/login')
+            return
+          }
+
+          setUser(data.user)
+        } else {
+          // Not authenticated
+          if (!isPublicAdminRoute) {
+            router.push('/admin/login')
+          }
+        }
       } catch (err) {
         console.error('Admin layout session check error:', err)
-        router.push('/admin/login')
+        if (!isPublicAdminRoute) {
+          router.push('/admin/login')
+        }
       } finally {
         setLoading(false)
       }
@@ -73,10 +91,7 @@ export default function AdminLayout({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/users/logout', { method: 'POST' })
-      // Clear token cookies
-      document.cookie = 'payload-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-      document.cookie = 'student-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+      await fetch('/api/auth/logout', { method: 'POST' })
 
       Swal.fire({
         icon: 'success',
@@ -125,6 +140,7 @@ export default function AdminLayout({
   // Filter links based on custom permissions and role authorization
   const sidebarLinks = [
     { label: 'Overview', href: '/admin', icon: FiLayout, roles: ['admin', 'staff', 'instructor'], permission: 'overview' },
+    { label: 'Manage Enrollments', href: '/admin/enrollments', icon: FiUsers, roles: ['admin'], permission: 'overview' },
     { label: 'Courses', href: '/admin/courses', icon: FiBookOpen, roles: ['admin', 'instructor'], permission: 'courses' },
     { label: 'Lessons Syllabus', href: '/admin/lessons', icon: FiList, roles: ['admin', 'instructor'], permission: 'lessons' },
     { label: 'Live Classes', href: '/admin/live-classes', icon: FiRadio, roles: ['admin', 'instructor'], permission: 'live-classes' },
@@ -134,6 +150,7 @@ export default function AdminLayout({
     { label: 'Blog Posts', href: '/admin/blogs', icon: FiFileText, roles: ['admin', 'staff'], permission: 'blogs' },
     { label: 'Media Library', href: '/admin/media', icon: FiImage, roles: ['admin', 'staff'], permission: 'media' },
     { label: 'Staff Registry', href: '/admin/staff-register', icon: FiUserPlus, roles: ['admin'], permission: 'staff-register' },
+    { label: 'Coupons Management', href: '/admin/coupons', icon: FiTag, roles: ['admin', 'staff'], permission: 'coupons' },
   ].filter((link) => {
     // 1. Root admin has access to everything
     if (user.role === 'admin') return true
@@ -167,8 +184,8 @@ export default function AdminLayout({
         </div>
 
         {/* Sidebar Links */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          <p className="text-base font-bold text-zinc-500 uppercase tracking-wider px-3 mb-4">Management</p>
+        <nav className="flex-1 px-4 py-3 space-y-1 overflow-y-auto">
+          <p className="text-base font-bold text-zinc-500 uppercase tracking-wider px-3 mb-2">Management</p>
           {sidebarLinks.map((link) => {
             const isActive = pathname === link.href
             const Icon = link.icon
@@ -176,13 +193,13 @@ export default function AdminLayout({
               <Link
                 key={link.label}
                 href={link.href}
-                className={`flex items-center gap-3 px-3.5 py-3 rounded-lg text-base font-semibold transition-all duration-200 group ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-semibold transition-all duration-200 group ${
                   isActive 
                     ? 'bg-[#615fff] text-white shadow-md shadow-[#615fff]/20 border border-[#615fff]/20' 
                     : 'text-zinc-400 hover:bg-[#27272a] hover:text-white border border-transparent'
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-white'}`} />
+                <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-zinc-500 group-hover:text-white'}`} />
                 <span>{link.label}</span>
               </Link>
             )
@@ -245,8 +262,8 @@ export default function AdminLayout({
             </button>
           </div>
 
-          <nav className="px-4 py-6 space-y-2">
-            <p className="text-base font-bold text-zinc-500 uppercase tracking-wider px-3 mb-4">Management</p>
+          <nav className="px-4 py-3 space-y-1">
+            <p className="text-base font-bold text-zinc-500 uppercase tracking-wider px-3 mb-2">Management</p>
             {sidebarLinks.map((link) => {
               const isActive = pathname === link.href
               const Icon = link.icon
@@ -255,13 +272,13 @@ export default function AdminLayout({
                   key={link.label}
                   href={link.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-lg text-base font-semibold transition-all duration-200 group ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-semibold transition-all duration-200 group ${
                     isActive 
                       ? 'bg-[#615fff] text-white shadow-md' 
                       : 'text-zinc-400 hover:bg-[#27272a] hover:text-white'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-zinc-500'}`} />
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-zinc-505'}`} />
                   <span>{link.label}</span>
                 </Link>
               )
@@ -335,6 +352,15 @@ export default function AdminLayout({
             >
               <FiHome className="h-4.5 w-4.5" />
               <span className="hidden sm:inline">Portal Homepage</span>
+            </Link>
+
+            {/* Student Portal Shortcut */}
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-base font-semibold text-zinc-400 hover:text-white hover:bg-[#18181b] border border-transparent hover:border-zinc-800 transition-all duration-200"
+            >
+              <FiUser className="h-4.5 w-4.5" />
+              <span className="hidden sm:inline">Student Portal</span>
             </Link>
 
             {/* Admin Badge Info */}

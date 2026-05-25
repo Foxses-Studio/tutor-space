@@ -379,7 +379,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                           className="px-5 py-3 border border-zinc-200 rounded-lg font-bold text-base text-zinc-800 hover:border-[#615fff]/30 hover:bg-[#615fff]/4 transition-all flex items-center gap-3 bg-white shadow-sm group"
                         >
                           <span>View Details</span>
-                          <span className="h-7 w-7 rounded-full bg-zinc-950 group-hover:bg-[#615fff] flex items-center justify-center text-white transition-colors duration-300">
+                          <span className="h-7 w-7 rounded-full bg-[#615fff]/10 group-hover:bg-[#615fff] flex items-center justify-center text-[#615fff] group-hover:text-white transition-colors duration-300">
                             <FiArrowUpRight className="h-4 w-4" />
                           </span>
                         </Link>
@@ -519,10 +519,10 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
         >
           <Link
             href="/courses"
-            className="px-6 py-4 bg-zinc-950 hover:bg-[#615fff] text-white font-bold text-base rounded-lg shadow-lg hover:shadow-[#615fff]/25 transition-all duration-300 flex items-center justify-center gap-3 group cursor-pointer"
+            className="px-6 py-4 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 flex items-center justify-center gap-3 group cursor-pointer border-none"
           >
             <span>View All Courses</span>
-            <span className="h-7 w-7 rounded-full bg-white flex items-center justify-center text-zinc-950 group-hover:text-[#615fff] transition-colors duration-300">
+            <span className="h-7 w-7 rounded-full bg-white flex items-center justify-center text-[#615fff] transition-colors duration-300">
               <FiArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </span>
           </Link>

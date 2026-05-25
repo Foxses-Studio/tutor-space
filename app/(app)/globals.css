@@ -51,3 +51,58 @@ body {
   animation: fadeIn 0.2s ease-out forwards;
 }
 
+/* ==========================================
+   ✨ PREMIUM CUSTOM SCROLLBARS ✨
+   ========================================== */
+
+/* Webkit-based browsers (Chrome, Safari, Edge, Opera) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d4d4d8;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #615fff;
+}
+
+/* Scrollbars inside dark theme panels (Admin console, sidebar, widgets) */
+.bg-\[\#0A1128\] ::-webkit-scrollbar-thumb,
+.bg-\[\#121212\] ::-webkit-scrollbar-thumb,
+.bg-\[\#18181b\] ::-webkit-scrollbar-thumb,
+.bg-\[\#121829\] ::-webkit-scrollbar-thumb,
+.bg-\[\#070d20\] ::-webkit-scrollbar-thumb,
+.bg-\[\#070b16\] ::-webkit-scrollbar-thumb,
+aside ::-webkit-scrollbar-thumb,
+nav ::-webkit-scrollbar-thumb {
+  background-color: #3f3f46;
+}
+
+.bg-\[\#0A1128\] ::-webkit-scrollbar-thumb:hover,
+.bg-\[\#121212\] ::-webkit-scrollbar-thumb:hover,
+.bg-\[\#18181b\] ::-webkit-scrollbar-thumb:hover,
+.bg-\[\#121829\] ::-webkit-scrollbar-thumb:hover,
+.bg-\[\#070d20\] ::-webkit-scrollbar-thumb:hover,
+.bg-\[\#070b16\] ::-webkit-scrollbar-thumb:hover,
+aside ::-webkit-scrollbar-thumb:hover,
+nav ::-webkit-scrollbar-thumb:hover {
+  background-color: #615fff;
+}
+
+/* Firefox standard scrollbar styles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+}
+

@@ -19,9 +19,11 @@ export default function ClientNavbarFooterWrapper({ children }: { children: Reac
     '/reset-password',
   ]
 
+  const isWatchPage = pathname.startsWith('/courses/') && pathname.endsWith('/watch')
+
   const shouldExclude = excludePrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
-  )
+  ) || isWatchPage
 
   if (shouldExclude) {
     return <>{children}</>

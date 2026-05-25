@@ -35,6 +35,7 @@ function registerModels() {
   require('./models/Review')
   require('./models/Blog')
   require('./models/FAQ')
+  require('./models/Coupon')
 }
 
 export async function connectToDatabase() {

@@ -1,0 +1,68 @@
+'use client'
+
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { FiZap, FiCheck, FiArrowRight } from 'react-icons/fi'
+import Swal from 'sweetalert2'
+
+interface EnrollButtonProps {
+  courseId: string
+  courseTitle: string
+  courseSlug?: string
+  isLoggedIn: boolean
+  isAlreadyEnrolled: boolean
+}
+
+export default function EnrollButton({
+  courseId,
+  courseTitle,
+  courseSlug,
+  isLoggedIn,
+  isAlreadyEnrolled,
+}: EnrollButtonProps) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
+  const handleEnrollClick = async () => {
+    if (isAlreadyEnrolled) {
+      if (courseSlug) {
+        router.push(`/courses/${courseSlug}/watch`)
+      } else {
+        router.push('/dashboard')
+      }
+    } else {
+      router.push(`/checkout/${courseId}`)
+    }
+  }
+
+  // Render State 1: Enrolled
+  if (isAlreadyEnrolled) {
+    return (
+      <button
+        onClick={handleEnrollClick}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-600/15 hover:shadow-emerald-600/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 whitespace-nowrap"
+      >
+        <FiCheck className="h-5 w-5" />
+        <span>Already Enrolled (Go to Course Player)</span>
+      </button>
+    )
+  }
+
+  // Render State 2: Enrolling / Enrollable
+  return (
+    <button
+      onClick={handleEnrollClick}
+      disabled={loading}
+      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 whitespace-nowrap ${
+        loading ? 'opacity-80 cursor-not-allowed' : ''
+      }`}
+    >
+      {loading ? (
+        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <FiZap className="h-5 w-5 fill-white" />
+      )}
+      <span>{loading ? 'Processing Enrollment...' : 'Enroll In Course'}</span>
+    </button>
+  )
+}

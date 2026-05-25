@@ -88,10 +88,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const logoutEndpoint = user?.role === 'student'
-        ? '/api/students/logout'
-        : '/api/users/logout'
-      await fetch(logoutEndpoint, { method: 'POST' })
+      await fetch('/api/auth/logout', { method: 'POST' })
       setUser(null)
       setUserMenuOpen(false)
       window.location.reload()
@@ -232,14 +229,35 @@ export default function Navbar() {
                         </span>
                       </div>
 
-                      <Link
-                        href={user.role === 'student' ? '/dashboard' : '/admin'}
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-semibold text-zinc-650 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
-                      >
-                        <FiLayout className="h-4.5 w-4.5 text-[#615fff]" />
-                        Dashboard
-                      </Link>
+                      {user.role === 'admin' ? (
+                        <>
+                          <Link
+                            href="/admin"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-semibold text-zinc-650 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
+                          >
+                            <FiLayout className="h-4.5 w-4.5 text-[#615fff]" />
+                            Admin Console
+                          </Link>
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-semibold text-zinc-650 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
+                          >
+                            <FiUser className="h-4.5 w-4.5 text-[#615fff]" />
+                            Student Portal
+                          </Link>
+                        </>
+                      ) : (
+                        <Link
+                          href={user.role === 'student' ? '/dashboard' : '/admin'}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-base font-semibold text-zinc-650 hover:text-[#121212] hover:bg-zinc-50 transition-all duration-200"
+                        >
+                          <FiLayout className="h-4.5 w-4.5 text-[#615fff]" />
+                          Dashboard
+                        </Link>
+                      )}
 
                       <button
                         onClick={handleLogout}

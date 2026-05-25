@@ -16,6 +16,7 @@ import {
   FiHome,
   FiBook,
   FiStar,
+  FiShield,
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -45,7 +46,7 @@ export default function DashboardLayout({
         const res = await fetch('/api/auth/me')
         const data = await res.json()
 
-        if (!res.ok || !data.authenticated || data.user.role !== 'student') {
+        if (!res.ok || !data.authenticated || (data.user.role !== 'student' && data.user.role !== 'admin')) {
           router.push('/login')
           return
         }
@@ -63,10 +64,7 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/students/logout', { method: 'POST' })
-      await fetch('/api/users/logout', { method: 'POST' })
-      document.cookie = 'payload-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-      document.cookie = 'student-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+      await fetch('/api/auth/logout', { method: 'POST' })
       
       Swal.fire({
         icon: 'success',
@@ -114,6 +112,10 @@ export default function DashboardLayout({
     { label: 'Profile Settings', href: '/dashboard/profile', icon: FiUser },
   ]
 
+  if (user.role === 'admin') {
+    sidebarLinks.push({ label: 'Admin Console', href: '/admin', icon: FiShield })
+  }
+
   return (
     <div className="h-screen bg-zinc-50/50 flex font-sans overflow-hidden">
       
@@ -133,8 +135,8 @@ export default function DashboardLayout({
         </div>
 
         {/* Sidebar Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-4">LMS Menu</p>
+        <nav className="flex-1 px-4 py-3 space-y-1">
+          <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-2">LMS Menu</p>
           {sidebarLinks.map((link) => {
             const isActive = pathname === link.href || (link.href.includes('#') && typeof window !== 'undefined' && window.location.hash === link.href.split('#')[1])
             const Icon = link.icon
@@ -142,13 +144,13 @@ export default function DashboardLayout({
               <Link
                 key={link.label}
                 href={link.href}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-all duration-200 group ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-semibold transition-all duration-200 group ${
                   isActive 
                     ? 'bg-[#615fff] text-white shadow-md shadow-[#615fff]/15' 
                     : 'hover:bg-[#152347] hover:text-white'
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
+                <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
                 <span>{link.label}</span>
               </Link>
             )
@@ -167,7 +169,9 @@ export default function DashboardLayout({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold text-white truncate leading-tight">{user.name}</p>
-              <p className="text-sm font-semibold text-[#615fff] truncate mt-0.5">Student Account</p>
+              <p className="text-sm font-semibold text-[#615fff] truncate mt-0.5">
+                {user.role === 'admin' ? 'Admin Account' : 'Student Account'}
+              </p>
             </div>
           </div>
           <button
@@ -211,8 +215,8 @@ export default function DashboardLayout({
             </button>
           </div>
 
-          <nav className="px-4 py-6 space-y-2">
-            <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-4">LMS Menu</p>
+          <nav className="px-4 py-3 space-y-1">
+            <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-2">LMS Menu</p>
             {sidebarLinks.map((link) => {
               const isActive = pathname === link.href
               const Icon = link.icon
@@ -221,13 +225,13 @@ export default function DashboardLayout({
                   key={link.label}
                   href={link.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-semibold transition-all duration-200 group ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-semibold transition-all duration-200 group ${
                     isActive 
                       ? 'bg-[#615fff] text-white shadow-md' 
                       : 'hover:bg-[#152347] hover:text-white'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
+                  <Icon className={`h-4.5 w-4.5 ${isActive ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`} />
                   <span>{link.label}</span>
                 </Link>
               )
@@ -246,7 +250,9 @@ export default function DashboardLayout({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold text-white truncate leading-none">{user.name}</p>
-              <p className="text-sm font-semibold text-[#615fff] truncate mt-1">Student</p>
+              <p className="text-sm font-semibold text-[#615fff] truncate mt-1">
+                {user.role === 'admin' ? 'Admin' : 'Student'}
+              </p>
             </div>
           </div>
           <button
@@ -333,7 +339,9 @@ export default function DashboardLayout({
               </div>
               <div className="hidden sm:block">
                 <p className="text-base font-bold text-zinc-800 leading-none">{user.name}</p>
-                <p className="text-sm font-semibold text-zinc-400 mt-1">Student</p>
+                <p className="text-sm font-semibold text-zinc-400 mt-1">
+                  {user.role === 'admin' ? 'Admin' : 'Student'}
+                </p>
               </div>
             </div>
 

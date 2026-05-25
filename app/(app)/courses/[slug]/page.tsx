@@ -5,14 +5,18 @@ import { connectToDatabase } from '@/lib/db/mongodb'
 import { Course } from '@/lib/db/models/Course'
 import { Lesson } from '@/lib/db/models/Lesson'
 import { Review } from '@/lib/db/models/Review'
+import { Enrollment } from '@/lib/db/models/Enrollment'
 import '@/lib/db/models/Student'
 import '@/lib/db/models/Media'
+import { cookies } from 'next/headers'
+import { verifyToken } from '@/lib/auth/auth'
 import {
   FiArrowLeft, FiClock, FiBookOpen, FiUsers, FiCheck,
   FiStar, FiZap, FiList, FiAward, FiBook, FiChevronRight,
   FiShield,
 } from 'react-icons/fi'
 import LessonsAccordion from '@/components/LessonsAccordion'
+import EnrollButton from '@/components/EnrollButton'
 
 // ─── Type helpers ─────────────────────────────────────────────────────────────
 
@@ -84,6 +88,33 @@ export default async function CourseDetailPage({ params }: Props) {
     .lean() as any
 
   if (!course) notFound()
+
+  // ─── Session and Enrollment Check ───
+  const cookieStore = await cookies()
+  const studentToken = cookieStore.get('student-token')?.value
+  const payloadToken = cookieStore.get('payload-token')?.value
+
+  let userId: string | null = null
+  if (studentToken) {
+    const decoded = verifyToken(studentToken)
+    if (decoded && decoded.id) userId = decoded.id
+  }
+  if (!userId && payloadToken) {
+    const decoded = verifyToken(payloadToken)
+    if (decoded && decoded.id) userId = decoded.id
+  }
+
+  let isAlreadyEnrolled = false
+  if (userId) {
+    const existingEnrollment = await Enrollment.findOne({
+      student: userId,
+      course: course._id,
+      paymentStatus: 'completed'
+    }).lean()
+    if (existingEnrollment) {
+      isAlreadyEnrolled = true
+    }
+  }
 
   // Parallel: lessons + approved reviews
   const [lessonsDocs, reviewsDocs] = await Promise.all([
@@ -269,7 +300,7 @@ export default async function CourseDetailPage({ params }: Props) {
           {/* Section: Course Curriculum Accordion */}
           {serializedLessons.length > 0 && (
             <div className="pt-2">
-              <LessonsAccordion lessons={serializedLessons} />
+              <LessonsAccordion lessons={serializedLessons} isEnrolled={isAlreadyEnrolled} courseSlug={course.slug} />
             </div>
           )}
 
@@ -375,18 +406,13 @@ export default async function CourseDetailPage({ params }: Props) {
               </div>
 
               {/* Action Button: Register / Enroll */}
-              <Link
-                href="/register"
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5"
-              >
-                <FiZap className="h-5 w-5 fill-white" />
-                <span>Enroll In Course</span>
-              </Link>
-
-              <div className="flex items-center justify-center gap-2 text-base font-semibold text-zinc-500">
-                <FiShield className="h-5 w-5 text-emerald-500 shrink-0" />
-                <span>30-Day Money-Back Guarantee</span>
-              </div>
+              <EnrollButton
+                courseId={course._id.toString()}
+                courseTitle={course.title}
+                courseSlug={course.slug}
+                isLoggedIn={!!userId}
+                isAlreadyEnrolled={isAlreadyEnrolled}
+              />
 
               {/* Comprehensive Includes check-list */}
               <div className="space-y-3.5 border-t border-zinc-100 pt-5">
