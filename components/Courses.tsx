@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useInView } from 'framer-motion'
 import {
   FiGrid, FiCode, FiLayers, FiClipboard,
   FiTrendingUp, FiClock, FiBookOpen, FiArrowUpRight,
-  FiZap, FiPackage, FiStar, FiUsers, FiUser,
+  FiZap, FiPackage, FiStar, FiUsers, FiUser, FiArrowRight
 } from 'react-icons/fi'
 import type { IconType } from 'react-icons'
 
@@ -67,6 +67,8 @@ function getImageUrl(thumbnail: CourseDoc['thumbnail']): string {
 function formatPrice(price: number): string {
   return `$${price.toFixed(2)}`
 }
+
+
 
 function getLevelLabel(level: CourseDoc['level']): string {
   const map: Record<string, string> = {
@@ -172,7 +174,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
   return (
     <section
       id="courses"
-      className="py-20 md:py-28 px-6 bg-[#ffffff] border-t border-zinc-100 relative overflow-hidden select-none"
+      className="py-20 md:py-28 px-6 bg-[#ffffff] border-t border-zinc-100 relative overflow-hidden"
     >
 
       {/* Background spotlights */}
@@ -388,6 +390,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                 </motion.div>
               )}
 
+
               {/* Regular Grid */}
               {regularCourses.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -398,117 +401,106 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                       variants={cardVariants}
                       initial="hidden"
                       animate={cardsInView ? 'visible' : 'hidden'}
-                      className="group bg-white rounded-lg border border-zinc-200/80 overflow-hidden shadow-sm hover:shadow-lg hover:border-[#615fff]/20 transition-all duration-300 flex flex-col h-full"
+                      className="w-full flex justify-center sm:justify-start"
                     >
-                      {/* Thumbnail */}
-                      <div className="relative aspect-[16/10] bg-[#f5f8ff] overflow-hidden border-b border-zinc-100">
-                        {getImageUrl(course.thumbnail) ? (
-                          <img
-                            src={getImageUrl(course.thumbnail)}
-                            alt={course.title}
-                            className="w-full h-full object-cover pointer-events-none group-hover:scale-[1.03] transition-transform duration-500"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                              const parent = (e.target as HTMLImageElement).parentElement;
-                              if (parent) {
-                                const fallback = parent.querySelector('.css-placeholder');
-                                if (fallback) fallback.classList.remove('hidden');
-                              }
-                            }}
-                          />
-                        ) : null}
-                        <div className={`css-placeholder w-full h-full bg-gradient-to-br from-[#0A163A] to-[#121212] flex flex-col items-center justify-center border border-white/5 absolute inset-0 ${getImageUrl(course.thumbnail) ? 'hidden' : ''}`}>
-                          <span className="h-10 w-10 rounded-lg bg-[#615fff]/20 flex items-center justify-center font-bold text-white shadow-lg text-base mb-1.5">
-                            T
-                          </span>
-                          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tutor Space</span>
-                        </div>
-                        {/* Level chip */}
-                        <span className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-lg text-zinc-600 font-bold text-base shadow-sm border border-zinc-100">
-                          {getLevelLabel(course.level)}
-                        </span>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-5 md:p-6 flex-1 flex flex-col justify-between space-y-5">
-                        <div className="space-y-3">
-
-                          {/* Category & Price */}
-                          <div className="flex items-center justify-between">
-                            <span className="px-3 py-1 bg-[#615fff]/8 text-[#615fff] rounded-lg font-bold text-base border border-[#615fff]/15">
-                              {getCategoryName(course.category) || 'Course'}
+                      <Link
+                        href={`/courses/${course.slug}`}
+                        className="bg-white rounded-lg overflow-hidden border-0 border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_30px_rgba(97,95,255,0.06)] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full w-full max-w-[380px]"
+                      >
+                        {/* Aspect-ratio constrained image wrapper */}
+                        <div className="relative aspect-[16/10] bg-[#f5f8ff] overflow-hidden rounded-t-lg">
+                          {getImageUrl(course.thumbnail) ? (
+                            <img
+                              src={getImageUrl(course.thumbnail)}
+                              alt={course.title}
+                              className="w-full h-full object-cover pointer-events-none group-hover:scale-[1.03] transition-transform duration-500 rounded-t-lg"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const parent = (e.target as HTMLImageElement).parentElement;
+                                if (parent) {
+                                  const fallback = parent.querySelector('.css-placeholder');
+                                  if (fallback) fallback.classList.remove('hidden');
+                                }
+                              }}
+                            />
+                          ) : null}
+                          <div className={`css-placeholder w-full h-full bg-gradient-to-br from-[#0A163A] to-[#121212] flex flex-col items-center justify-center border border-white/5 absolute inset-0 ${getImageUrl(course.thumbnail) ? 'hidden' : ''} rounded-t-lg`}>
+                            <span className="h-10 w-10 rounded-lg bg-[#615fff]/20 flex items-center justify-center font-bold text-white shadow-lg text-base mb-1.5">
+                              T
                             </span>
-                            <span className="text-xl font-bold text-[#615fff]">
-                              {formatPrice(course.price)}
-                            </span>
+                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tutor Space</span>
                           </div>
-
-                          {/* Title */}
-                          <h3 className="text-lg sm:text-xl font-bold text-zinc-900 leading-snug tracking-tight group-hover:text-[#615fff] transition-colors duration-300">
-                            {course.title}
-                          </h3>
-
-                          {/* Summary */}
-                          <p className="text-base font-semibold text-zinc-500 leading-relaxed line-clamp-2">
-                            {course.summary}
-                          </p>
-
-                          {/* Instructor */}
-                          {course.instructor && (
-                            <span className="flex items-center gap-1.5 text-base font-semibold text-zinc-400">
-                              <FiUser className="h-4 w-4" />
-                              <span>{course.instructor.name}</span>
-                            </span>
-                          )}
-
-                        </div>
-
-                        {/* Footer meta + CTA */}
-                        <div className="space-y-3 pt-4 border-t border-zinc-100">
-                          <div className="flex items-center justify-between text-base font-bold text-zinc-400">
-                            <div className="flex items-center gap-4">
-                              {course.duration && (
-                                <span className="flex items-center gap-1.5">
-                                  <FiClock className="h-4 w-4" />
-                                  <span>{course.duration}</span>
-                                </span>
-                              )}
-                              <span className="flex items-center gap-1.5">
-                                <FiBookOpen className="h-4 w-4" />
-                                <span>{getLevelLabel(course.level)}</span>
+                          
+                          {/* Rating Badge Overlay */}
+                          {course.avgRating && course.avgRating > 0 ? (
+                            <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-0.5 rounded-lg flex items-center gap-1 border border-zinc-200/40 shadow-sm">
+                              <FiStar className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                              <span className="text-zinc-800 font-bold text-base">
+                                {course.avgRating.toFixed(1)}
                               </span>
                             </div>
-                            <Link
-                              href={`/courses/${course.slug}`}
-                              className="h-8 w-8 rounded-full bg-zinc-100 group-hover:bg-[#615fff] flex items-center justify-center text-zinc-500 group-hover:text-white transition-all duration-300"
-                            >
-                              <FiArrowUpRight className="h-4 w-4" />
-                            </Link>
-                          </div>
-
-                          {/* Rating & enrollment row */}
-                          {((course.avgRating ?? 0) > 0 || (course.enrollmentCount ?? 0) > 0) && (
-                            <div className="flex items-center gap-4 text-base font-semibold text-zinc-400">
-                              {(course.avgRating ?? 0) > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <FiStar className="h-4 w-4 text-amber-400 fill-amber-400" />
-                                  <span className="text-zinc-600 font-bold">{course.avgRating}</span>
-                                  {(course.reviewCount ?? 0) > 0 && (
-                                    <span>({course.reviewCount})</span>
-                                  )}
-                                </span>
-                              )}
-                              {(course.enrollmentCount ?? 0) > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <FiUsers className="h-4 w-4" />
-                                  <span>{course.enrollmentCount} students</span>
-                                </span>
-                              )}
-                            </div>
-                          )}
+                          ) : null}
                         </div>
 
-                      </div>
+                        {/* Content Details */}
+                        <div className="p-5 md:p-6 flex-grow flex flex-col justify-between gap-4">
+                          <div className="space-y-2">
+                            
+                            {/* Metadata (Duration, Level, Learners) */}
+                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-zinc-400 text-base font-semibold mb-2">
+                              {course.duration ? (
+                                <span className="flex items-center gap-1 text-zinc-500">
+                                  <FiClock className="h-4 w-4 text-zinc-400 shrink-0" />
+                                  <span>{course.duration}</span>
+                                </span>
+                              ) : null}
+                              {course.duration ? <span className="w-1.5 h-1.5 rounded-full bg-zinc-200" /> : null}
+                              
+                              <span className="text-zinc-500 font-medium">
+                                {getLevelLabel(course.level)}
+                              </span>
+                              
+                              {course.enrollmentCount && course.enrollmentCount > 0 ? (
+                                <>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-200" />
+                                  <span className="flex items-center gap-1 text-zinc-500">
+                                    <FiUsers className="h-4 w-4 text-zinc-400 shrink-0" />
+                                    <span>{course.enrollmentCount} learners</span>
+                                  </span>
+                                </>
+                              ) : null}
+                            </div>
+
+                            {/* Title */}
+                            <h3 className="font-bold text-[#0A163A] text-lg sm:text-xl leading-snug group-hover:text-[#615fff] transition-colors line-clamp-2">
+                              {course.title}
+                            </h3>
+                            
+                            {/* Instructor */}
+                            {course.instructor && (
+                              <p className="text-base text-zinc-500 font-semibold truncate pt-0.5">
+                                By {course.instructor.name}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-4">
+                            {/* Price + CTA Button row */}
+                            <div className="flex items-center justify-between gap-2 pt-1">
+                              <div className="flex flex-wrap items-baseline gap-x-1.5 min-w-0">
+                                <span className={`text-xl font-bold ${course.price === 0 ? 'text-emerald-600' : 'text-zinc-900'} truncate`}>
+                                  {formatPrice(course.price)}
+                                </span>
+                              </div>
+
+                              <div className="px-4 py-2 border border-zinc-205 hover:bg-[#615fff]/5 group-hover:border-[#615fff]/30 rounded-lg text-base font-semibold text-zinc-800 transition-all duration-300 flex items-center gap-2 bg-white shrink-0 whitespace-nowrap">
+                                <span>Enroll Now</span>
+                                <FiArrowRight className="h-4.5 w-4.5 text-zinc-500 transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
                     </motion.div>
                   ))}
                 </div>

@@ -9,7 +9,8 @@ import '@/lib/db/models/Student'
 import '@/lib/db/models/Media'
 import {
   FiArrowLeft, FiClock, FiBookOpen, FiUsers, FiCheck,
-  FiStar, FiZap, FiList, FiAward,
+  FiStar, FiZap, FiList, FiAward, FiBook, FiChevronRight,
+  FiShield,
 } from 'react-icons/fi'
 import LessonsAccordion from '@/components/LessonsAccordion'
 
@@ -28,6 +29,7 @@ function getLevelLabel(level: string): string {
 }
 
 function formatPrice(price: number) {
+  if (price === 0) return 'Free'
   return `$${price.toFixed(2)}`
 }
 
@@ -48,7 +50,7 @@ function StarDisplay({ rating }: { rating: number }) {
       {[1, 2, 3, 4, 5].map((star) => (
         <FiStar
           key={star}
-          className={`h-4 w-4 ${star <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'}`}
+          className={`h-4.5 w-4.5 ${star <= Math.round(rating) ? 'text-amber-400 fill-amber-400 shrink-0' : 'text-zinc-300 shrink-0'}`}
         />
       ))}
     </div>
@@ -114,134 +116,148 @@ export default async function CourseDetailPage({ params }: Props) {
     videoUrl: l.videoUrl || '',
   }))
 
-  return (
-    <div className="min-h-screen bg-white font-sans text-zinc-900">
+  const initials = instructorName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
 
-      {/* ── Breadcrumb bar ── */}
-      <div className="border-b border-zinc-100 bg-zinc-50/70">
-        <div className="container mx-auto px-6 py-4 flex items-center gap-2 text-base font-semibold text-zinc-500">
-          <Link href="/" className="hover:text-[#615fff] transition-colors">Home</Link>
-          <span>/</span>
-          <Link href="/#courses" className="hover:text-[#615fff] transition-colors">Courses</Link>
-          <span>/</span>
-          <span className="text-zinc-800 line-clamp-1">{course.title}</span>
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#ffffff] via-[#fbfcff] to-[#f5f8ff] font-sans text-zinc-900 pb-20 pt-22 relative">
+      
+      {/* Background glow accents */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[25%] right-[-10%] w-[500px] h-[500px] bg-[#615fff]/3 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[25%] left-[-10%] w-[500px] h-[500px] bg-[#FDBF2D]/3 rounded-full blur-[120px]" />
+      </div>
+
+      {/* ── Breadcrumb bar (Premium Glassmorphism Style) ── */}
+      <div className="relative border-b border-[#E9E6FF] bg-gradient-to-r from-[#FAF9FF] to-[#F5F3FF] select-text z-10">
+        <div className="container mx-auto px-6 py-4 flex flex-wrap items-center gap-2 text-base font-semibold text-zinc-500">
+          <Link href="/" className="hover:text-[#615fff] transition-colors flex items-center gap-1">Home</Link>
+          <FiChevronRight className="h-4 w-4 text-zinc-400 shrink-0" />
+          <Link href="/courses" className="hover:text-[#615fff] transition-colors">Courses</Link>
+          <FiChevronRight className="h-4 w-4 text-zinc-400 shrink-0" />
+          <span className="text-zinc-800 font-bold line-clamp-1">{course.title}</span>
         </div>
       </div>
 
-      {/* ── Hero section ── */}
-      <div className="bg-[#0A163A] text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#543cdf]/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ── Breathtaking Hero Section (Premium Dark Sapphire Glow) ── */}
+      <div className="relative bg-gradient-to-br from-[#0A163A] via-[#121F4C] to-[#0A163A] text-white border-b border-[#1A2E66] overflow-hidden select-text z-10">
+        {/* Soft decorative glows inside banner */}
+        <div className="absolute -top-12 -left-12 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-12 -right-12 w-96 h-96 bg-[#615fff]/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Premium Dot grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.22] pointer-events-none"
+          style={{ 
+            backgroundImage: 'radial-gradient(#615fff 1.2px, transparent 1.2px)', 
+            backgroundSize: '24px 24px',
+            maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+          }}
+        />
 
         <div className="container mx-auto px-6 py-16 md:py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
 
-          {/* Left: course info */}
-          <div className="lg:col-span-7 space-y-6">
+          {/* Left Side: Course Metadata & Main Info */}
+          <div className="lg:col-span-8 space-y-6">
             <Link
-              href="/#courses"
-              className="inline-flex items-center gap-2 text-base font-semibold text-zinc-400 hover:text-white transition-colors"
+              href="/courses"
+              className="inline-flex items-center gap-2 text-base font-bold text-zinc-400 hover:text-white transition-colors group"
             >
-              <FiArrowLeft className="h-4 w-4" />
-              Back to Courses
+              <FiArrowLeft className="h-4.5 w-4.5 transition-transform group-hover:-translate-x-0.5" />
+              <span>Back to Courses</span>
             </Link>
 
             {/* Badges */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               {categoryName && (
-                <span className="px-3.5 py-1.5 bg-[#615fff]/20 border border-[#615fff]/30 text-[#a09dff] rounded-lg font-bold text-base">
+                <span className="px-3.5 py-1.5 bg-[#615fff]/18 border border-[#615fff]/25 text-[#b2b0ff] rounded-lg font-bold text-base uppercase tracking-wide">
                   {categoryName}
                 </span>
               )}
-              <span className="px-3.5 py-1.5 bg-white/10 border border-white/15 text-zinc-300 rounded-lg font-bold text-base">
+              <span className="px-3.5 py-1.5 bg-white/8 border border-white/12 text-zinc-300 rounded-lg font-bold text-base uppercase tracking-wide">
                 {getLevelLabel(course.level)}
               </span>
             </div>
 
-            {/* Title */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-display leading-tight tracking-tight">
+            {/* Course Title */}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold font-display leading-[1.2] tracking-tight text-white">
               {course.title}
             </h1>
 
-            {/* Summary */}
-            <p className="text-lg font-semibold text-zinc-300 leading-relaxed max-w-2xl">
+            {/* Course Summary */}
+            <p className="text-lg sm:text-xl font-semibold text-zinc-300 leading-relaxed max-w-3xl">
               {course.summary}
             </p>
 
-            {/* Stats row */}
-            <div className="flex flex-wrap items-center gap-6 text-base font-semibold text-zinc-400">
+            {/* Course Meta Stats Row */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-2 text-base font-bold text-zinc-300 border-t border-white/5">
               {course.duration && (
                 <span className="flex items-center gap-2">
-                  <FiClock className="h-5 w-5 text-[#615fff]" />
-                  {course.duration}
+                  <FiClock className="h-5 w-5 text-[#615fff] shrink-0" />
+                  <span>{course.duration}</span>
                 </span>
               )}
               {lessonCount > 0 && (
                 <span className="flex items-center gap-2">
-                  <FiList className="h-5 w-5 text-[#615fff]" />
-                  {lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'}
+                  <FiList className="h-5 w-5 text-[#615fff] shrink-0" />
+                  <span>{lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'}</span>
                 </span>
               )}
               <span className="flex items-center gap-2">
-                <FiAward className="h-5 w-5 text-[#615fff]" />
-                {getLevelLabel(course.level)}
+                <FiAward className="h-5 w-5 text-[#615fff] shrink-0" />
+                <span>{getLevelLabel(course.level)}</span>
               </span>
               {reviews.length > 0 && (
-                <span className="flex items-center gap-1.5">
-                  <FiStar className="h-5 w-5 text-amber-400 fill-amber-400" />
+                <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-lg">
+                  <FiStar className="h-4.5 w-4.5 text-amber-400 fill-amber-400 shrink-0" />
                   <span className="text-white font-bold">{avgRating}</span>
                   <span className="text-zinc-400">({reviews.length} reviews)</span>
                 </span>
               )}
             </div>
 
-            {/* Instructor */}
-            <p className="text-base font-semibold text-zinc-400">
-              Instructor:{' '}
-              <span className="text-white font-bold">{instructorName}</span>
-            </p>
-          </div>
-
-          {/* Right: course thumbnail */}
-          <div className="lg:col-span-5">
-            <div className="rounded-lg overflow-hidden border border-white/10 shadow-2xl aspect-[16/10] bg-[#152347] relative">
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt={course.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : null}
-              <div className={`css-placeholder w-full h-full bg-gradient-to-br from-[#0A163A] to-[#121212] flex flex-col items-center justify-center border border-white/5 absolute inset-0 ${imageUrl ? 'hidden' : ''}`}>
-                <span className="h-16 w-16 rounded-lg bg-[#615fff]/20 flex items-center justify-center font-bold text-white shadow-lg text-xl mb-2.5">
-                  T
-                </span>
-                <span className="text-base font-bold text-zinc-450 uppercase tracking-wider">Tutor Space</span>
+            {/* Instructor Details Bar */}
+            <div className="flex items-center gap-3 pt-3">
+              <div className="h-11 w-11 rounded-lg bg-[#615fff]/20 border border-[#615fff]/35 flex items-center justify-center font-bold text-white text-base">
+                {initials}
+              </div>
+              <div>
+                <p className="text-base font-bold text-zinc-400">Instructed by</p>
+                <p className="text-base font-bold text-white">{instructorName}</p>
               </div>
             </div>
           </div>
 
+          {/* Right Side Spacer for Sticky Card on Desktop */}
+          <div className="lg:col-span-4 hidden lg:block" />
+
         </div>
       </div>
 
-      {/* ── Main content ── */}
-      <div className="container mx-auto px-6 py-14 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      {/* ── Main Responsive Content Grid ── */}
+      <div className="container mx-auto px-6 py-14 grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
 
-        {/* Left: detailed content */}
-        <div className="lg:col-span-8 space-y-12">
+        {/* Left Area: Detailed Content (8 cols) */}
+        <div className="lg:col-span-8 space-y-12 order-2 lg:order-1">
 
-          {/* What You'll Learn */}
+          {/* Section: What You'll Learn (Beautiful Lavender Accent Card) */}
           {course.whatYouWillLearn && course.whatYouWillLearn.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-zinc-900 mb-6 tracking-tight">
-                What You&apos;ll Learn
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-[#0A163A] tracking-tight">
+                What you&apos;ll learn in this course
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#f8f7ff] border border-[#615fff]/10 rounded-lg p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white border border-[#E9E6FF] rounded-lg p-6 shadow-[0_4px_20px_rgba(97,95,255,0.02)]">
                 {course.whatYouWillLearn.map((item: any, i: number) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-[#615fff]/15 flex items-center justify-center shrink-0 mt-0.5">
-                      <FiCheck className="h-3 w-3 text-[#615fff]" />
+                    <div className="h-6 w-6 rounded-lg bg-[#615fff]/8 border border-[#615fff]/15 flex items-center justify-center shrink-0 mt-0.5">
+                      <FiCheck className="h-4 w-4 text-[#615fff]" />
                     </div>
-                    <span className="text-base font-semibold text-zinc-700 leading-snug">
+                    <span className="text-base font-semibold text-zinc-700 leading-relaxed">
                       {item.outcome}
                     </span>
                   </div>
@@ -250,19 +266,26 @@ export default async function CourseDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Requirements */}
+          {/* Section: Course Curriculum Accordion */}
+          {serializedLessons.length > 0 && (
+            <div className="pt-2">
+              <LessonsAccordion lessons={serializedLessons} />
+            </div>
+          )}
+
+          {/* Section: Course Requirements */}
           {course.requirements && course.requirements.length > 0 && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
-                Requirements
+              <h2 className="text-2xl font-bold text-[#0A163A] tracking-tight">
+                Requirements for this course
               </h2>
-              <div className="bg-zinc-50 border border-zinc-200/80 rounded-lg p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white border border-zinc-200/80 rounded-lg p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
                 {course.requirements.map((item: any, i: number) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-[#615fff]/10 flex items-center justify-center shrink-0 mt-0.5 text-[#615fff] text-xs font-bold border border-[#615fff]/20">
+                    <div className="h-6 w-6 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0 mt-0.5 text-zinc-500 text-base font-bold">
                       {i + 1}
                     </div>
-                    <span className="text-base font-semibold text-zinc-600 leading-snug">
+                    <span className="text-base font-semibold text-zinc-600 leading-relaxed">
                       {item.requirement}
                     </span>
                   </div>
@@ -271,55 +294,48 @@ export default async function CourseDetailPage({ params }: Props) {
             </div>
           )}
 
-          {/* Lessons Accordion Curriculum */}
-          {serializedLessons.length > 0 && (
-            <div className="pt-2">
-              <LessonsAccordion lessons={serializedLessons} />
-            </div>
-          )}
-
-          {/* Reviews section */}
+          {/* Section: Student Reviews Feed */}
           {reviews.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-150">
+                <h2 className="text-2xl font-bold text-[#0A163A] tracking-tight">
                   Student Reviews
                 </h2>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <StarDisplay rating={avgRating} />
-                  <span className="text-base font-bold text-zinc-700">{avgRating} / 5</span>
+                  <span className="text-base font-bold text-zinc-700">{avgRating} out of 5 stars</span>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {reviews.map((review: any) => {
                   const studentName = review.student && typeof review.student === 'object'
-                    ? review.student.name : 'Anonymous'
+                    ? review.student.name : 'Anonymous Student'
                   const picRaw = review.student?.profilePic
                   const picUrl = picRaw
                     ? (typeof picRaw === 'object' ? picRaw.url ?? null : null)
                     : null
-                  const initials = studentName.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
+                  const sInitials = studentName.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
 
                   return (
-                    <div key={review._id.toString()} className="bg-zinc-50 border border-zinc-200/80 rounded-lg p-5 space-y-3">
-                      <div className="flex items-center justify-between">
+                    <div key={review._id.toString()} className="bg-white border border-zinc-200/80 rounded-lg p-6 space-y-4 shadow-[0_4px_15px_rgba(0,0,0,0.02)]">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                           {picUrl ? (
-                            <img src={picUrl} alt={studentName} className="h-10 w-10 rounded-full object-cover" />
+                            <img src={picUrl} alt={studentName} className="h-11 w-11 rounded-lg object-cover border border-zinc-200" />
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-[#615fff]/10 flex items-center justify-center font-bold text-base text-[#615fff]">
-                              {initials}
+                            <div className="h-11 w-11 rounded-lg bg-[#615fff]/8 border border-[#615fff]/15 flex items-center justify-center font-bold text-base text-[#615fff]">
+                              {sInitials}
                             </div>
                           )}
                           <div>
-                            <p className="text-base font-bold text-zinc-800">{studentName}</p>
-                            <p className="text-base font-semibold text-zinc-400">Verified Student</p>
+                            <p className="text-base font-bold text-[#0A163A]">{studentName}</p>
+                            <p className="text-base font-semibold text-zinc-400">Verified Buyer</p>
                           </div>
                         </div>
                         <StarDisplay rating={parseInt(review.rating, 10)} />
                       </div>
-                      <p className="text-base font-semibold text-zinc-600 leading-relaxed">
+                      <p className="text-base font-semibold text-zinc-650 leading-relaxed italic">
                         &ldquo;{review.comment}&rdquo;
                       </p>
                     </div>
@@ -331,81 +347,92 @@ export default async function CourseDetailPage({ params }: Props) {
 
         </div>
 
-        {/* Right: Sticky pricing card */}
-        <div className="lg:col-span-4">
-          <div className="sticky top-8 bg-white border border-zinc-200/80 rounded-lg shadow-lg overflow-hidden">
-            {/* Card image preview */}
-            <div className="aspect-[16/10] overflow-hidden bg-zinc-100 relative">
-              {imageUrl ? (
+        {/* Right Area: Premium Sticky Pricing Card (4 cols) */}
+        <div className="lg:col-span-4 relative z-20 lg:-mt-[700px] w-full order-1 lg:order-2">
+          <div className="sticky top-28 bg-white border border-zinc-200 rounded-lg shadow-[0_12px_45px_rgba(97,95,255,0.09)] overflow-hidden">
+            
+            {/* Aspect image header on widget */}
+            {imageUrl ? (
+              <div className="aspect-[16/10] overflow-hidden bg-zinc-50 border-b border-zinc-100 relative group hidden lg:block">
                 <img
                   src={imageUrl}
                   alt={course.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                 />
-              ) : null}
-              <div className={`css-placeholder w-full h-full bg-gradient-to-br from-[#0A163A] to-[#121212] flex flex-col items-center justify-center border border-white/5 absolute inset-0 ${imageUrl ? 'hidden' : ''}`}>
-                <span className="h-12 w-12 rounded-lg bg-[#615fff]/20 flex items-center justify-center font-bold text-white shadow-lg text-lg mb-2">
-                  T
-                </span>
-                <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Tutor Space</span>
               </div>
-            </div>
+            ) : null}
 
             <div className="p-6 space-y-6">
-              {/* Price */}
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-bold text-[#615fff]">
-                  {formatPrice(course.price)}
-                </span>
+              
+              {/* Dynamic Price Area */}
+              <div className="space-y-1">
+                <p className="text-base font-bold text-zinc-400 uppercase tracking-wide">Investment</p>
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-4xl font-bold ${course.price === 0 ? 'text-emerald-600' : 'text-[#615fff]'}`}>
+                    {formatPrice(course.price)}
+                  </span>
+                </div>
               </div>
 
-              {/* Enroll CTA */}
+              {/* Action Button: Register / Enroll */}
               <Link
                 href="/register"
-                className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-lg shadow-[#615fff]/20 hover:shadow-[#615fff]/30 transition-all duration-300"
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5"
               >
-                <FiZap className="h-5 w-5" />
-                Enroll Now
+                <FiZap className="h-5 w-5 fill-white" />
+                <span>Enroll In Course</span>
               </Link>
 
-              <p className="text-base font-semibold text-zinc-400 text-center">
-                30-day money-back guarantee
-              </p>
+              <div className="flex items-center justify-center gap-2 text-base font-semibold text-zinc-500">
+                <FiShield className="h-5 w-5 text-emerald-500 shrink-0" />
+                <span>30-Day Money-Back Guarantee</span>
+              </div>
 
-              {/* Course includes */}
-              <div className="space-y-3 border-t border-zinc-100 pt-5">
-                <p className="text-base font-bold text-zinc-800 mb-2">This course includes:</p>
+              {/* Comprehensive Includes check-list */}
+              <div className="space-y-3.5 border-t border-zinc-100 pt-5">
+                <p className="text-base font-bold text-[#0A163A]">This course includes:</p>
+                
                 {course.duration && (
                   <div className="flex items-center gap-3 text-base font-semibold text-zinc-600">
                     <FiClock className="h-5 w-5 text-[#615fff] shrink-0" />
-                    <span>{course.duration} of content</span>
+                    <span>{course.duration} on-demand video</span>
                   </div>
                 )}
+                
                 {lessonCount > 0 && (
                   <div className="flex items-center gap-3 text-base font-semibold text-zinc-600">
                     <FiList className="h-5 w-5 text-[#615fff] shrink-0" />
-                    <span>{lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}</span>
+                    <span>{lessonCount} {lessonCount === 1 ? 'recorded lesson' : 'recorded lessons'}</span>
                   </div>
                 )}
+                
                 <div className="flex items-center gap-3 text-base font-semibold text-zinc-600">
                   <FiAward className="h-5 w-5 text-[#615fff] shrink-0" />
-                  <span>{getLevelLabel(course.level)}</span>
+                  <span>{getLevelLabel(course.level)} material</span>
                 </div>
+                
                 <div className="flex items-center gap-3 text-base font-semibold text-zinc-600">
                   <FiUsers className="h-5 w-5 text-[#615fff] shrink-0" />
                   <span>Full lifetime access</span>
                 </div>
+                
                 <div className="flex items-center gap-3 text-base font-semibold text-zinc-600">
-                  <FiBookOpen className="h-5 w-5 text-[#615fff] shrink-0" />
+                  <FiBook className="h-5 w-5 text-[#615fff] shrink-0" />
                   <span>Certificate of completion</span>
                 </div>
               </div>
 
-              {/* Instructor */}
-              <div className="border-t border-zinc-100 pt-5">
-                <p className="text-base font-semibold text-zinc-500 mb-1">Instructor</p>
-                <p className="text-base font-bold text-zinc-800">{instructorName}</p>
+              {/* Verified Instructor footer within widget */}
+              <div className="border-t border-zinc-100 pt-4 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-zinc-500 text-base">
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-base font-bold text-zinc-400 uppercase tracking-wide">Instructor</p>
+                  <p className="text-base font-bold text-zinc-800 truncate max-w-[200px]">{instructorName}</p>
+                </div>
               </div>
+
             </div>
           </div>
         </div>
