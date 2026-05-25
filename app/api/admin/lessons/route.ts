@@ -5,6 +5,7 @@ import { Course } from '@/lib/db/models/Course'
 import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { createZoomMeeting } from '@/lib/zoom'
 
 // GET all lessons (optionally filtered by courseId)
 export async function GET(request: Request) {
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, slug, course: courseId, order, lessonType, videoUrl, livePlatform, liveUrl, liveDate, content, duration, isPreviewable } = body
+    const { title, slug, course: courseId, order, lessonType, videoUrl, livePlatform, liveUrl, liveDate, content, duration, isPreviewable, autoGenerateZoom } = body
 
     if (!title || !slug || !courseId || !order || !duration) {
       return NextResponse.json({ error: 'Missing required lesson fields.' }, { status: 400 })
@@ -60,13 +61,28 @@ export async function POST(request: Request) {
     const existing = await Lesson.findOne({ slug }).lean()
     if (existing) return NextResponse.json({ error: 'Lesson slug already exists.' }, { status: 400 })
 
+    let actualLiveUrl = liveUrl
+    const finalAutoGenerate = !!(lessonType === 'live' && livePlatform === 'zoom' && autoGenerateZoom)
+
+    if (finalAutoGenerate) {
+      if (!liveDate) {
+        return NextResponse.json({ error: 'Scheduled Time & Date is required to auto-generate a Zoom meeting.' }, { status: 400 })
+      }
+
+      const zoomDetails = await createZoomMeeting(title, liveDate, Number(duration) || 60)
+      if (!zoomDetails) {
+        return NextResponse.json({ error: 'Failed to auto-generate Zoom meeting link. Please verify your Zoom credentials.' }, { status: 500 })
+      }
+      actualLiveUrl = zoomDetails.joinUrl
+    }
+
     const newLesson = new Lesson({
       title, slug, course: courseId, order, lessonType: lessonType || 'recorded',
-      videoUrl, livePlatform, liveUrl,
+      videoUrl, livePlatform, liveUrl: actualLiveUrl,
       liveDate: liveDate ? new Date(liveDate) : undefined,
       content, duration: Number(duration),
       isPreviewable: isPreviewable || false,
-      autoGenerateZoom: false,
+      autoGenerateZoom: finalAutoGenerate,
     })
     await newLesson.save()
 

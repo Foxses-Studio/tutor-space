@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiUser, FiLogOut, FiLayout, FiMenu, FiX, FiChevronDown } from 'react-icons/fi'
 
@@ -14,14 +15,15 @@ interface User {
 }
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/' },
-  { label: 'Courses', href: '#courses' },
-  { label: 'Instructors', href: '#instructors' },
-  { label: 'About Us', href: '#about-us' },
-  { label: 'Contact Us', href: '#contact-us' },
+  { label: 'Home',        href: '/',           match: '/' },
+  { label: 'Courses',     href: '/courses',    match: '/courses' },
+  { label: 'Instructors', href: '#instructors', match: '/instructors' },
+  { label: 'About Us',    href: '#about-us',   match: '/about' },
+  { label: 'Contact Us',  href: '#contact-us', match: '/contact' },
 ]
 
 export default function Navbar() {
+  const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -29,6 +31,12 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Active link check
+  const isActive = (match: string): boolean => {
+    if (match === '/') return pathname === '/'
+    return pathname === match || pathname.startsWith(match + '/')
+  }
 
   // Track scroll position for transparent to sticky background transition
   useEffect(() => {
@@ -127,17 +135,26 @@ export default function Navbar() {
 
         {/* Middle: Navigation Menu (Desktop) - 16px minimum font size */}
         <nav className="hidden md:flex items-center gap-8 text-base font-semibold">
-          {NAV_LINKS.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
-              className="relative text-zinc-500 hover:text-[#121212] pb-1.5 pt-1 transition-colors duration-200 group"
-            >
-              <span>{link.label}</span>
-              {/* Expanding brand underline micro-interaction */}
-              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#615fff] transition-all duration-300 group-hover:w-full origin-left" />
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const active = isActive(link.match)
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative pb-1.5 pt-1 transition-colors duration-200 group ${
+                  active ? 'text-[#615fff]' : 'text-zinc-500 hover:text-[#121212]'
+                }`}
+              >
+                <span>{link.label}</span>
+                {/* Active underline — always full when active, expands on hover otherwise */}
+                <span
+                  className={`absolute bottom-0 left-0 h-[2px] bg-[#615fff] transition-all duration-300 origin-left ${
+                    active ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}
+                />
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Right Side: User Icon & Mobile Toggle */}
@@ -288,16 +305,23 @@ export default function Navbar() {
             className="md:hidden border-t border-zinc-100 bg-white px-6 py-4 shadow-md overflow-hidden"
           >
             <nav className="flex flex-col gap-4 text-base font-semibold">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-zinc-500 hover:text-zinc-900 py-1 transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {NAV_LINKS.map((link) => {
+                const active = isActive(link.match)
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`py-1 transition-colors border-l-2 pl-3 ${
+                      active
+                        ? 'text-[#615fff] border-[#615fff] font-bold'
+                        : 'text-zinc-500 hover:text-zinc-900 border-transparent'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              })}
             </nav>
           </motion.div>
         )}

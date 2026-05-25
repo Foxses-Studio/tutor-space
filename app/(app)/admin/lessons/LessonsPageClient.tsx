@@ -174,90 +174,121 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
             </div>
           ) : (
             <div>
-              <div className="px-6 py-4 border-b border-zinc-800/50 bg-[#0b0e17]">
+              <div className="px-6 py-4 border-b border-zinc-800/50 bg-[#0b0e17] flex items-center justify-between">
                 <p className="text-base font-bold text-zinc-450">
-                  {lessons.length} lesson{lessons.length !== 1 ? 's' : ''} in syllabus
+                  Syllabus Registry ({lessons.length} lesson{lessons.length !== 1 ? 's' : ''})
                 </p>
               </div>
-              <div className="divide-y divide-zinc-800/50">
-                {lessons
-                  .sort((a, b) => a.order - b.order)
-                  .map((lesson) => (
-                    <div
-                      key={lesson.id}
-                      className="flex items-center gap-4 px-6 py-4 hover:bg-[#152347]/10 transition-colors"
-                    >
-                      {/* Order badge */}
-                      <div className="h-9 w-9 rounded-lg bg-[#615fff]/15 border border-[#615fff]/20 flex items-center justify-center font-bold text-[#615fff] text-base shrink-0">
-                        {lesson.order}
-                      </div>
-                      {/* Type icon */}
-                      <div
-                        className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${
-                          lesson.lessonType === 'live'
-                            ? 'bg-rose-500/10 border border-rose-500/20'
-                            : 'bg-emerald-500/10 border border-emerald-500/20'
-                        }`}
-                      >
-                        {lesson.lessonType === 'live' ? (
-                          <FiRadio className="h-4.5 w-4.5 text-rose-400" />
-                        ) : (
-                          <FiVideo className="h-4.5 w-4.5 text-emerald-400" />
-                        )}
-                      </div>
-                      {/* Lesson info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-base truncate">{lesson.title}</p>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          <span
-                            className={`text-sm font-bold capitalize px-2 py-0.5 rounded border ${
-                              lesson.lessonType === 'live'
-                                ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-                                : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                            }`}
-                          >
-                            {lesson.lessonType === 'live'
-                              ? `Live • ${lesson.livePlatform}`
-                              : 'Recorded'}
-                          </span>
-                          <span className="text-sm font-semibold text-zinc-550">
-                            {lesson.duration} min
-                          </span>
-                          {lesson.isPreviewable && (
-                            <span className="text-sm font-bold text-amber-400 flex items-center gap-1">
-                              <FiEye className="h-3.5 w-3.5" />
-                              Preview
-                            </span>
-                          )}
-                          {lesson.liveDate && (
-                            <span className="text-sm font-semibold text-zinc-550">
-                              {new Date(lesson.liveDate).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Link
-                          href={`/admin/lessons/${lesson.id}/edit`}
-                          className="p-2 rounded bg-[#615fff]/10 hover:bg-[#615fff] border border-[#615fff]/20 hover:border-[#615fff] text-[#615fff] hover:text-white transition-all cursor-pointer"
-                        >
-                          <FiEdit className="h-4.5 w-4.5" />
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(lesson)}
-                          className="p-2 rounded bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-400 hover:text-white transition-all cursor-pointer"
-                        >
-                          <FiTrash2 className="h-4.5 w-4.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-base">
+                  <thead>
+                    <tr className="bg-[#121212] border-b border-zinc-800 text-zinc-400 font-bold text-sm uppercase tracking-wider font-display">
+                      <th className="px-6 py-3.5 text-center w-16">Order</th>
+                      <th className="px-6 py-3.5">Lesson Title</th>
+                      <th className="px-6 py-3.5">Format</th>
+                      <th className="px-6 py-3.5">Duration</th>
+                      <th className="px-6 py-3.5">Scheduled Date</th>
+                      <th className="px-6 py-3.5 text-right w-32">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60 font-semibold text-zinc-200">
+                    {lessons
+                      .sort((a, b) => a.order - b.order)
+                      .map((lesson) => {
+                        const dateObj = lesson.liveDate ? new Date(lesson.liveDate) : null
+                        const formattedDate = dateObj
+                          ? dateObj.toLocaleString('en-BD', {
+                              weekday: 'short',
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
+                          : '—'
+
+                        return (
+                          <tr key={lesson.id} className="hover:bg-zinc-800/20 transition-colors">
+                            {/* Order */}
+                            <td className="px-6 py-4 text-center">
+                              <span className="inline-flex h-9 w-9 rounded-lg bg-[#615fff]/15 border border-[#615fff]/20 items-center justify-center font-bold text-[#615fff]">
+                                {lesson.order}
+                              </span>
+                            </td>
+                            {/* Lesson Title */}
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  lesson.lessonType === 'live'
+                                    ? 'bg-rose-500/10 border border-rose-500/20 text-rose-450'
+                                    : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-450'
+                                }`}>
+                                  {lesson.lessonType === 'live' ? (
+                                    <FiRadio className="h-4.5 w-4.5" />
+                                  ) : (
+                                    <FiVideo className="h-4.5 w-4.5" />
+                                  )}
+                                </span>
+                                <div>
+                                  <p className="font-bold text-white text-base leading-snug line-clamp-1">{lesson.title}</p>
+                                </div>
+                              </div>
+                            </td>
+                            {/* Format */}
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-bold capitalize px-2.5 py-1 rounded border select-none ${
+                                  lesson.lessonType === 'live'
+                                    ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+                                    : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                }`}>
+                                  {lesson.lessonType === 'live'
+                                    ? `Live • ${lesson.livePlatform || 'zoom'}`
+                                    : 'Recorded'}
+                                </span>
+                                {lesson.isPreviewable && (
+                                  <span className="inline-flex px-2 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25 select-none items-center gap-1">
+                                    <FiEye className="h-3 w-3" />
+                                    Preview
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            {/* Duration */}
+                            <td className="px-6 py-4 text-zinc-300">
+                              {lesson.duration} mins
+                            </td>
+                            {/* Scheduled Date */}
+                            <td className="px-6 py-4 text-zinc-300">
+                              {lesson.lessonType === 'live' ? (
+                                <span className="text-zinc-200 font-bold">{formattedDate}</span>
+                              ) : (
+                                <span className="text-zinc-550 italic font-medium">—</span>
+                              )}
+                            </td>
+                            {/* Actions */}
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2.5">
+                                <Link
+                                  href={`/admin/lessons/${lesson.id}/edit`}
+                                  className="p-2 rounded-lg bg-[#615fff]/10 hover:bg-[#615fff] border border-[#615fff]/20 text-[#615fff] hover:text-white transition-all duration-200 hover:scale-105 inline-flex items-center shadow-sm cursor-pointer"
+                                >
+                                  <FiEdit className="h-4.5 w-4.5" />
+                                </Link>
+                                <button
+                                  onClick={() => handleDelete(lesson)}
+                                  className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-400 hover:text-white transition-all duration-200 hover:scale-105 inline-flex items-center shadow-sm cursor-pointer"
+                                >
+                                  <FiTrash2 className="h-4.5 w-4.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

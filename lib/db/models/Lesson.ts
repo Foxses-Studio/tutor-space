@@ -15,6 +15,7 @@ export interface ILesson extends Document {
   content?: any // Lexical rich text
   duration: number
   isPreviewable: boolean
+  reminderSent?: boolean
   seo?: {
     metaTitle?: string
     metaDescription?: string
@@ -38,6 +39,7 @@ const LessonSchema = new Schema<ILesson>(
     content: Schema.Types.Mixed, // Lexical RichText
     duration: { type: Number, required: true },
     isPreviewable: { type: Boolean, default: false },
+    reminderSent: { type: Boolean, default: false },
     seo: {
       metaTitle: String,
       metaDescription: String,

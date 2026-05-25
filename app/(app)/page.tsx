@@ -5,7 +5,6 @@ import { Category } from '@/lib/db/models/Category'
 import { Review } from '@/lib/db/models/Review'
 import { Enrollment } from '@/lib/db/models/Enrollment'
 import { FAQ } from '@/lib/db/models/FAQ'
-import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
 import Categories from '@/components/Categories'
@@ -138,9 +137,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden flex flex-col">
-
-      {/* Scroll-Adaptive Navbar */}
-      <Navbar />
 
       {/* Hero Section with Marquee children composition */}
       <Hero>

@@ -25,6 +25,7 @@ interface LessonFormProps {
     duration: number
     isPreviewable: boolean
     courseId: string
+    autoGenerateZoom?: boolean
   }
 }
 
@@ -61,6 +62,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
   )
   const [duration, setDuration] = useState(initialData?.duration || 60)
   const [isPreviewable, setIsPreviewable] = useState(initialData?.isPreviewable || false)
+  const [autoGenerateZoom, setAutoGenerateZoom] = useState(initialData?.autoGenerateZoom || false)
   const [saving, setSaving] = useState(false)
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +71,18 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
     if (!isEditMode) {
       setSlug(slugify(val))
     }
+  }
+
+  const handleVideoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.trim()
+    if (val.startsWith('<iframe')) {
+      const match = val.match(/src="([^"]+)"/)
+      if (match && match[1]) {
+        setVideoUrl(match[1])
+        return
+      }
+    }
+    setVideoUrl(val)
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -99,6 +113,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
         liveDate: lessonType === 'live' && liveDate ? liveDate : undefined,
         duration,
         isPreviewable,
+        autoGenerateZoom: lessonType === 'live' && livePlatform === 'zoom' ? autoGenerateZoom : false,
       }
 
       const url = isEditMode ? `/api/admin/lessons/${initialData?.id}` : '/api/admin/lessons'
@@ -258,7 +273,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                 <input
                   type="url"
                   value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onChange={handleVideoUrlChange}
                   placeholder="https://www.youtube.com/embed/..."
                   className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
                 />
@@ -289,14 +304,42 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                     />
                   </div>
                 </div>
+                {livePlatform === 'zoom' && (
+                  <div className="bg-[#070b16] border border-zinc-800/80 rounded-lg p-4 flex flex-col gap-3 animate-fadeIn">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <div
+                        className={`relative w-12 h-6 rounded-full transition-colors ${
+                          autoGenerateZoom ? 'bg-[#615fff]' : 'bg-zinc-700'
+                        }`}
+                        onClick={() => setAutoGenerateZoom(!autoGenerateZoom)}
+                      >
+                        <div
+                          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                            autoGenerateZoom ? 'translate-x-7' : 'translate-x-1'
+                          }`}
+                        />
+                      </div>
+                      <span className="text-base font-bold text-zinc-300">Auto-generate Zoom Meeting Link</span>
+                    </label>
+                    <p className="text-sm font-semibold text-zinc-400">
+                      When enabled, Tutor Space will automatically create a Zoom meeting using your Server-to-Server OAuth credentials.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-2">
-                  <label className="text-base font-bold text-zinc-300">Meeting Join URL</label>
+                  <label className="text-base font-bold text-zinc-300">
+                    {autoGenerateZoom ? 'Meeting Join URL (Auto-generated)' : 'Meeting Join URL'}
+                  </label>
                   <input
                     type="url"
-                    value={liveUrl}
+                    value={liveUrl || ''}
+                    disabled={autoGenerateZoom}
                     onChange={(e) => setLiveUrl(e.target.value)}
-                    placeholder="https://zoom.us/j/..."
-                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
+                    placeholder={autoGenerateZoom ? 'Will be automatically generated upon save' : 'https://zoom.us/j/...'}
+                    className={`bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono ${
+                      autoGenerateZoom ? 'opacity-50 cursor-not-allowed select-none' : ''
+                    }`}
                   />
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { Course } from '@/lib/db/models/Course'
 import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { createZoomMeeting } from '@/lib/zoom'
 
 async function authCheck() {
   const cookieStore = await cookies()
@@ -36,18 +37,52 @@ export async function PUT(
     }
 
     const body = await request.json()
+
+    const finalLessonType = body.lessonType ?? lesson.lessonType
+    const finalLivePlatform = body.livePlatform ?? lesson.livePlatform
+    const finalAutoGenerateZoom = body.autoGenerateZoom ?? lesson.autoGenerateZoom
+    const finalLiveDate = body.liveDate ? new Date(body.liveDate) : lesson.liveDate
+    const finalTitle = body.title ?? lesson.title
+    const finalDuration = body.duration ? Number(body.duration) : lesson.duration
+
+    let finalLiveUrl = body.liveUrl ?? lesson.liveUrl
+
+    const shouldGenerateZoom = 
+      finalLessonType === 'live' &&
+      finalLivePlatform === 'zoom' &&
+      finalAutoGenerateZoom &&
+      (
+        !lesson.liveUrl || 
+        !lesson.autoGenerateZoom ||
+        (body.liveDate && new Date(body.liveDate).getTime() !== new Date(lesson.liveDate).getTime()) ||
+        (body.title && body.title !== lesson.title)
+      )
+
+    if (shouldGenerateZoom) {
+      if (!finalLiveDate) {
+        return NextResponse.json({ error: 'Scheduled Time & Date is required to auto-generate a Zoom meeting.' }, { status: 400 })
+      }
+
+      const zoomDetails = await createZoomMeeting(finalTitle, finalLiveDate.toISOString(), finalDuration || 60)
+      if (!zoomDetails) {
+        return NextResponse.json({ error: 'Failed to auto-generate Zoom meeting link. Please verify your Zoom credentials.' }, { status: 500 })
+      }
+      finalLiveUrl = zoomDetails.joinUrl
+    }
+
     Object.assign(lesson, {
-      title: body.title ?? lesson.title,
+      title: finalTitle,
       slug: body.slug ?? lesson.slug,
       order: body.order ?? lesson.order,
-      lessonType: body.lessonType ?? lesson.lessonType,
+      lessonType: finalLessonType,
       videoUrl: body.videoUrl ?? lesson.videoUrl,
-      livePlatform: body.livePlatform ?? lesson.livePlatform,
-      liveUrl: body.liveUrl ?? lesson.liveUrl,
-      liveDate: body.liveDate ? new Date(body.liveDate) : lesson.liveDate,
+      livePlatform: finalLivePlatform,
+      liveUrl: finalLiveUrl,
+      liveDate: finalLiveDate,
       content: body.content ?? lesson.content,
-      duration: body.duration ? Number(body.duration) : lesson.duration,
+      duration: finalDuration,
       isPreviewable: body.isPreviewable ?? lesson.isPreviewable,
+      autoGenerateZoom: finalAutoGenerateZoom,
     })
     await lesson.save()
 

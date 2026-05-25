@@ -9,6 +9,7 @@ import {
   FiArrowLeft, FiClock, FiBookOpen, FiUsers, FiCheck,
   FiStar, FiZap, FiList, FiAward,
 } from 'react-icons/fi'
+import LessonsAccordion from '@/components/LessonsAccordion'
 
 // ─── Type helpers ─────────────────────────────────────────────────────────────
 
@@ -99,6 +100,19 @@ export default async function CourseDetailPage({ params }: Props) {
     ? course.instructor.name ?? course.instructor.email
     : 'Expert Instructor'
   const imageUrl = getImageUrl(course.thumbnail)
+
+  const serializedLessons = (lessonsDocs as any[]).map((l: any) => ({
+    id: l._id.toString(),
+    title: l.title,
+    slug: l.slug,
+    order: l.order || 1,
+    lessonType: l.lessonType || 'recorded',
+    duration: l.duration || 10,
+    isPreviewable: l.isPreviewable || false,
+    livePlatform: l.livePlatform || '',
+    liveDate: l.liveDate ? l.liveDate.toISOString() : undefined,
+    videoUrl: l.videoUrl || '',
+  }))
 
   return (
     <div className="min-h-screen bg-white font-sans text-zinc-900">
@@ -195,14 +209,6 @@ export default async function CourseDetailPage({ params }: Props) {
                   src={imageUrl}
                   alt={course.title}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    const parent = (e.target as HTMLImageElement).parentElement;
-                    if (parent) {
-                      const fallback = parent.querySelector('.css-placeholder');
-                      if (fallback) fallback.classList.remove('hidden');
-                    }
-                  }}
                 />
               ) : null}
               <div className={`css-placeholder w-full h-full bg-gradient-to-br from-[#0A163A] to-[#121212] flex flex-col items-center justify-center border border-white/5 absolute inset-0 ${imageUrl ? 'hidden' : ''}`}>
@@ -246,18 +252,29 @@ export default async function CourseDetailPage({ params }: Props) {
 
           {/* Requirements */}
           {course.requirements && course.requirements.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-zinc-900 mb-6 tracking-tight">
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">
                 Requirements
               </h2>
-              <ul className="space-y-3">
+              <div className="bg-zinc-50 border border-zinc-200/80 rounded-lg p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {course.requirements.map((item: any, i: number) => (
-                  <li key={i} className="flex items-start gap-3 text-base font-semibold text-zinc-600">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#615fff] shrink-0" />
-                    {item.requirement}
-                  </li>
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="h-5 w-5 rounded-full bg-[#615fff]/10 flex items-center justify-center shrink-0 mt-0.5 text-[#615fff] text-xs font-bold border border-[#615fff]/20">
+                      {i + 1}
+                    </div>
+                    <span className="text-base font-semibold text-zinc-600 leading-snug">
+                      {item.requirement}
+                    </span>
+                  </div>
                 ))}
-              </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Lessons Accordion Curriculum */}
+          {serializedLessons.length > 0 && (
+            <div className="pt-2">
+              <LessonsAccordion lessons={serializedLessons} />
             </div>
           )}
 
@@ -321,14 +338,6 @@ export default async function CourseDetailPage({ params }: Props) {
                   src={imageUrl}
                   alt={course.title}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    const parent = (e.target as HTMLImageElement).parentElement;
-                    if (parent) {
-                      const fallback = parent.querySelector('.css-placeholder');
-                      if (fallback) fallback.classList.remove('hidden');
-                    }
-                  }}
                 />
               ) : null}
               <div className={`css-placeholder w-full h-full bg-gradient-to-br from-[#0A163A] to-[#121212] flex flex-col items-center justify-center border border-white/5 absolute inset-0 ${imageUrl ? 'hidden' : ''}`}>

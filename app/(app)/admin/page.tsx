@@ -68,6 +68,17 @@ interface DashboardData {
     level: string
     duration: string
   }>
+  liveLessons?: Array<{
+    id: string
+    title: string
+    slug: string
+    courseTitle: string
+    livePlatform: string
+    liveUrl: string
+    liveDate: string | null
+    duration: number
+    autoGenerateZoom: boolean
+  }>
 }
 
 function formatCurrency(amount: number) {
@@ -625,76 +636,153 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Assigned Courses Grid */}
-          <div className="bg-[#18181b] border border-zinc-800 rounded-lg p-6 shadow-sm space-y-4">
-            <div>
-              <h2 className="text-lg font-bold text-white">Your Syllabus</h2>
-              <p className="text-base font-semibold text-zinc-400 mt-0.5">Courses currently assigned to your instruction</p>
+          {/* Grid Layout: Your Syllabus + Live Classes Sidebar */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left side: Your Syllabus */}
+            <div className="lg:col-span-8 bg-[#18181b] border border-zinc-800 rounded-lg p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="text-lg font-bold text-white">Your Syllabus</h2>
+                <p className="text-base font-semibold text-zinc-400 mt-0.5">Courses currently assigned to your instruction</p>
+              </div>
+
+              {courses && courses.length === 0 ? (
+                <div className="text-center py-8 text-zinc-550 font-semibold text-base">
+                  No courses assigned to your profile yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-base">
+                    <thead>
+                      <tr className="bg-[#121212] border-b border-zinc-800 text-zinc-400 font-bold text-sm uppercase tracking-wider">
+                        <th className="px-6 py-3.5">Course Title</th>
+                        <th className="px-6 py-3.5">Price</th>
+                        <th className="px-4 py-3.5 text-center">Visibility</th>
+                        <th className="px-6 py-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800/60 font-semibold text-zinc-200">
+                      {courses?.map((c) => (
+                        <tr key={c.id} className="hover:bg-zinc-800/20 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              {/* Thumbnail */}
+                              <div className="h-12 w-20 rounded-md overflow-hidden bg-[#070b16] border border-zinc-800 shrink-0 relative flex items-center justify-center select-none">
+                                {c.thumbnail ? (
+                                  <img src={c.thumbnail} alt={c.title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-xs font-bold text-zinc-650">Tutor</span>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-white text-base leading-snug line-clamp-1">{c.title}</p>
+                                <p className="text-xs font-bold text-zinc-500 mt-1 uppercase tracking-wider">
+                                  {c.level} • {c.duration}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-base text-[#615fff] font-bold">
+                            {formatCurrency(c.price)}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span className={`inline-flex px-2.5 py-1 rounded text-xs font-bold uppercase select-none ${
+                              c.status === 'published' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                : 'bg-zinc-850 text-zinc-450 border border-zinc-800'
+                            }`}>
+                              {c.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Link
+                              href={`/admin/lessons?courseId=${c.id}`}
+                              className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-colors"
+                            >
+                              <FiList className="h-4.5 w-4.5" />
+                              <span>Manage Syllabus</span>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
-            {courses && courses.length === 0 ? (
-              <div className="text-center py-8 text-zinc-550 font-semibold text-base">
-                No courses assigned to your profile yet.
+            {/* Right side: Live Classes Sidebar (Short form) */}
+            <div className="lg:col-span-4 bg-[#18181b] border border-zinc-800 rounded-lg p-6 shadow-sm flex flex-col">
+              <div className="border-b border-zinc-800/60 pb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-[#615fff] animate-pulse" />
+                    Live Schedule
+                  </h2>
+                  <p className="text-base font-semibold text-zinc-400 mt-0.5">Upcoming interactive classes</p>
+                </div>
+                <span className="px-2 py-0.5 bg-[#615fff]/15 border border-[#615fff]/25 text-[#615fff] text-xs font-bold rounded-md select-none shrink-0">
+                  {(data.liveLessons || []).length} Total
+                </span>
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-base">
-                  <thead>
-                    <tr className="bg-[#121212] border-b border-zinc-800 text-zinc-400 font-bold text-sm uppercase tracking-wider">
-                      <th className="px-6 py-3.5">Course Title</th>
-                      <th className="px-6 py-3.5">Price</th>
-                      <th className="px-4 py-3.5 text-center">Visibility</th>
-                      <th className="px-6 py-3.5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/60 font-semibold text-zinc-200">
-                    {courses?.map((c) => (
-                      <tr key={c.id} className="hover:bg-zinc-800/20 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            {/* Thumbnail */}
-                            <div className="h-12 w-20 rounded-md overflow-hidden bg-[#070b16] border border-zinc-800 shrink-0 relative flex items-center justify-center select-none">
-                              {c.thumbnail ? (
-                                <img src={c.thumbnail} alt={c.title} className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-xs font-bold text-zinc-650">Tutor</span>
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-bold text-white text-base leading-snug line-clamp-1">{c.title}</p>
-                              <p className="text-xs font-bold text-zinc-500 mt-1 uppercase tracking-wider">
-                                {c.level} • {c.duration}
-                              </p>
-                            </div>
+
+              <div className="flex-1 divide-y divide-zinc-800/50 overflow-y-auto max-h-[380px] mt-3 space-y-4 pr-1">
+                {(!data.liveLessons || data.liveLessons.length === 0) ? (
+                  <div className="text-center py-12 text-zinc-550 font-semibold text-base">
+                    No live classes scheduled.
+                  </div>
+                ) : (
+                  data.liveLessons.map((lesson) => {
+                    const dateObj = lesson.liveDate ? new Date(lesson.liveDate) : null
+                    const formattedDate = dateObj
+                      ? dateObj.toLocaleString('en-BD', {
+                          month: 'short',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: true,
+                        })
+                      : 'Not Scheduled'
+
+                    const isUpcoming = dateObj ? dateObj.getTime() > Date.now() : false
+
+                    return (
+                      <div key={lesson.id} className="pt-4 first:pt-0 flex flex-col gap-2">
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-white text-base leading-snug line-clamp-2">{lesson.title}</h3>
+                            <span className="shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 select-none">
+                              {lesson.livePlatform}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-base text-[#615fff] font-bold">
-                          {formatCurrency(c.price)}
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span className={`inline-flex px-2.5 py-1 rounded text-xs font-bold uppercase select-none ${
-                            c.status === 'published' 
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                              : 'bg-zinc-850 text-zinc-450 border border-zinc-800'
-                          }`}>
-                            {c.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <Link
-                            href={`/admin/lessons?courseId=${c.id}`}
-                            className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-colors"
-                          >
-                            <FiList className="h-4.5 w-4.5" />
-                            <span>Manage Syllabus</span>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <p className="text-xs font-bold text-zinc-500 mt-1 truncate">{lesson.courseTitle}</p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 bg-[#0c0e17] border border-zinc-800/40 p-2 rounded-lg">
+                          <div className="flex items-center gap-1.5">
+                            <span className={`h-2 w-2 rounded-full ${isUpcoming ? 'bg-amber-400 animate-pulse' : 'bg-zinc-500'}`} />
+                            <span className="text-xs font-bold text-zinc-300">{formattedDate}</span>
+                          </div>
+                          {lesson.liveUrl ? (
+                            <a
+                              href={lesson.liveUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="py-1 px-2.5 rounded bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-xs transition-colors shrink-0"
+                            >
+                              Join
+                            </a>
+                          ) : (
+                            <span className="text-xs font-bold text-zinc-650 shrink-0">Pending</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
               </div>
-            )}
+            </div>
+
           </div>
         </div>
       )}

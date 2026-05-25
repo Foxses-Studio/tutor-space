@@ -1,0 +1,61 @@
+import { NextResponse } from 'next/server'
+import { connectToDatabase } from '@/lib/db/mongodb'
+import { Lesson } from '@/lib/db/models/Lesson'
+import { Course } from '@/lib/db/models/Course'
+import { User } from '@/lib/db/models/User'
+import { verifyToken } from '@/lib/auth/auth'
+import { cookies } from 'next/headers'
+
+export async function GET() {
+  try {
+    await connectToDatabase()
+
+    const cookieStore = await cookies()
+    const payloadToken = cookieStore.get('payload-token')?.value
+
+    if (!payloadToken) {
+      return NextResponse.json({ error: 'Unauthorized: Session missing.' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(payloadToken)
+    if (!decoded || !decoded.id) {
+      return NextResponse.json({ error: 'Unauthorized: Session invalid.' }, { status: 401 })
+    }
+
+    const user = await User.findById(decoded.id).lean()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: User not found.' }, { status: 401 })
+    }
+
+    let lessonsQuery: any = { lessonType: 'live' }
+
+    if (user.role === 'instructor') {
+      // Instructors only see live classes in their assigned courses (regardless of who created the lesson)
+      const instructorCourses = await Course.find({ instructor: user._id }).select('_id').lean()
+      const courseIds = instructorCourses.map((c) => c._id)
+      lessonsQuery.course = { $in: courseIds }
+    }
+
+    const liveLessons = await Lesson.find(lessonsQuery)
+      .populate({ path: 'course', select: 'title' })
+      .sort({ liveDate: 1 })
+      .lean()
+
+    const serializedLessons = (liveLessons as any[]).map((l: any) => ({
+      id: l._id.toString(),
+      title: l.title,
+      slug: l.slug,
+      courseTitle: l.course?.title || 'Unknown Course',
+      livePlatform: l.livePlatform || 'zoom',
+      liveUrl: l.liveUrl || '',
+      liveDate: l.liveDate ? l.liveDate.toISOString() : null,
+      duration: l.duration || 60,
+      autoGenerateZoom: l.autoGenerateZoom || false,
+    }))
+
+    return NextResponse.json({ success: true, liveLessons: serializedLessons })
+  } catch (error: any) {
+    console.error('Fetch Live Classes API Error:', error)
+    return NextResponse.json({ error: error.message || 'Failed to fetch live classes.' }, { status: 500 })
+  }
+}

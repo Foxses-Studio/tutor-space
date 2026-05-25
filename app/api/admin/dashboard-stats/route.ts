@@ -10,10 +10,16 @@ import { Blog } from '@/lib/db/models/Blog'
 import { FAQ } from '@/lib/db/models/FAQ'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { checkAndSendLiveClassReminders } from '@/lib/email'
 
 export async function GET() {
   try {
     await connectToDatabase()
+
+    // Trigger upcoming live class email reminders in background
+    checkAndSendLiveClassReminders().catch((err) => {
+      console.error('Error in background live class reminders:', err)
+    })
 
     const cookieStore = await cookies()
     const payloadToken = cookieStore.get('payload-token')?.value
@@ -170,10 +176,26 @@ export async function GET() {
         .lean()
       const courseIds = instructorCourses.map((c) => c._id)
 
-      const [totalLessons, totalStudentEnrollments] = await Promise.all([
+      const [totalLessons, totalStudentEnrollments, rawLiveLessons] = await Promise.all([
         Lesson.countDocuments({ course: { $in: courseIds } }),
         Enrollment.countDocuments({ course: { $in: courseIds }, paymentStatus: 'completed' }),
+        Lesson.find({ course: { $in: courseIds }, lessonType: 'live' })
+          .populate('course')
+          .sort({ liveDate: 1 })
+          .lean()
       ])
+
+      const serializedLiveLessons = (rawLiveLessons as any[]).map((l: any) => ({
+        id: l._id.toString(),
+        title: l.title,
+        slug: l.slug,
+        courseTitle: l.course?.title || 'Unknown Course',
+        livePlatform: l.livePlatform || 'zoom',
+        liveUrl: l.liveUrl || '',
+        liveDate: l.liveDate ? l.liveDate.toISOString() : null,
+        duration: l.duration || 60,
+        autoGenerateZoom: l.autoGenerateZoom || false,
+      }))
 
       return NextResponse.json({
         role: 'instructor',
@@ -198,6 +220,7 @@ export async function GET() {
             duration: c.duration || 'N/A',
           }
         }),
+        liveLessons: serializedLiveLessons,
       })
     }
 
