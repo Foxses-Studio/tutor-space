@@ -1,232 +1,367 @@
 'use client'
 
-import React, { useState } from 'react'
-import { FiPlus, FiEdit, FiTrash2, FiFileText, FiX, FiSave, FiUploadCloud, FiImage } from 'react-icons/fi'
+import React, { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { 
+  FiPlus, 
+  FiEdit, 
+  FiTrash2, 
+  FiFileText, 
+  FiSearch, 
+  FiCalendar, 
+  FiTag,
+  FiLayout,
+  FiTrendingUp,
+  FiAward
+} from 'react-icons/fi'
 import Swal from 'sweetalert2'
-import RichTextEditor from '@/components/RichTextEditor'
-import MediaPickerModal from '@/components/MediaPickerModal'
-import type { MediaItem } from '@/components/MediaPickerModal'
 
 interface BlogItem {
-  id: string; title: string; content: string
-  authorName: string; coverImageUrl?: string; publishedDate?: string
+  id: string
+  title: string
+  content: string
+  authorName: string
+  coverImageUrl?: string
+  publishedDate?: string
   tags?: Array<{ tag: string }>
 }
 
+function stripHtml(html: string): string {
+  if (typeof window === 'undefined') return html
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    return doc.body.textContent || ''
+  } catch (e) {
+    return html.replace(/<[^>]*>/g, '')
+  }
+}
+
 export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogItem[] }) {
+  const router = useRouter()
   const [blogs, setBlogs] = useState<BlogItem[]>(initialBlogs)
-  const [showForm, setShowForm] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [tagsInput, setTagsInput] = useState('')
-  const [coverImageId, setCoverImageId] = useState('')
-  const [coverImageUrl, setCoverImageUrl] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [showMediaPicker, setShowMediaPicker] = useState(false)
+  
+  // Search & Filter state
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
 
-  function openNew() {
-    setEditingId(null); setTitle(''); setContent(''); setTagsInput(''); setCoverImageId(''); setCoverImageUrl(''); setShowForm(true)
-  }
-  function openEdit(b: BlogItem) {
-    setEditingId(b.id); setTitle(b.title); setContent(b.content)
-    setTagsInput((b.tags || []).map(t => t.tag).join(', '))
-    setCoverImageId(''); setCoverImageUrl(b.coverImageUrl || '')
-    setShowForm(true)
-  }
+  // 1. Calculate dashboard KPIs
+  const stats = useMemo(() => {
+    const total = blogs.length
+    
+    // Extract unique tags
+    const allTags = new Set<string>()
+    blogs.forEach(b => {
+      (b.tags || []).forEach(t => allTags.add(t.tag))
+    })
+    
+    // Latest published blog title
+    const latest = blogs[0]?.title || 'No posts published'
+    
+    return {
+      total,
+      uniqueTagsCount: allTags.size,
+      latestPostTitle: latest
+    }
+  }, [blogs])
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return
-    setUploading(true)
-    const form = new FormData(); form.append('file', file); form.append('alt', title ? `Cover for ${title}` : '')
-    try {
-      const res = await fetch('/api/admin/media/upload', { method: 'POST', body: form })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      setCoverImageId(data.media.id); setCoverImageUrl(data.media.url)
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Upload Failed', text: err.message, background: '#121829', color: '#fff' })
-    } finally { setUploading(false) }
-  }
+  // Extract all tag labels for navigation filter pills
+  const tagList = useMemo(() => {
+    const tagsMap: Record<string, number> = {}
+    blogs.forEach(b => {
+      (b.tags || []).forEach(t => {
+        tagsMap[t.tag] = (tagsMap[t.tag] || 0) + 1
+      })
+    })
+    
+    return Object.entries(tagsMap)
+      .sort((a, b) => b[1] - a[1]) // sort by frequency
+      .slice(0, 10)
+      .map(entry => entry[0])
+  }, [blogs])
 
-  function handleMediaPickerSelect(item: MediaItem) {
-    setCoverImageId(item.id)
-    setCoverImageUrl(item.url)
-  }
-
-  async function handleSave() {
-    if (!title || !content) { Swal.fire({ icon: 'warning', title: 'Title and content required', background: '#121829', color: '#fff' }); return }
-    setSaving(true)
-    const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean).map(t => ({ tag: t }))
-    try {
-      const method = editingId ? 'PUT' : 'POST'
-      const body: any = { title, content, tags, coverImage: coverImageId || undefined, publishedDate: new Date().toISOString() }
-      if (editingId) body.id = editingId
-      const res = await fetch('/api/admin/blogs', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-
-      if (editingId) {
-        setBlogs(prev => prev.map(b => b.id === editingId ? { ...b, title, content, coverImageUrl, tags } : b))
-      } else {
-        setBlogs(prev => [{
-          id: data.blog._id, title: data.blog.title, content: data.blog.content,
-          authorName: 'You', coverImageUrl, tags: data.blog.tags,
-          publishedDate: data.blog.publishedDate,
-        }, ...prev])
-      }
-      Swal.fire({ icon: 'success', title: editingId ? 'Blog Updated' : 'Blog Published', timer: 1300, showConfirmButton: false, background: '#121829', color: '#fff' })
-      setShowForm(false)
-    } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Error', text: err.message, background: '#121829', color: '#fff' })
-    } finally { setSaving(false) }
-  }
+  // 2. Filter blogs based on search text and selected tag
+  const filteredBlogs = useMemo(() => {
+    return blogs.filter(blog => {
+      const plainContent = stripHtml(blog.content)
+      const matchesSearch = 
+        blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        plainContent.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesTag = 
+        !selectedTag || 
+        (blog.tags || []).some(t => t.tag === selectedTag)
+        
+      return matchesSearch && matchesTag
+    })
+  }, [blogs, searchQuery, selectedTag])
 
   async function handleDelete(blog: BlogItem) {
-    const result = await Swal.fire({ title: `Delete "${blog.title}"?`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', background: '#121829', color: '#fff' })
+    const result = await Swal.fire({
+      title: 'Delete Article?',
+      text: `Are you sure you want to permanently delete "${blog.title}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#27272a',
+      background: '#121829',
+      color: '#ffffff',
+    })
+    
     if (!result.isConfirmed) return
-    await fetch('/api/admin/blogs', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: blog.id }) })
-    setBlogs(prev => prev.filter(b => b.id !== blog.id))
+    
+    try {
+      const res = await fetch('/api/admin/blogs', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: blog.id })
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      
+      setBlogs(prev => prev.filter(b => b.id !== blog.id))
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Article Deleted',
+        timer: 1300,
+        showConfirmButton: false,
+        background: '#121829',
+        color: '#ffffff',
+      })
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Failed to Delete',
+        text: err.message,
+        background: '#121829',
+        color: '#ffffff',
+      })
+    }
   }
 
   return (
-    <div className="px-6 py-8 space-y-6 container mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="px-6 py-8 space-y-8 container mx-auto">
+      
+      {/* ─── Premium Header ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-zinc-800/80 pb-6">
         <div>
-          <h1 className="text-3xl font-bold font-display text-white">Blog Posts</h1>
-          <p className="text-base font-semibold text-zinc-450 mt-1">Publish SEO-rich articles and platform announcements</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white font-display">Blog Editor Dashboard</h1>
+          <p className="text-base font-semibold text-zinc-450 mt-1">
+            Publish SEO-rich educational resources, tips, and platform updates.
+          </p>
         </div>
-        <button onClick={openNew}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-md shadow-[#615fff]/20 transition-all cursor-pointer">
-          <FiPlus className="h-5 w-5" /> Write New Blog
+        
+        <button 
+          onClick={() => router.push('/admin/blogs/new')}
+          className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:scale-[1.01] transition-all cursor-pointer shrink-0"
+        >
+          <FiPlus className="h-5 w-5" />
+          <span>Write New Article</span>
         </button>
       </div>
 
-      {/* Blog form */}
-      {showForm && (
-        <div className="bg-[#121829] border border-[#615fff]/30 rounded-lg p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">{editingId ? 'Edit Blog Post' : 'Publish New Blog'}</h2>
-            <button onClick={() => setShowForm(false)} className="p-1.5 text-zinc-500 hover:text-white cursor-pointer"><FiX className="h-5 w-5" /></button>
+      {/* ─── KPI Metrics Cards Grid ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        {/* Total Articles card */}
+        <div className="bg-[#121829] border border-zinc-800/60 rounded-lg p-6 flex items-center gap-5 shadow-sm">
+          <div className="h-12 w-12 rounded-lg bg-[#615fff]/10 border border-[#615fff]/20 flex items-center justify-center text-[#9693ff]">
+            <FiFileText className="h-6 w-6" />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-base font-bold text-zinc-300">Blog Title *</label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="Write an engaging, SEO-friendly title..."
-              className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/70 text-white rounded-lg p-3 text-base font-semibold outline-none" />
+          <div>
+            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total Articles</p>
+            <h3 className="text-2xl font-bold text-white mt-1">{stats.total}</h3>
           </div>
-          <RichTextEditor
-            label="Content"
-            required
-            rows={10}
-            value={content}
-            onChange={setContent}
-            placeholder="Write your full blog content here. Use clear paragraphs and structure your content well..."
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-base font-bold text-zinc-300">Tags (comma-separated)</label>
-              <input type="text" value={tagsInput} onChange={e => setTagsInput(e.target.value)}
-                placeholder="e.g. Next.js, MongoDB, Tutorial"
-                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/70 text-white rounded-lg p-3 text-base font-semibold outline-none" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-base font-bold text-zinc-300">Cover Image</label>
-              {coverImageUrl ? (
-                <div className="space-y-2">
-                  <div className="relative">
-                    <img src={coverImageUrl} alt="Cover" className="w-full h-28 object-cover rounded-lg border border-zinc-800" />
-                    <button onClick={() => { setCoverImageId(''); setCoverImageUrl('') }}
-                      className="absolute top-1.5 right-1.5 p-1.5 rounded bg-black/70 hover:bg-rose-500 text-zinc-400 hover:text-white transition-all cursor-pointer">
-                      <FiX className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <label className={`flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 font-bold text-sm cursor-pointer transition-all ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                      <FiUploadCloud className="h-4 w-4" /> Upload New
-                    </label>
-                    <button type="button" onClick={() => setShowMediaPicker(true)}
-                      className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#615fff]/15 hover:bg-[#615fff]/25 border border-[#615fff]/20 text-[#615fff] font-bold text-sm cursor-pointer transition-all">
-                      <FiImage className="h-4 w-4" /> From Library
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <label className={`flex items-center gap-2 px-3 py-3 bg-[#070b16] border border-zinc-800 hover:border-[#615fff]/60 rounded-lg cursor-pointer transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                    <FiUploadCloud className="h-5 w-5 text-zinc-500" />
-                    <span className="text-base font-semibold text-zinc-500">{uploading ? 'Uploading...' : 'Upload new image'}</span>
-                  </label>
-                  <button type="button" onClick={() => setShowMediaPicker(true)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#615fff]/10 hover:bg-[#615fff]/20 border border-[#615fff]/20 text-[#615fff] font-bold text-base transition-all cursor-pointer">
-                    <FiImage className="h-4.5 w-4.5" /> Pick from Media Library
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          <button onClick={handleSave} disabled={saving}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all cursor-pointer disabled:opacity-50">
-            <FiSave className="h-4.5 w-4.5" /> {saving ? 'Publishing...' : editingId ? 'Save Changes' : 'Publish Blog Post'}
-          </button>
-
-          {/* Media Picker Modal */}
-          <MediaPickerModal
-            open={showMediaPicker}
-            onClose={() => setShowMediaPicker(false)}
-            onSelect={handleMediaPickerSelect}
-            title="Pick Blog Cover Image"
-          />
         </div>
-      )}
 
-      {/* Blog grid */}
-      {blogs.length === 0 ? (
-        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-16 text-center space-y-4">
-          <FiFileText className="h-10 w-10 text-zinc-700 mx-auto" />
-          <p className="text-base font-semibold text-zinc-500">No blog posts yet. Write your first article above.</p>
+        {/* Unique tags card */}
+        <div className="bg-[#121829] border border-zinc-800/60 rounded-lg p-6 flex items-center gap-5 shadow-sm">
+          <div className="h-12 w-12 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <FiTag className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Active Tags</p>
+            <h3 className="text-2xl font-bold text-white mt-1">{stats.uniqueTagsCount}</h3>
+          </div>
+        </div>
+
+        {/* Latest Announcement card */}
+        <div className="bg-[#121829] border border-zinc-800/60 rounded-lg p-6 flex items-center gap-5 shadow-sm">
+          <div className="h-12 w-12 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <FiAward className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Latest Post</p>
+            <h3 className="text-base font-bold text-white mt-1 truncate leading-snug" title={stats.latestPostTitle}>
+              {stats.latestPostTitle}
+            </h3>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ─── Filter & Search Bar Controls ─── */}
+      <div className="bg-[#121829]/60 border border-zinc-800/60 rounded-lg p-5 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
+        
+        {/* Search Input bar */}
+        <div className="relative w-full md:max-w-md">
+          <input 
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search article titles or contents..."
+            className="w-full pl-10 pr-4 py-2.5 bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/60 text-white rounded-lg text-base font-semibold outline-none transition-colors"
+          />
+          <FiSearch className="absolute left-3.5 top-3.5 text-zinc-500 h-4.5 w-4.5" />
+        </div>
+
+        {/* Filter tags pills list */}
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto md:justify-end">
+          <button
+            onClick={() => setSelectedTag(null)}
+            className={`px-3.5 py-1.5 rounded-lg border font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer select-none ${
+              selectedTag === null 
+                ? 'bg-[#615fff] text-white border-transparent' 
+                : 'bg-zinc-850 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
+            }`}
+          >
+            All
+          </button>
+          
+          {tagList.map(tag => (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(tag)}
+              className={`px-3.5 py-1.5 rounded-lg border font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer select-none ${
+                selectedTag === tag 
+                  ? 'bg-[#615fff] text-white border-transparent' 
+                  : 'bg-zinc-850 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
+              }`}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+
+      </div>
+
+      {/* ─── Premium Blog Cards Grid ─── */}
+      {filteredBlogs.length === 0 ? (
+        <div className="bg-[#121829]/60 border border-zinc-800/40 rounded-lg p-16 text-center space-y-4 shadow-sm">
+          <FiFileText className="h-12 w-12 text-zinc-700 mx-auto" />
+          <h3 className="text-lg font-bold text-zinc-350">No blog posts found</h3>
+          <p className="text-base font-semibold text-zinc-550 max-w-sm mx-auto">
+            {searchQuery || selectedTag 
+              ? 'No articles match your search criteria. Try modifying your query or clearing active filters.' 
+              : 'Construct your first educational resource by clicking write article above.'}
+          </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {blogs.map(blog => (
-            <div key={blog.id} className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-colors">
-              {blog.coverImageUrl && (
-                <div className="aspect-[16/7] overflow-hidden">
-                  <img src={blog.coverImageUrl} alt={blog.title} className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="p-5 space-y-3">
-                <h3 className="font-bold text-white text-xl leading-snug line-clamp-2">{blog.title}</h3>
-                <p className="text-base font-semibold text-zinc-450 line-clamp-3 leading-relaxed">{blog.content}</p>
-                {blog.tags && blog.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {blog.tags.slice(0, 4).map((t, i) => (
-                      <span key={i} className="px-2.5 py-1 bg-[#615fff]/10 border border-[#615fff]/20 text-[#a09dff] rounded font-bold text-sm">{t.tag}</span>
-                    ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredBlogs.map(blog => {
+            const plainTextPreview = stripHtml(blog.content)
+            
+            return (
+              <div 
+                key={blog.id} 
+                className="bg-[#121829] border border-zinc-800/60 rounded-lg overflow-hidden hover:border-[#615fff]/40 hover:shadow-xl hover:shadow-[#615fff]/5 transition-all transform hover:-translate-y-1 flex flex-col justify-between group"
+              >
+                <div>
+                  {/* Card Cover image box */}
+                  <div className="aspect-[16/8] relative overflow-hidden bg-[#070b16] border-b border-zinc-800/40">
+                    {blog.coverImageUrl ? (
+                      <img 
+                        src={blog.coverImageUrl} 
+                        alt={blog.title} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 bg-gradient-to-br from-[#0F1B40] to-[#070B16]">
+                        <FiFileText className="h-10 w-10 text-zinc-500 mb-2" />
+                        <span className="text-xs font-bold uppercase tracking-widest text-zinc-550">Tutor Space Insights</span>
+                      </div>
+                    )}
+                    
+                    {/* Floating draft / published status badge placeholder if needed */}
                   </div>
-                )}
-                <div className="flex items-center justify-between pt-2 border-t border-zinc-800/50">
-                  <div>
-                    <p className="text-sm font-bold text-zinc-500">by {blog.authorName}</p>
-                    {blog.publishedDate && (
-                      <p className="text-sm font-semibold text-zinc-600">{new Date(blog.publishedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+
+                  {/* Card Info Content box */}
+                  <div className="p-6 space-y-4">
+                    <h3 className="font-bold text-white text-xl leading-snug line-clamp-2 group-hover:text-[#b2b0ff] transition-colors">
+                      {blog.title}
+                    </h3>
+                    
+                    <p className="text-base font-semibold text-zinc-400 line-clamp-3 leading-relaxed font-sans select-text">
+                      {plainTextPreview || 'No content preview available.'}
+                    </p>
+                    
+                    {/* Card metadata tag pills */}
+                    {blog.tags && blog.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {blog.tags.slice(0, 4).map((t, i) => (
+                          <span 
+                            key={i} 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedTag(t.tag)
+                            }}
+                            className="px-2.5 py-1 bg-[#615fff]/10 border border-[#615fff]/20 text-[#b2b0ff] rounded font-bold text-xs uppercase tracking-wide cursor-pointer hover:bg-[#615fff]/20 transition-colors"
+                          >
+                            #{t.tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => openEdit(blog)} className="p-2 rounded bg-[#615fff]/10 hover:bg-[#615fff] border border-[#615fff]/20 text-[#615fff] hover:text-white transition-all cursor-pointer">
+                </div>
+
+                {/* Card footer block */}
+                <div className="px-6 pb-6 pt-4 border-t border-zinc-800/50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-[#615fff]/10 border border-[#615fff]/20 flex items-center justify-center font-bold text-sm text-[#9693ff] uppercase">
+                      {blog.authorName[0]}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-zinc-400">By {blog.authorName}</p>
+                      {blog.publishedDate && (
+                        <p className="text-[11px] font-semibold text-zinc-550 flex items-center gap-1 mt-0.5">
+                          <FiCalendar className="h-3 w-3" />
+                          <span>
+                            {new Date(blog.publishedDate).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            })}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button 
+                      onClick={() => router.push(`/admin/blogs/${blog.id}/edit`)} 
+                      className="h-9 w-9 flex items-center justify-center rounded-lg bg-zinc-850 hover:bg-[#615fff] border border-zinc-800 text-zinc-450 hover:text-white transition-all cursor-pointer hover:shadow-lg hover:shadow-[#615fff]/10"
+                      title="Edit Article"
+                    >
                       <FiEdit className="h-4.5 w-4.5" />
                     </button>
-                    <button onClick={() => handleDelete(blog)} className="p-2 rounded bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-400 hover:text-white transition-all cursor-pointer">
+                    <button 
+                      onClick={() => handleDelete(blog)} 
+                      className="h-9 w-9 flex items-center justify-center rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-400 hover:text-white transition-all cursor-pointer hover:shadow-lg hover:shadow-rose-500/10"
+                      title="Delete Article"
+                    >
                       <FiTrash2 className="h-4.5 w-4.5" />
                     </button>
                   </div>
                 </div>
+
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

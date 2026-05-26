@@ -639,7 +639,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-zinc-800 pb-16 relative select-none">
+    <div className="min-h-screen bg-slate-50 font-sans text-zinc-800 pb-16 relative">
       
       {/* ─── Top Course Navigation Bar (Premium Glassmorphism) ─── */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
