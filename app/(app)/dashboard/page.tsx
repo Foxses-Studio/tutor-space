@@ -24,6 +24,7 @@ interface CourseItem {
   duration?: string
   level?: string
   slug: string
+  totalLessons?: number
   thumbnail?: {
     url: string
     alt?: string
@@ -99,15 +100,22 @@ export default function StudentDashboard() {
           }
         }
 
-        // Load or initialize course progress in localStorage
+        // Load completed lessons from localStorage and calculate actual percentage progress
         const savedProgress = localStorage.getItem('ts-course-progress')
         let progressMap: Record<string, number> = savedProgress ? JSON.parse(savedProgress) : {}
         let updated = false
 
         fetchedEnrollments.forEach((e) => {
-          if (e.course && e.course.id && progressMap[e.course.id] === undefined) {
-            progressMap[e.course.id] = 15 // Default starter progress
-            updated = true
+          if (e.course && e.course.id) {
+            const completedList = localStorage.getItem(`ts-completed-lessons-${e.course.id}`)
+            const completedCount = completedList ? JSON.parse(completedList).length : 0
+            const totalLessons = e.course.totalLessons || 1
+            const percentage = Math.min(Math.round((completedCount / totalLessons) * 100), 100)
+            
+            if (progressMap[e.course.id] !== percentage) {
+              progressMap[e.course.id] = percentage
+              updated = true
+            }
           }
         })
 
@@ -152,28 +160,19 @@ export default function StudentDashboard() {
   }, [router])
 
   const handleResumeLearning = (courseId: string, slug: string) => {
-    // Increment course progress by 10% dynamically on click to make it completely active
-    const savedProgress = localStorage.getItem('ts-course-progress')
-    let progressMap: Record<string, number> = savedProgress ? JSON.parse(savedProgress) : {}
-    
-    const currentVal = progressMap[courseId] ?? 15
-    const newVal = Math.min(currentVal + 10, 100)
-    progressMap[courseId] = newVal
-    
-    localStorage.setItem('ts-course-progress', JSON.stringify(progressMap))
-    setCourseProgress(progressMap)
-
     Swal.fire({
       icon: 'success',
       title: 'Resuming Course',
       text: 'Loading curriculum and interactive lesson streams...',
-      timer: 1500,
+      timer: 800,
       showConfirmButton: false,
+      background: '#121829',
+      color: '#ffffff',
     })
 
     setTimeout(() => {
       router.push(`/courses/${slug}/watch`)
-    }, 1500)
+    }, 800)
   }
 
   const handleRegisterSeat = (webinarTitle: string) => {
@@ -185,17 +184,20 @@ export default function StudentDashboard() {
     })
   }
 
-  // Calculate dynamic stats based on course progress
+  // Calculate dynamic stats based on actual course progress
   const totalCompletedLessons = enrollments.reduce((sum, e) => {
     if (!e.course || !e.course.id) return sum
-    const progress = courseProgress[e.course.id] ?? 15
-    return sum + Math.round(18 * (progress / 100))
+    const completedList = localStorage.getItem(`ts-completed-lessons-${e.course.id}`)
+    const completedCount = completedList ? JSON.parse(completedList).length : 0
+    return sum + completedCount
   }, 0)
 
   const totalLearningHours = enrollments.reduce((sum, e) => {
     if (!e.course || !e.course.id) return sum
-    const progress = courseProgress[e.course.id] ?? 15
-    return sum + Number((24 * (progress / 100)).toFixed(1))
+    const completedList = localStorage.getItem(`ts-completed-lessons-${e.course.id}`)
+    const completedCount = completedList ? JSON.parse(completedList).length : 0
+    // Estimate 1.25 hours per completed lesson, or fallback to default
+    return sum + Number((completedCount * 1.25).toFixed(1))
   }, 0)
 
   const getWeekDays = () => {
@@ -230,7 +232,7 @@ export default function StudentDashboard() {
     <div className="container mx-auto px-6 py-8 pb-16">
       
       {/* Dynamic Premium Header/Banner */}
-      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden select-none mb-10 shadow-lg shadow-[#0A163A]/10">
+      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 shadow-lg shadow-[#0A163A]/10">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#543cdf]/15 rounded-full blur-3xl pointer-events-none" />
         
@@ -288,8 +290,8 @@ export default function StudentDashboard() {
         
         {/* Left Column: Enrolled Courses (takes 2 cols on desktop) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between select-none">
-            <h2 className="text-2xl font-bold text-zinc-800 tracking-tight font-display">My Courses</h2>
+          <div className="flex items-center justify-between">
+            <h2 id="courses" className="text-2xl font-bold text-zinc-800 tracking-tight font-display scroll-mt-24">My Courses</h2>
             {enrollments.length > 0 && (
               <Link href="/" className="text-[#615fff] hover:text-[#543cdf] font-bold text-base flex items-center gap-1.5 transition-colors">
                 Explore More
@@ -332,7 +334,7 @@ export default function StudentDashboard() {
                   <div key={enrollment.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
                     <div>
                       {/* Thumbnail */}
-                      <div className="h-44 w-full bg-zinc-100 overflow-hidden relative select-none">
+                      <div className="h-44 w-full bg-zinc-100 overflow-hidden relative">
                         <img 
                           src={thumbnailSrc} 
                           alt={course.title} 
@@ -366,7 +368,7 @@ export default function StudentDashboard() {
                     {/* Card Footer with Progress & Action */}
                     <div className="p-5 bg-zinc-50/50 space-y-4">
                       {/* Progress Bar (Dynamic tracking from localStorage) */}
-                      <div className="space-y-1.5 select-none">
+                      <div className="space-y-1.5">
                         <div className="flex justify-between text-base font-semibold text-zinc-500">
                           <span>Syllabus Progress</span>
                           <span>{progress}%</span>
@@ -396,7 +398,7 @@ export default function StudentDashboard() {
 
         {/* Right Column: Learning Sidebar Panel */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-zinc-800 tracking-tight font-display">Study Hub</h2>
+          <h2 id="study-hub" className="text-2xl font-bold text-zinc-800 tracking-tight font-display scroll-mt-24">Study Hub</h2>
           
           {/* Study Streak Card - Completely borderless */}
           <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow space-y-4">
@@ -406,7 +408,7 @@ export default function StudentDashboard() {
             <p className="text-base font-semibold text-zinc-500 leading-relaxed">
               You have logged in {streakCount} {streakCount === 1 ? 'day' : 'days'} in a row! Keep up the momentum to build consistency.
             </p>
-            <div className="flex justify-between items-center bg-zinc-50 p-4 rounded-lg select-none">
+            <div className="flex justify-between items-center bg-zinc-50 p-4 rounded-lg">
               {getWeekDays().map((day, idx) => {
                 const isActive = loginDates.includes(day.dateStr)
                 return (
@@ -451,7 +453,7 @@ export default function StudentDashboard() {
                     <div key={webinar.id} className="p-4 rounded-lg bg-zinc-50/50 space-y-2">
                       <div className="flex justify-between items-start gap-3">
                         <h4 className="text-base font-bold text-zinc-800 leading-snug line-clamp-2">{webinar.title}</h4>
-                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0 select-none shadow-sm ${
+                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0 shadow-sm ${
                           isUpcoming ? 'bg-emerald-500/10 text-emerald-600' : 'bg-zinc-200 text-zinc-500'
                         }`}>
                           {isUpcoming ? 'Upcoming' : 'Ended'}
@@ -461,7 +463,7 @@ export default function StudentDashboard() {
                       <p className="text-sm font-bold text-[#615fff]">{formattedDate} ({webinar.livePlatform.toUpperCase()})</p>
                       
                       {isUpcoming && webinar.liveUrl && (
-                        <div className="flex items-center gap-3 pt-2 select-none">
+                        <div className="flex items-center gap-3 pt-2">
                           <button 
                             onClick={() => handleRegisterSeat(webinar.title)}
                             className="px-3.5 py-2 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold transition-colors cursor-pointer border-none shadow-sm"

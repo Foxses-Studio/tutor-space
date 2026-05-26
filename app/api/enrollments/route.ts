@@ -5,6 +5,7 @@ import { Student } from '@/lib/db/models/Student'
 import { User } from '@/lib/db/models/User'
 import { Course } from '@/lib/db/models/Course'
 import { Coupon } from '@/lib/db/models/Coupon'
+import { Lesson } from '@/lib/db/models/Lesson'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
 
@@ -68,26 +69,39 @@ export async function GET(request: Request) {
       .sort({ createdAt: -1 })
       .lean()
 
-    // Map Mongoose _id fields to id for client convenience
-    const formattedDocs = docs.map((doc: any) => ({
-      id: doc._id.toString(),
-      ...doc,
-      course: doc.course ? {
-        id: doc.course._id.toString(),
-        ...doc.course,
-        category: doc.course.category ? {
-          id: doc.course.category._id.toString(),
-          ...doc.course.category
-        } : null,
-        instructor: doc.course.instructor ? {
-          id: doc.course.instructor._id.toString(),
-          ...doc.course.instructor
-        } : null,
-        thumbnail: doc.course.thumbnail ? {
-          id: doc.course.thumbnail._id.toString(),
-          ...doc.course.thumbnail
-        } : null
-      } : null
+    // Map Mongoose _id fields to id for client convenience and inject totalLessons dynamically
+    const formattedDocs = await Promise.all(docs.map(async (doc: any) => {
+      if (!doc.course) {
+        return {
+          id: doc._id.toString(),
+          ...doc,
+          course: null
+        }
+      }
+
+      const totalLessons = await Lesson.countDocuments({ course: doc.course._id })
+
+      return {
+        id: doc._id.toString(),
+        ...doc,
+        course: {
+          id: doc.course._id.toString(),
+          ...doc.course,
+          totalLessons,
+          category: doc.course.category ? {
+            id: doc.course.category._id.toString(),
+            ...doc.course.category
+          } : null,
+          instructor: doc.course.instructor ? {
+            id: doc.course.instructor._id.toString(),
+            ...doc.course.instructor
+          } : null,
+          thumbnail: doc.course.thumbnail ? {
+            id: doc.course.thumbnail._id.toString(),
+            ...doc.course.thumbnail
+          } : null
+        }
+      }
     }))
 
     return NextResponse.json({
