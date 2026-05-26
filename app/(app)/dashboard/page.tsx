@@ -232,7 +232,7 @@ export default function StudentDashboard() {
     <div className="container mx-auto px-6 py-8 pb-16">
       
       {/* Dynamic Premium Header/Banner */}
-      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 shadow-lg shadow-[#0A163A]/10">
+      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 border border-zinc-800/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#543cdf]/15 rounded-full blur-3xl pointer-events-none" />
         
@@ -249,11 +249,11 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Quick Stats Grid - Completely borderless as per public page rules */}
+      {/* Quick Stats Grid - Completely borderless and shadowless */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         {/* Enrolled Courses Stat */}
-        <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center gap-5">
-          <div className="h-12 w-12 rounded-lg bg-[#615fff]/10 flex items-center justify-center text-[#615fff] shadow-sm">
+        <div className="bg-white p-6 border border-zinc-200 rounded-lg flex items-center gap-5">
+          <div className="h-12 w-12 rounded-lg bg-[#615fff]/10 flex items-center justify-center text-[#615fff]">
             <FiBookOpen className="h-6 w-6" />
           </div>
           <div>
@@ -263,8 +263,8 @@ export default function StudentDashboard() {
         </div>
 
         {/* Completed Lessons Stat */}
-        <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center gap-5">
-          <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-600 shadow-sm">
+        <div className="bg-white p-6 border border-zinc-200 rounded-lg flex items-center gap-5">
+          <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-600">
             <FiAward className="h-6 w-6" />
           </div>
           <div>
@@ -274,8 +274,8 @@ export default function StudentDashboard() {
         </div>
 
         {/* Study Time Stat */}
-        <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center gap-5">
-          <div className="h-12 w-12 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shadow-sm">
+        <div className="bg-white p-6 border border-zinc-200 rounded-lg flex items-center gap-5">
+          <div className="h-12 w-12 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600">
             <FiClock className="h-6 w-6" />
           </div>
           <div>
@@ -302,7 +302,7 @@ export default function StudentDashboard() {
 
           {enrollments.length === 0 ? (
             /* Beautiful Premium Empty State */
-            <div className="bg-white rounded-lg p-12 text-center flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-white rounded-lg p-12 text-center flex flex-col items-center justify-center border border-zinc-200">
               <div className="h-16 w-16 rounded-full bg-[#615fff]/5 flex items-center justify-center text-[#615fff] mb-6">
                 <FiBook className="h-8 w-8" />
               </div>
@@ -312,7 +312,7 @@ export default function StudentDashboard() {
               </p>
               <Link
                 href="/"
-                className="px-6 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 transition-all duration-300"
+                className="px-6 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base transition-all duration-300"
               >
                 Browse Premium Courses
               </Link>
@@ -331,7 +331,7 @@ export default function StudentDashboard() {
                 const progress = courseProgress[course.id] ?? 0
 
                 return (
-                  <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
+                  <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
                     <div>
                       {/* Thumbnail with hover zoom */}
                       <div className="h-48 w-full bg-zinc-100 overflow-hidden relative">
@@ -344,7 +344,7 @@ export default function StudentDashboard() {
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 pointer-events-none" />
-                        <span className="absolute top-3 left-3 bg-[#615fff]/10 backdrop-blur-md text-[#615fff] border border-[#615fff]/20 px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider shadow-sm">
+                        <span className="absolute top-3 left-3 bg-[#615fff]/10 backdrop-blur-md text-[#615fff] border border-[#615fff]/20 px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider">
                           {course.category && typeof course.category === 'object' ? course.category.name : 'LMS'}
                         </span>
                         {course.level && (
@@ -398,7 +398,7 @@ export default function StudentDashboard() {
 
                       <button 
                         onClick={() => handleResumeLearning(course.id, course.slug)}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md border-none active:scale-[0.99]"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all duration-200 cursor-pointer border-none active:scale-[0.99]"
                       >
                         <span>Resume Learning</span>
                         <FiArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
@@ -415,8 +415,8 @@ export default function StudentDashboard() {
         <div className="space-y-6">
           <h2 id="study-hub" className="text-2xl font-bold text-zinc-800 tracking-tight font-display scroll-mt-24">Study Hub</h2>
           
-          {/* Study Streak Card - Completely borderless */}
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow space-y-4">
+          {/* Study Streak Card - Completely borderless and shadowless */}
+          <div className="bg-white p-6 border border-zinc-200 rounded-lg space-y-4">
             <h3 className="text-lg font-bold text-zinc-800 flex items-center gap-2">
               <span className="text-orange-500">🔥</span> Study Streak
             </h3>
@@ -429,7 +429,7 @@ export default function StudentDashboard() {
                 return (
                   <div key={idx} className="flex flex-col items-center gap-1.5">
                     <span className="text-sm font-bold text-zinc-450">{day.label}</span>
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-sm ${isActive ? 'bg-orange-500 text-white font-bold' : 'bg-zinc-200 text-zinc-400 font-bold'}`}>
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive ? 'bg-orange-500 text-white font-bold' : 'bg-zinc-200 text-zinc-400 font-bold'}`}>
                       {isActive ? '✓' : ''}
                     </div>
                   </div>
@@ -438,8 +438,8 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Upcoming Live Classes - Completely dynamic from Mongoose */}
-          <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow space-y-4">
+          {/* Upcoming Live Classes - Completely dynamic and shadowless */}
+          <div className="bg-white p-6 border border-zinc-200 rounded-lg space-y-4">
             <h3 className="text-lg font-bold text-zinc-800 flex items-center gap-2">
               <FiCalendar className="text-[#615fff]" /> Live Webinars
             </h3>
@@ -468,7 +468,7 @@ export default function StudentDashboard() {
                     <div key={webinar.id} className="p-4 rounded-lg bg-zinc-50/50 space-y-2">
                       <div className="flex justify-between items-start gap-3">
                         <h4 className="text-base font-bold text-zinc-800 leading-snug line-clamp-2">{webinar.title}</h4>
-                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0 shadow-sm ${
+                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0 ${
                           isUpcoming ? 'bg-emerald-500/10 text-emerald-600' : 'bg-zinc-200 text-zinc-500'
                         }`}>
                           {isUpcoming ? 'Upcoming' : 'Ended'}
@@ -481,7 +481,7 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-3 pt-2">
                           <button 
                             onClick={() => handleRegisterSeat(webinar.title)}
-                            className="px-3.5 py-2 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold transition-colors cursor-pointer border-none shadow-sm"
+                            className="px-3.5 py-2 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold transition-colors cursor-pointer border-none"
                           >
                             RSVP Seat
                           </button>
@@ -489,7 +489,7 @@ export default function StudentDashboard() {
                             href={webinar.liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-3.5 py-2 rounded-lg bg-zinc-150 hover:bg-zinc-200 text-zinc-700 text-sm font-bold transition-colors shadow-sm"
+                            className="px-3.5 py-2 rounded-lg bg-zinc-150 hover:bg-zinc-200 text-zinc-700 text-sm font-bold transition-colors"
                           >
                             Join Webinar
                           </a>

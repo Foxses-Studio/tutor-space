@@ -124,7 +124,7 @@ export default function StudyHubPage() {
     <div className="container mx-auto px-6 py-8 pb-16">
 
       {/* Dynamic Premium Header/Banner */}
-      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 shadow-lg shadow-[#0A163A]/10">
+      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 border border-zinc-800/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#543cdf]/15 rounded-full blur-3xl pointer-events-none" />
         
@@ -145,7 +145,7 @@ export default function StudyHubPage() {
         
         {/* Study Streak (Left Column) */}
         <div className="lg:col-span-5">
-          <div className="bg-white p-6 border border-zinc-200/80 rounded-lg shadow-sm space-y-6">
+          <div className="bg-white p-6 border border-zinc-200/80 rounded-lg space-y-6">
             <div>
               <h3 className="text-xl font-bold text-zinc-800 flex items-center gap-2">
                 <span className="text-orange-500">🔥</span> Study Streak Calendar
@@ -166,7 +166,7 @@ export default function StudyHubPage() {
                 return (
                   <div key={idx} className="flex flex-col items-center gap-2">
                     <span className="text-xs font-bold text-zinc-450 uppercase">{day.label}</span>
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 shadow-sm ${isActive ? 'bg-orange-500 text-white' : 'bg-zinc-200 text-zinc-400'}`}>
+                    <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive ? 'bg-orange-500 text-white' : 'bg-zinc-200 text-zinc-400'}`}>
                       {isActive ? '✓' : ''}
                     </div>
                   </div>
@@ -178,7 +178,7 @@ export default function StudyHubPage() {
 
         {/* Live Webinars (Right Column) */}
         <div className="lg:col-span-7">
-          <div className="bg-white p-6 border border-zinc-200/80 rounded-lg shadow-sm space-y-6">
+          <div className="bg-white p-6 border border-zinc-200/80 rounded-lg space-y-6">
             <div>
               <h3 className="text-xl font-bold text-zinc-800 flex items-center gap-2">
                 <FiCalendar className="text-[#615fff]" /> Live Webinar Broadcasts
@@ -213,7 +213,7 @@ export default function StudyHubPage() {
                     <div key={webinar.id} className="p-5 rounded-lg bg-zinc-50/50 border border-zinc-150/80 space-y-3">
                       <div className="flex justify-between items-start gap-4">
                         <h4 className="text-base font-bold text-zinc-850 leading-snug line-clamp-2">{webinar.title}</h4>
-                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0 shadow-sm ${
+                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider shrink-0 ${
                           isUpcoming ? 'bg-emerald-500/10 text-emerald-600' : 'bg-zinc-200 text-zinc-500'
                         }`}>
                           {isUpcoming ? 'Upcoming' : 'Ended'}
@@ -226,7 +226,7 @@ export default function StudyHubPage() {
                         <div className="flex items-center gap-3 pt-2">
                           <button 
                             onClick={() => handleRegisterSeat(webinar.title)}
-                            className="px-4 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold transition-colors cursor-pointer border-none shadow-sm"
+                            className="px-4 py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold transition-colors cursor-pointer border-none"
                           >
                             RSVP Seat
                           </button>
@@ -234,7 +234,7 @@ export default function StudyHubPage() {
                             href={webinar.liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2.5 rounded-lg bg-zinc-150 hover:bg-zinc-200 text-zinc-700 text-sm font-bold transition-colors shadow-sm inline-flex items-center gap-1"
+                            className="px-4 py-2.5 rounded-lg bg-zinc-150 hover:bg-zinc-200 text-zinc-700 text-sm font-bold transition-colors inline-flex items-center gap-1"
                           >
                             <span>Join Webinar</span>
                             <FiExternalLink className="h-4 w-4" />

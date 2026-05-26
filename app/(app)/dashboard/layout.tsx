@@ -125,7 +125,7 @@ export default function DashboardLayout({
         {/* Sidebar Brand Header */}
         <div className="h-20 flex items-center px-6 border-b border-[#152347] justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white shadow-lg shadow-[#615fff]/30 transition-transform group-hover:scale-105 duration-300 text-base">
+            <span className="h-9 w-9 rounded-lg bg-[#615fff] flex items-center justify-center font-bold text-white transition-transform group-hover:scale-105 duration-300 text-base">
               T
             </span>
             <span className="text-xl font-bold font-display tracking-tight text-white">
@@ -146,7 +146,7 @@ export default function DashboardLayout({
                 href={link.href}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-semibold transition-all duration-200 group ${
                   isActive 
-                    ? 'bg-[#615fff] text-white shadow-md shadow-[#615fff]/15' 
+                    ? 'bg-[#615fff] text-white' 
                     : 'hover:bg-[#152347] hover:text-white'
                 }`}
               >
@@ -227,7 +227,7 @@ export default function DashboardLayout({
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-base font-semibold transition-all duration-200 group ${
                     isActive 
-                      ? 'bg-[#615fff] text-white shadow-md' 
+                      ? 'bg-[#615fff] text-white' 
                       : 'hover:bg-[#152347] hover:text-white'
                   }`}
                 >

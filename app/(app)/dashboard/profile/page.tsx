@@ -219,12 +219,12 @@ export default function StudentProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Card: Avatar & Image Preview Control */}
-        <div className="bg-white rounded-lg border border-zinc-200/80 p-6 text-center shadow-sm flex flex-col items-center justify-center self-start select-none">
+        <div className="bg-white rounded-lg border border-zinc-200/80 p-6 text-center flex flex-col items-center justify-center self-start select-none">
           
           <div className="relative group mb-6 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             
             {/* Profile Avatar circle with hover effect */}
-            <div className="h-32 w-32 rounded-full border-2 border-[#615fff]/20 bg-zinc-100 flex items-center justify-center overflow-hidden shadow-md shadow-[#615fff]/10 transition-all duration-300 group-hover:scale-105 group-hover:border-[#615fff]">
+            <div className="h-32 w-32 rounded-full border-2 border-[#615fff]/20 bg-zinc-100 flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:border-[#615fff]">
               {imagePreview ? (
                 <img src={imagePreview} alt={name} className="h-full w-full object-cover" />
               ) : (
@@ -235,7 +235,7 @@ export default function StudentProfile() {
             </div>
 
             {/* Glowing camera hover badge overlay */}
-            <div className="absolute bottom-1 right-1 h-9 w-9 bg-[#615fff] hover:bg-[#615fff]/90 text-white rounded-full flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110">
+            <div className="absolute bottom-1 right-1 h-9 w-9 bg-[#615fff] hover:bg-[#615fff]/90 text-white rounded-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
               <FiCamera className="h-4.5 w-4.5" />
             </div>
 
@@ -268,7 +268,7 @@ export default function StudentProfile() {
         </div>
 
         {/* Right Card: Main Profile Edit Form */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-zinc-200/80 p-6 md:p-8 shadow-sm">
+        <div className="lg:col-span-2 bg-white rounded-lg border border-zinc-200/80 p-6 md:p-8">
           
           <h2 className="text-xl font-bold text-zinc-800 mb-6 pb-3 border-b border-zinc-100 flex items-center gap-2.5 select-none">
             <FiUser className="text-[#615fff] h-5 w-5" />
@@ -405,7 +405,7 @@ export default function StudentProfile() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-8 py-3.5 bg-[#615fff] hover:bg-[#615fff]/95 disabled:bg-[#615fff]/50 text-white font-bold text-base rounded-lg shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all duration-300 flex items-center gap-2 cursor-pointer"
+                className="px-8 py-3.5 bg-[#615fff] hover:bg-[#615fff]/95 disabled:bg-[#615fff]/50 text-white font-bold text-base rounded-lg transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
                 {saving ? (
                   <>

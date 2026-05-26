@@ -118,7 +118,7 @@ export default function MyCoursesPage() {
     <div className="container mx-auto px-6 py-8 pb-16">
 
       {/* Dynamic Premium Header/Banner */}
-      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 shadow-lg shadow-[#0A163A]/10">
+      <div className="w-full bg-[#0A163A] rounded-lg p-8 md:p-12 relative overflow-hidden mb-10 border border-zinc-800/20">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#615fff]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#543cdf]/15 rounded-full blur-3xl pointer-events-none" />
         
@@ -144,7 +144,7 @@ export default function MyCoursesPage() {
         </div>
 
         {enrollments.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center flex flex-col items-center justify-center shadow-sm">
+          <div className="bg-white rounded-lg p-12 text-center flex flex-col items-center justify-center border border-zinc-200">
             <div className="h-16 w-16 rounded-full bg-[#615fff]/5 flex items-center justify-center text-[#615fff] mb-6">
               <FiBook className="h-8 w-8" />
             </div>
@@ -154,7 +154,7 @@ export default function MyCoursesPage() {
             </p>
             <Link
               href="/"
-              className="px-6 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base shadow-lg shadow-[#615fff]/15 transition-all duration-300"
+              className="px-6 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#615fff]/95 text-white font-bold text-base transition-all duration-300"
             >
               Browse Premium Courses
             </Link>
@@ -172,7 +172,7 @@ export default function MyCoursesPage() {
               const progress = courseProgress[course.id] ?? 0
 
               return (
-                <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
+                <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
                   <div>
                     {/* Thumbnail with hover zoom */}
                     <div className="h-48 w-full bg-zinc-100 overflow-hidden relative">
@@ -185,7 +185,7 @@ export default function MyCoursesPage() {
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 pointer-events-none" />
-                      <span className="absolute top-3 left-3 bg-[#615fff]/10 backdrop-blur-md text-[#615fff] border border-[#615fff]/20 px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider shadow-sm">
+                      <span className="absolute top-3 left-3 bg-[#615fff]/10 backdrop-blur-md text-[#615fff] border border-[#615fff]/20 px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider">
                         {course.category && typeof course.category === 'object' ? course.category.name : 'LMS'}
                       </span>
                       {course.level && (
@@ -239,7 +239,7 @@ export default function MyCoursesPage() {
 
                     <button 
                       onClick={() => handleResumeLearning(course.id, course.slug)}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md border-none active:scale-[0.99]"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all duration-200 cursor-pointer border-none active:scale-[0.99]"
                     >
                       <span>Resume Learning</span>
                       <FiArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
