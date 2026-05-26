@@ -319,7 +319,7 @@ export default function StudentDashboard() {
             </div>
           ) : (
             /* Enrolled Courses Grid list - Completely borderless cards */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {enrollments.map((enrollment) => {
                 const course = enrollment.course
                 if (!course) return null
@@ -328,54 +328,69 @@ export default function StudentDashboard() {
                   ? course.thumbnail.url
                   : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'
 
-                const progress = courseProgress[course.id] ?? 15
+                const progress = courseProgress[course.id] ?? 0
 
                 return (
-                  <div key={enrollment.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                  <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
                     <div>
-                      {/* Thumbnail */}
-                      <div className="h-44 w-full bg-zinc-100 overflow-hidden relative">
+                      {/* Thumbnail with hover zoom */}
+                      <div className="h-48 w-full bg-zinc-100 overflow-hidden relative">
                         <img 
                           src={thumbnailSrc} 
                           alt={course.title} 
-                          className="h-full w-full object-cover" 
+                          className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-500" 
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'
                           }}
                         />
-                        <span className="absolute top-3 left-3 bg-[#615fff] text-white px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider shadow-sm">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60 pointer-events-none" />
+                        <span className="absolute top-3 left-3 bg-[#615fff]/10 backdrop-blur-md text-[#615fff] border border-[#615fff]/20 px-3 py-1 rounded-lg text-sm font-bold uppercase tracking-wider shadow-sm">
                           {course.category && typeof course.category === 'object' ? course.category.name : 'LMS'}
                         </span>
+                        {course.level && (
+                          <span className="absolute bottom-3 right-3 bg-zinc-900/60 backdrop-blur-sm text-zinc-100 px-2.5 py-0.5 rounded-lg text-xs font-semibold capitalize tracking-wide">
+                            {course.level}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Title and summary */}
-                      <div className="p-5 space-y-3">
-                        <h3 className="text-lg font-bold text-zinc-800 line-clamp-2 leading-snug hover:text-[#615fff] transition-colors cursor-pointer" onClick={() => handleResumeLearning(course.id, course.slug)}>
+                      {/* Title & Summary */}
+                      <div className="p-6 space-y-3.5">
+                        <h3 
+                          onClick={() => handleResumeLearning(course.id, course.slug)}
+                          className="text-lg font-bold text-zinc-800 line-clamp-2 leading-snug hover:text-[#615fff] transition-colors cursor-pointer"
+                        >
                           {course.title}
                         </h3>
-                        <p className="text-zinc-400 text-base font-semibold line-clamp-2 leading-relaxed">
+                        <p className="text-zinc-555 text-base font-semibold line-clamp-2 leading-relaxed">
                           {course.summary}
                         </p>
-                        <div className="flex items-center gap-2 pt-1.5">
-                          <span className="text-base font-semibold text-zinc-500">Instructor:</span>
-                          <span className="text-base font-bold text-zinc-700">
-                            {course.instructor && typeof course.instructor === 'object' ? course.instructor.name : 'Expert'}
-                          </span>
+                        
+                        {/* Instructor detail row */}
+                        <div className="flex items-center gap-2.5 pt-2 border-t border-zinc-100">
+                          <div className="h-7 w-7 rounded-full bg-[#615fff]/10 flex items-center justify-center font-bold text-xs text-[#615fff] uppercase shrink-0">
+                            {course.instructor && typeof course.instructor === 'object' ? course.instructor.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) : 'EX'}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-zinc-450 uppercase leading-none">Instructor</p>
+                            <p className="text-sm font-bold text-zinc-700 truncate mt-0.5">
+                              {course.instructor && typeof course.instructor === 'object' ? course.instructor.name : 'Expert Instructor'}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Card Footer with Progress & Action */}
-                    <div className="p-5 bg-zinc-50/50 space-y-4">
-                      {/* Progress Bar (Dynamic tracking from localStorage) */}
-                      <div className="space-y-1.5">
+                    {/* Progress Bar & CTA */}
+                    <div className="p-6 pt-0 space-y-5">
+                      <div className="space-y-2 border-t border-zinc-100 pt-4">
                         <div className="flex justify-between text-base font-semibold text-zinc-500">
-                          <span>Syllabus Progress</span>
-                          <span>{progress}%</span>
+                          <span className="flex items-center gap-1.5"><FiBookOpen className="text-zinc-400 h-4 w-4 shrink-0" /> Syllabus Progress</span>
+                          <span className="font-bold text-[#615fff]">{progress}%</span>
                         </div>
-                        <div className="w-full bg-zinc-200 h-2 rounded-lg overflow-hidden">
+                        <div className="w-full bg-zinc-100 h-2 rounded-lg overflow-hidden">
                           <div 
-                            className="bg-[#615fff] h-full rounded-lg transition-all duration-500" 
+                            className="bg-gradient-to-r from-[#615fff] to-[#8a88ff] h-full rounded-lg transition-all duration-500" 
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -383,10 +398,10 @@ export default function StudentDashboard() {
 
                       <button 
                         onClick={() => handleResumeLearning(course.id, course.slug)}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md border-none"
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md border-none active:scale-[0.99]"
                       >
                         <span>Resume Learning</span>
-                        <FiArrowRight className="h-5 w-5" />
+                        <FiArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     </div>
                   </div>

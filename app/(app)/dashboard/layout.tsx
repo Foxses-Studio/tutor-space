@@ -106,8 +106,8 @@ export default function DashboardLayout({
 
   const sidebarLinks = [
     { label: 'Overview', href: '/dashboard', icon: FiLayout },
-    { label: 'My Courses', href: '/dashboard#courses', icon: FiBookOpen },
-    { label: 'Study Hub', href: '/dashboard#study-hub', icon: FiBook },
+    { label: 'My Courses', href: '/dashboard/courses', icon: FiBookOpen },
+    { label: 'Study Hub', href: '/dashboard/study-hub', icon: FiBook },
     { label: 'My Reviews', href: '/dashboard/reviews', icon: FiStar },
     { label: 'Profile Settings', href: '/dashboard/profile', icon: FiUser },
   ]
@@ -138,7 +138,7 @@ export default function DashboardLayout({
         <nav className="flex-1 px-4 py-3 space-y-1">
           <p className="text-xs font-bold text-[#4c6093] uppercase tracking-wider px-3 mb-2">LMS Menu</p>
           {sidebarLinks.map((link) => {
-            const isActive = pathname === link.href || (link.href.includes('#') && typeof window !== 'undefined' && window.location.hash === link.href.split('#')[1])
+            const isActive = pathname === link.href
             const Icon = link.icon
             return (
               <Link
