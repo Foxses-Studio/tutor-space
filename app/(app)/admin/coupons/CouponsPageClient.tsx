@@ -166,7 +166,7 @@ export default function CouponsPageClient({
                       <span className="font-bold text-emerald-400 text-base">
                         {coupon.discountType === 'percentage'
                           ? `${coupon.discountValue}% Off`
-                          : `$${coupon.discountValue.toFixed(2)} Off`}
+                          : `৳${coupon.discountValue.toLocaleString('en-BD')} Off`}
                       </span>
                     </td>
 

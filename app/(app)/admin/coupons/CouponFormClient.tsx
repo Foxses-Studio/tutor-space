@@ -170,14 +170,14 @@ export default function CouponFormClient({ initialCoupon }: CouponFormClientProp
                 onChange={(e: any) => setDiscountType(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/60 text-white font-semibold text-base focus:outline-none transition-colors"
               >
-                <option value="fixed">Fixed cash deduction ($)</option>
+                <option value="fixed">Fixed cash deduction (৳)</option>
                 <option value="percentage">Percentage discount (%)</option>
               </select>
             </div>
             
             <div className="flex flex-col gap-2">
               <label className="text-base font-bold text-zinc-300">
-                {discountType === 'percentage' ? 'Discount Percentage (%)' : 'Discount Dollar Value ($)'}
+                {discountType === 'percentage' ? 'Discount Percentage (%)' : 'Discount BDT Value (৳)'}
               </label>
               <input
                 type="number"

@@ -34,7 +34,7 @@ function getLevelLabel(level: string): string {
 
 function formatPrice(price: number) {
   if (price === 0) return 'Free'
-  return `$${price.toFixed(2)}`
+  return `৳${price.toLocaleString('en-BD')}`
 }
 
 function getImageUrl(thumbnail: any): string {

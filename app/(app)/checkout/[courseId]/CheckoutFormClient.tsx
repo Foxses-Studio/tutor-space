@@ -613,7 +613,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                     ) : (
                       <>
                         <FiZap className="h-5 w-5 fill-white" />
-                        <span>Complete Course Purchase (${finalPrice.toFixed(2)})</span>
+                        <span>Complete Course Purchase (৳{finalPrice.toLocaleString('en-BD')})</span>
                       </>
                     )}
                   </button>
@@ -663,7 +663,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                 
                 <div className="flex justify-between items-center text-base font-semibold text-zinc-600">
                   <span>Base Course Price</span>
-                  <span className="font-bold text-zinc-800">${basePrice.toFixed(2)}</span>
+                  <span className="font-bold text-zinc-800">৳{basePrice.toLocaleString('en-BD')}</span>
                 </div>
 
                 {appliedCoupon && (
@@ -672,14 +672,14 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                       <FiTag className="h-4 w-4" />
                       Promo code ({appliedCoupon.code})
                     </span>
-                    <span className="font-bold">-${discountAmount.toFixed(2)}</span>
+                    <span className="font-bold">-৳{discountAmount.toLocaleString('en-BD')}</span>
                   </div>
                 )}
 
                 <div className="border-t border-zinc-100 pt-3.5 flex justify-between items-center">
                   <span className="text-base font-bold text-zinc-800">Total Investment</span>
                   <span className="text-3xl font-bold text-[#615fff]">
-                    ${finalPrice.toFixed(2)}
+                    ৳{finalPrice.toLocaleString('en-BD')}
                   </span>
                 </div>
               </div>
