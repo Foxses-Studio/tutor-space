@@ -162,13 +162,15 @@ export default function LiveClassesPageClient() {
                               href={lesson.liveUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base transition-colors"
+                              className="inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-lg bg-[#615fff] hover:bg-[#5248e8] active:scale-[0.98] text-white font-bold text-base transition-all shadow-md shadow-[#615fff]/15 whitespace-nowrap cursor-pointer border-none"
                             >
                               Join Session
                               <FiExternalLink className="h-4 w-4" />
                             </a>
                           ) : (
-                            <span className="text-sm font-bold text-zinc-550">Link Pending</span>
+                            <span className="inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-zinc-800/40 border border-zinc-800 text-zinc-500 text-sm font-bold whitespace-nowrap select-none">
+                              Link Pending
+                            </span>
                           )}
                         </td>
                       </tr>

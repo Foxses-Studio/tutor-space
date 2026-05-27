@@ -113,16 +113,21 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     }
   }, [searchParams, lessons])
 
-  // Load completed lessons from localStorage on mount
+  // Load completed lessons from DB API on mount
   useEffect(() => {
-    const saved = localStorage.getItem(`ts-completed-lessons-${course.id}`)
-    if (saved) {
+    async function loadProgress() {
       try {
-        setCompletedLessonIds(JSON.parse(saved))
-      } catch (e) {
-        console.error('Failed to parse completed lessons cache', e)
+        const res = await fetch('/api/progress')
+        if (res.ok) {
+          const data = await res.json()
+          const ids: string[] = data.completedLessons?.[course.id] || []
+          setCompletedLessonIds(ids)
+        }
+      } catch (err) {
+        console.error('Failed to load progress from API', err)
       }
     }
+    loadProgress()
   }, [course.id])
 
   // Fullscreen toggle handler
@@ -194,12 +199,14 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
   useEffect(() => {
     // 1. Right Click Prevention
     const handleContextMenu = (e: MouseEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
       e.preventDefault()
     }
     document.addEventListener('contextmenu', handleContextMenu)
 
     // 2. DevTools & Ctrl+U Block
     const handleDevTools = (e: KeyboardEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
       const key = e.key.toLowerCase()
       if (
         e.key === 'F12' ||
@@ -222,6 +229,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
     // 3. Prevent Copying
     const handleCopy = (e: ClipboardEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
       e.clipboardData?.setData('text/plain', 'Tutor Space Anti-Piracy Shield: Copying content is disabled on this player.')
       e.preventDefault()
     }
@@ -229,6 +237,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
     // 4. PrintScreen & active screenshot keys detection (keydown triggers blackout instantly)
     const handleScreenshotKeyDown = (e: KeyboardEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
       const key = e.key.toLowerCase()
       if (
         e.key === 'PrintScreen' ||
@@ -248,6 +257,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
     // 5. PrintScreen KeyUp clipboard overwrite
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
       if (e.key === 'PrintScreen') {
         setIsBlackout(true)
         navigator.clipboard.writeText('Protected Content - Tutor Space Screen Captures Restricted.').catch(() => {})
@@ -269,6 +279,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
     // 6. Focus & blur window detection (blackout screen when focus is lost)
     const handleBlur = () => {
+      if (!window.location.pathname.includes('/watch')) return
       // Small timeout to allow document.activeElement to update
       setTimeout(() => {
         const activeEl = document.activeElement
@@ -281,12 +292,14 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     }
 
     const handleFocus = () => {
+      if (!window.location.pathname.includes('/watch')) return
       setTimeout(() => {
         setIsBlackout(false)
       }, 1000)
     }
 
     const handleVisibilityChange = () => {
+      if (!window.location.pathname.includes('/watch')) return
       if (document.visibilityState === 'hidden') {
         setIsBlackout(true)
       } else {
@@ -312,25 +325,34 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     }
   }, [])
 
-  // Handle Mark as Completed
-  const handleToggleComplete = (lessonId: string) => {
-    let updatedCompleted: string[] = []
-    
-    if (completedLessonIds.includes(lessonId)) {
-      updatedCompleted = completedLessonIds.filter(id => id !== lessonId)
-      Swal.fire({
-        icon: 'info',
-        title: 'Status Updated',
-        text: 'Lesson marked as incomplete.',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 2000,
-        background: '#1a1a1a',
-        color: '#ffffff',
+  // Handle Mark as Completed — persists to DB
+  const handleToggleComplete = async (lessonId: string) => {
+    const willBeCompleted = !completedLessonIds.includes(lessonId)
+    const updatedCompleted = willBeCompleted
+      ? [...completedLessonIds, lessonId]
+      : completedLessonIds.filter(id => id !== lessonId)
+
+    // Optimistically update UI
+    setCompletedLessonIds(updatedCompleted)
+
+    // Persist to DB
+    try {
+      await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: course.id,
+          lessonId,
+          completed: willBeCompleted,
+        }),
       })
-    } else {
-      updatedCompleted = [...completedLessonIds, lessonId]
+    } catch (err) {
+      console.error('Failed to save progress to API', err)
+      // Revert optimistic update on error
+      setCompletedLessonIds(completedLessonIds)
+    }
+
+    if (willBeCompleted) {
       Swal.fire({
         icon: 'success',
         title: 'Outstanding Work!',
@@ -342,19 +364,18 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
         background: '#1a1a1a',
         color: '#ffffff',
       })
-    }
-    
-    setCompletedLessonIds(updatedCompleted)
-    localStorage.setItem(`ts-completed-lessons-${course.id}`, JSON.stringify(updatedCompleted))
-    
-    // Sync percentage progress back to student dashboard (ts-course-progress map)
-    if (sortedLessons.length > 0) {
-      const percentage = Math.round((updatedCompleted.length / sortedLessons.length) * 100)
-      const savedProgress = localStorage.getItem('ts-course-progress')
-      let progressMap: Record<string, number> = savedProgress ? JSON.parse(savedProgress) : {}
-      
-      progressMap[course.id] = percentage
-      localStorage.setItem('ts-course-progress', JSON.stringify(progressMap))
+    } else {
+      Swal.fire({
+        icon: 'info',
+        title: 'Status Updated',
+        text: 'Lesson marked as incomplete.',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2000,
+        background: '#1a1a1a',
+        color: '#ffffff',
+      })
     }
   }
 
@@ -395,24 +416,9 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
   const isLiveUpcoming = liveDateObj ? liveDateObj.getTime() > Date.now() : false
 
   // ─── Render Sub-Components for clean split layouts ───
-  
   const renderPlayer = () => (
     <div ref={videoContainerRef} className="bg-slate-900 border border-slate-950 rounded-lg overflow-hidden shadow-xl aspect-video relative">
       
-      {/* Immersive Floating Moving Anti-Piracy Watermark Overlay (Subtle translucent student email every 5s) */}
-      {student && (
-        <div 
-          className="absolute bg-white/5 border border-white/5 rounded px-2.5 py-0.5 text-[13px] font-bold text-white/10 pointer-events-none select-none z-20 tracking-wider transition-all duration-1000 ease-in-out"
-          style={{
-            top: watermarkPos.top,
-            left: watermarkPos.left,
-            textShadow: '1px 1px 0px rgba(0,0,0,0.1)',
-          }}
-        >
-          {student.email}
-        </div>
-      )}
-
       {/* Full Black Screen overlay on focus loss or screenshot keys */}
       {isBlackout && (
         <div className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center text-center p-6 select-none animate-fade-in">
@@ -441,7 +447,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
           <div className="w-full h-full flex flex-col items-center justify-center text-white bg-slate-950 p-6 text-center select-text">
             <FiVideo className="h-10 w-10 text-slate-600 mb-3" />
             <p className="text-base font-bold">Watch Video Stream</p>
-            <p className="text-base text-zinc-550 mt-2">
+            <p className="text-base text-zinc-500 mt-2">
               Please use the link below to watch the premium content:
             </p>
             <a 
@@ -504,15 +510,33 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                 <span>Join Live Broadcast</span>
               </a>
             ) : (
-              <div className="py-2 px-4 rounded-lg bg-white/5 border border-white/10 text-slate-450 text-base font-bold select-none">
+              <div className="py-2 px-4 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-base font-bold select-none">
                 Link Activating at Class Time
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-zinc-455 bg-slate-950">
+        <div className="w-full h-full flex items-center justify-center text-zinc-400 bg-slate-950">
           <p className="text-base font-bold">Unsupported lesson style or format</p>
+        </div>
+      )}
+
+      {/* Immersive Floating Moving Anti-Piracy Watermark Overlay (Declared at bottom and z-30 to render on top of iframes) */}
+      {student && (
+        <div 
+          className="absolute pointer-events-none select-none z-30 transition-all duration-1000 ease-in-out"
+          style={{
+            top: watermarkPos.top,
+            left: watermarkPos.left,
+            color: 'rgba(97, 95, 255, 0.65)',
+            fontSize: '13px',
+            fontWeight: '600',
+            letterSpacing: '0.05em',
+            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.4)',
+          }}
+        >
+          {student.email}
         </div>
       )}
     </div>

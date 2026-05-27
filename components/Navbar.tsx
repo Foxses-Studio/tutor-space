@@ -17,9 +17,9 @@ interface User {
 const NAV_LINKS = [
   { label: 'Home',        href: '/',           match: '/' },
   { label: 'Courses',     href: '/courses',    match: '/courses' },
-  { label: 'Instructors', href: '#instructors', match: '/instructors' },
+  { label: 'Instructors', href: '/instructors', match: '/instructors' },
   { label: 'About Us',    href: '#about-us',   match: '/about' },
-  { label: 'Contact Us',  href: '#contact-us', match: '/contact' },
+  { label: 'Contact Us',  href: '/contact',    match: '/contact' },
 ]
 
 export default function Navbar() {

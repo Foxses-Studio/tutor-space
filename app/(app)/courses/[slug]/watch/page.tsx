@@ -78,6 +78,10 @@ export default async function CourseWatchPage({ params }: Props) {
   if (userId) {
     const { Student } = await import('@/lib/db/models/Student')
     studentDoc = await Student.findById(userId).lean()
+    if (!studentDoc) {
+      const { User } = await import('@/lib/db/models/User')
+      studentDoc = await User.findById(userId).lean()
+    }
   }
 
   const serializedStudent = studentDoc ? {

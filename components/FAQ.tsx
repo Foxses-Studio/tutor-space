@@ -114,7 +114,7 @@ export default function FAQ({ faqs }: FAQProps) {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.05 }}
-          className="space-y-3"
+          className="space-y-3 max-w-3xl mx-auto"
         >
           {faqs.map((faq) => {
             const isOpen = openId === faq.id
@@ -187,7 +187,7 @@ export default function FAQ({ faqs }: FAQProps) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 p-6 rounded-lg bg-white border border-zinc-200/80 shadow-sm"
+          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 p-6 rounded-lg bg-white border border-zinc-200/80 shadow-sm max-w-3xl mx-auto"
         >
           <div className="h-11 w-11 rounded-lg bg-[#615fff]/10 flex items-center justify-center shrink-0">
             <FiHelpCircle className="h-5 w-5 text-[#615fff]" />

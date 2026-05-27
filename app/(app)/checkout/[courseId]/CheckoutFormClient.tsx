@@ -70,6 +70,12 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
   const [couponLoading, setCouponLoading] = useState(false)
   const [purchaseLoading, setPurchaseLoading] = useState(false)
 
+  // Pop-up free inline alert states
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null)
+
   // Check login session on mount
   useEffect(() => {
     async function getSession() {
@@ -93,13 +99,10 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
   // Handle Login submission
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAuthError(null)
+    setAuthSuccess(null)
     if (!loginEmail || !loginPassword) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Please fill in both email and password.',
-        confirmButtonColor: '#615fff',
-      })
+      setAuthError('Please fill in both email and password.')
       return
     }
 
@@ -116,24 +119,12 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
         setUser(data.user)
         setBillingName(data.user.name || '')
         setBillingPhone(data.user.phone || '')
-        
-        Swal.fire({
-          icon: 'success',
-          title: 'Signed In',
-          text: `Welcome back, ${data.user.name}!`,
-          timer: 1500,
-          showConfirmButton: false,
-        })
+        setAuthSuccess(`Welcome back, ${data.user.name}! Continuing to billing...`)
       } else {
         throw new Error(data.message || 'Invalid email or password.')
       }
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Authentication Failed',
-        text: err.message,
-        confirmButtonColor: '#615fff',
-      })
+      setAuthError(err.message || 'Authentication failed.')
     } finally {
       setAuthLoading(false)
     }
@@ -142,22 +133,14 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
   // Handle Registration submission + silent login
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAuthError(null)
+    setAuthSuccess(null)
     if (!regName || !regEmail || !regPassword) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Please fill in all required fields.',
-        confirmButtonColor: '#615fff',
-      })
+      setAuthError('Please fill in all required fields.')
       return
     }
     if (regPassword.length < 6) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Weak Password',
-        text: 'Password must be at least 6 characters long.',
-        confirmButtonColor: '#615fff',
-      })
+      setAuthError('Password must be at least 6 characters long.')
       return
     }
 
@@ -193,24 +176,12 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
         setUser(loginData.user)
         setBillingName(loginData.user.name || '')
         setBillingPhone(loginData.user.phone || '')
-        
-        Swal.fire({
-          icon: 'success',
-          title: 'Account Created',
-          text: `Welcome to Tutor Space, ${loginData.user.name}!`,
-          timer: 1500,
-          showConfirmButton: false,
-        })
+        setAuthSuccess(`Account created successfully! Welcome, ${loginData.user.name}.`)
       } else {
         throw new Error('Registration succeeded, but login failed. Please sign in manually.')
       }
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Registration Failed',
-        text: err.message,
-        confirmButtonColor: '#615fff',
-      })
+      setAuthError(err.message || 'Registration failed.')
     } finally {
       setAuthLoading(false)
     }
@@ -263,13 +234,10 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
   // Complete course purchase / checkout
   const handleCompletePurchase = async (e: React.FormEvent) => {
     e.preventDefault()
+    setCheckoutError(null)
+    setCheckoutSuccess(null)
     if (!billingName.trim() || !billingPhone.trim() || !billingAddress.trim()) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Billing Information',
-        text: 'Please fill in your name, phone number, and billing address.',
-        confirmButtonColor: '#615fff',
-      })
+      setCheckoutError('Please fill in your name, phone number, and billing address.')
       return
     }
 
@@ -289,25 +257,15 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
       const data = await response.json()
 
       if (response.ok && data.success) {
-        await Swal.fire({
-          icon: 'success',
-          title: 'Enrollment Confirmed!',
-          text: `You have successfully purchased and enrolled in "${course.title}".`,
-          confirmButtonColor: '#615fff',
-          confirmButtonText: 'Start Learning Now',
-        })
-        
-        window.location.href = '/dashboard'
+        setCheckoutSuccess(`You have successfully purchased and enrolled in "${course.title}".`)
+        setTimeout(() => {
+          window.location.href = '/dashboard'
+        }, 1500)
       } else {
         throw new Error(data.error || 'Failed to complete transaction.')
       }
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Purchase Failed',
-        text: err.message || 'There was an issue processing your checkout.',
-        confirmButtonColor: '#615fff',
-      })
+      setCheckoutError(err.message || 'There was an issue processing your checkout.')
     } finally {
       setPurchaseLoading(false)
     }
@@ -325,7 +283,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
   }
 
   return (
-    <div className="container mx-auto px-6 py-12 lg:py-16 max-w-7xl">
+    <div className="container mx-auto px-6 pt-28 pb-16">
       {/* Back button */}
       <Link
         href={`/courses/${course.id}`}
@@ -342,7 +300,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
           
           {!user ? (
             /* USER IS ANONYMOUS: SIGN IN OR SIGN UP WORKSPACE */
-            <div className="bg-white border border-zinc-200 rounded-lg p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.02)] space-y-6">
+            <div className="bg-white border border-zinc-200 rounded-lg p-6 sm:p-8 space-y-6">
               
               {/* Tab Header */}
               <div className="flex border-b border-zinc-200">
@@ -377,6 +335,18 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                       Access your student credentials to log your enrollment.
                     </p>
                   </div>
+
+                  {authError && (
+                    <div className="p-3.5 bg-rose-50 border border-rose-100 rounded-lg text-rose-650 font-semibold text-base">
+                      {authError}
+                    </div>
+                  )}
+
+                  {authSuccess && (
+                    <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700 font-bold text-base animate-pulse">
+                      {authSuccess}
+                    </div>
+                  )}
 
                   <div className="space-y-4 pt-2">
                     <div className="space-y-1.5">
@@ -423,7 +393,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                     <button
                       type="submit"
                       disabled={authLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base shadow-md shadow-[#615fff]/15 transition-all select-none cursor-pointer mt-4"
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base transition-all select-none cursor-pointer mt-4"
                     >
                       {authLoading ? (
                         <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -445,6 +415,18 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                       Set up your credentials to manage courses and trace progress.
                     </p>
                   </div>
+
+                  {authError && (
+                    <div className="p-3.5 bg-rose-50 border border-rose-100 rounded-lg text-rose-655 font-semibold text-base">
+                      {authError}
+                    </div>
+                  )}
+
+                  {authSuccess && (
+                    <div className="p-3.5 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700 font-bold text-base animate-pulse">
+                      {authSuccess}
+                    </div>
+                  )}
 
                   <div className="space-y-4 pt-2">
                     <div className="space-y-1.5">
@@ -524,7 +506,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                     <button
                       type="submit"
                       disabled={authLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base shadow-md shadow-[#615fff]/15 transition-all select-none cursor-pointer mt-4"
+                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base transition-all select-none cursor-pointer mt-4"
                     >
                       {authLoading ? (
                         <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -544,7 +526,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
             <div className="space-y-6">
               
               {/* Billing Info Form */}
-              <div className="bg-white border border-zinc-200 rounded-lg p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.02)] space-y-6">
+              <div className="bg-white border border-zinc-200 rounded-lg p-6 sm:p-8 space-y-6">
                 <div>
                   <h3 className="text-xl font-bold text-zinc-800 flex items-center gap-2">
                     <FiMapPin className="text-[#615fff]" />
@@ -556,6 +538,21 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                 </div>
 
                 <form onSubmit={handleCompletePurchase} className="space-y-4">
+                  {checkoutError && (
+                    <div className="p-3.5 bg-rose-50 border border-rose-105 rounded-lg text-rose-650 font-semibold text-base">
+                      {checkoutError}
+                    </div>
+                  )}
+
+                  {checkoutSuccess && (
+                    <div className="p-4 bg-emerald-50 border border-emerald-150 rounded-lg text-emerald-800 text-center flex flex-col items-center gap-2">
+                      <FiCheckCircle className="h-7 w-7 text-emerald-500 animate-bounce" />
+                      <span className="font-bold text-lg leading-tight">Purchase Confirmed!</span>
+                      <span className="text-sm font-semibold text-emerald-700 leading-relaxed">{checkoutSuccess}</span>
+                      <span className="text-zinc-500 text-xs font-semibold mt-1 animate-pulse">Redirecting you to active learning space...</span>
+                    </div>
+                  )}
+
                   {/* Name */}
                   <div className="space-y-1.5">
                     <label className="text-base font-bold text-zinc-700">Full Billing Name</label>
@@ -609,7 +606,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
                   <button
                     type="submit"
                     disabled={purchaseLoading}
-                    className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all select-none cursor-pointer mt-6"
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-lg bg-[#615fff] hover:bg-[#543cdf] text-white font-bold text-base transition-all select-none cursor-pointer mt-6"
                   >
                     {purchaseLoading ? (
                       <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -627,10 +624,10 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
         </div>
 
         {/* RIGHT COLUMN: STICKY COURSE SUMMARY CARD & COUPON APPLICATION */}
-        <div className="lg:col-span-5 relative z-10 w-full order-1 lg:order-2 space-y-6 lg:sticky lg:top-28">
+        <div className="lg:col-span-5 relative z-10 w-full order-1 lg:order-2 space-y-6 lg:sticky lg:top-32">
           
           {/* Sticky Course details widget */}
-          <div className="bg-white border border-zinc-200 rounded-lg shadow-[0_4px_30px_rgba(97,95,255,0.05)] overflow-hidden">
+          <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
             
             {/* Banner image */}
             {course.imageUrl && (
@@ -691,7 +688,7 @@ export default function CheckoutFormClient({ course }: { course: CourseData }) {
 
           {/* Promo Code section (Shown only if logged in) */}
           {user && (
-            <div className="bg-white border border-zinc-200 rounded-lg p-6 shadow-[0_4px_25px_rgba(0,0,0,0.02)] space-y-4">
+            <div className="bg-white border border-zinc-200 rounded-lg p-6 space-y-4">
               <label className="text-base font-bold text-zinc-800 flex items-center gap-2">
                 <FiTag className="text-[#615fff]" />
                 Apply Coupon / Promo Code

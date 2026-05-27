@@ -248,7 +248,7 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
 
       </div>
 
-      {/* ─── Premium Blog Cards Grid ─── */}
+      {/* ─── Premium Blog Data Table ─── */}
       {filteredBlogs.length === 0 ? (
         <div className="bg-[#121829]/60 border border-zinc-800/40 rounded-lg p-16 text-center space-y-4 shadow-sm">
           <FiFileText className="h-12 w-12 text-zinc-700 mx-auto" />
@@ -260,108 +260,135 @@ export default function BlogsPageClient({ initialBlogs }: { initialBlogs: BlogIt
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredBlogs.map(blog => {
-            const plainTextPreview = stripHtml(blog.content)
-            
-            return (
-              <div 
-                key={blog.id} 
-                className="bg-[#121829] border border-zinc-800/60 rounded-lg overflow-hidden hover:border-[#615fff]/40 hover:shadow-xl hover:shadow-[#615fff]/5 transition-all transform hover:-translate-y-1 flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Card Cover image box */}
-                  <div className="aspect-[16/8] relative overflow-hidden bg-[#070b16] border-b border-zinc-800/40">
-                    {blog.coverImageUrl ? (
-                      <img 
-                        src={blog.coverImageUrl} 
-                        alt={blog.title} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 bg-gradient-to-br from-[#0F1B40] to-[#070B16]">
-                        <FiFileText className="h-10 w-10 text-zinc-500 mb-2" />
-                        <span className="text-xs font-bold uppercase tracking-widest text-zinc-550">Tutor Space Insights</span>
-                      </div>
-                    )}
-                    
-                    {/* Floating draft / published status badge placeholder if needed */}
-                  </div>
+        <div className="bg-[#121829] border border-zinc-800/60 rounded-lg overflow-hidden shadow-xl shadow-zinc-950/20">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-white">
+              <thead>
+                <tr className="border-b border-zinc-800/80 bg-zinc-900/40">
+                  <th className="px-6 py-4 text-base font-bold text-zinc-400 uppercase tracking-wider">Article Title</th>
+                  <th className="px-6 py-4 text-base font-bold text-zinc-400 uppercase tracking-wider">Author</th>
+                  <th className="px-6 py-4 text-base font-bold text-zinc-400 uppercase tracking-wider">Date Published</th>
+                  <th className="px-6 py-4 text-base font-bold text-zinc-400 uppercase tracking-wider">Tags</th>
+                  <th className="px-6 py-4 text-base font-bold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/50">
+                {filteredBlogs.map(blog => {
+                  const plainTextPreview = stripHtml(blog.content)
+                  
+                  return (
+                    <tr 
+                      key={blog.id} 
+                      className="hover:bg-zinc-800/20 transition-colors group"
+                    >
+                      {/* Title column with image preview */}
+                      <td className="px-6 py-4 max-w-md">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-16 rounded-lg bg-[#070b16] border border-zinc-800 flex-shrink-0 overflow-hidden">
+                            {blog.coverImageUrl ? (
+                              <img 
+                                src={blog.coverImageUrl} 
+                                alt={blog.title} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-zinc-600 bg-gradient-to-br from-[#0f1b40] to-[#070b16]">
+                                <FiFileText className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-white text-base truncate group-hover:text-[#b2b0ff] transition-colors" title={blog.title}>
+                              {blog.title}
+                            </h3>
+                            <p className="text-base font-normal text-zinc-400 truncate mt-0.5" title={plainTextPreview}>
+                              {plainTextPreview || 'No content preview available.'}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
 
-                  {/* Card Info Content box */}
-                  <div className="p-6 space-y-4">
-                    <h3 className="font-bold text-white text-xl leading-snug line-clamp-2 group-hover:text-[#b2b0ff] transition-colors">
-                      {blog.title}
-                    </h3>
-                    
-                    <p className="text-base font-semibold text-zinc-400 line-clamp-3 leading-relaxed font-sans select-text">
-                      {plainTextPreview || 'No content preview available.'}
-                    </p>
-                    
-                    {/* Card metadata tag pills */}
-                    {blog.tags && blog.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {blog.tags.slice(0, 4).map((t, i) => (
-                          <span 
-                            key={i} 
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedTag(t.tag)
-                            }}
-                            className="px-2.5 py-1 bg-[#615fff]/10 border border-[#615fff]/20 text-[#b2b0ff] rounded font-bold text-xs uppercase tracking-wide cursor-pointer hover:bg-[#615fff]/20 transition-colors"
+                      {/* Author Column */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-[#615fff]/15 border border-[#615fff]/25 flex items-center justify-center font-bold text-base text-[#9693ff] uppercase">
+                            {blog.authorName[0]}
+                          </div>
+                          <span className="text-base font-bold text-zinc-300">{blog.authorName}</span>
+                        </div>
+                      </td>
+
+                      {/* Date Column */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {blog.publishedDate ? (
+                          <div className="flex items-center gap-2 text-base font-semibold text-zinc-400">
+                            <FiCalendar className="h-4.5 w-4.5 text-zinc-500" />
+                            <span>
+                              {new Date(blog.publishedDate).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-base font-semibold text-zinc-500">Not published</span>
+                        )}
+                      </td>
+
+                      {/* Tags badges column */}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1.5 max-w-xs">
+                          {blog.tags && blog.tags.length > 0 ? (
+                            blog.tags.slice(0, 3).map((t, i) => (
+                              <button
+                                key={i}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedTag(selectedTag === t.tag ? null : t.tag)
+                                }}
+                                className={`px-2.5 py-0.5 border rounded-lg font-bold text-base transition-colors cursor-pointer select-none ${
+                                  selectedTag === t.tag
+                                    ? 'bg-[#615fff] text-white border-transparent'
+                                    : 'bg-[#615fff]/10 border-[#615fff]/20 text-[#b2b0ff] hover:bg-[#615fff]/20'
+                                }`}
+                              >
+                                #{t.tag}
+                              </button>
+                            ))
+                          ) : (
+                            <span className="text-base font-semibold text-zinc-600">—</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Action buttons column */}
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2.5">
+                          <button 
+                            onClick={() => router.push(`/admin/blogs/${blog.id}/edit`)} 
+                            className="h-9 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-lg bg-zinc-850 hover:bg-[#615fff] border border-zinc-800 text-base font-bold text-zinc-300 hover:text-white transition-all cursor-pointer hover:shadow-lg hover:shadow-[#615fff]/10"
+                            title="Edit Article"
                           >
-                            #{t.tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card footer block */}
-                <div className="px-6 pb-6 pt-4 border-t border-zinc-800/50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-lg bg-[#615fff]/10 border border-[#615fff]/20 flex items-center justify-center font-bold text-sm text-[#9693ff] uppercase">
-                      {blog.authorName[0]}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-zinc-400">By {blog.authorName}</p>
-                      {blog.publishedDate && (
-                        <p className="text-[11px] font-semibold text-zinc-550 flex items-center gap-1 mt-0.5">
-                          <FiCalendar className="h-3 w-3" />
-                          <span>
-                            {new Date(blog.publishedDate).toLocaleDateString('en-US', { 
-                              month: 'short', 
-                              day: 'numeric', 
-                              year: 'numeric' 
-                            })}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button 
-                      onClick={() => router.push(`/admin/blogs/${blog.id}/edit`)} 
-                      className="h-9 w-9 flex items-center justify-center rounded-lg bg-zinc-850 hover:bg-[#615fff] border border-zinc-800 text-zinc-450 hover:text-white transition-all cursor-pointer hover:shadow-lg hover:shadow-[#615fff]/10"
-                      title="Edit Article"
-                    >
-                      <FiEdit className="h-4.5 w-4.5" />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(blog)} 
-                      className="h-9 w-9 flex items-center justify-center rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-400 hover:text-white transition-all cursor-pointer hover:shadow-lg hover:shadow-rose-500/10"
-                      title="Delete Article"
-                    >
-                      <FiTrash2 className="h-4.5 w-4.5" />
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            )
-          })}
+                            <FiEdit className="h-4 w-4" />
+                            <span>Edit</span>
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(blog)} 
+                            className="h-9 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-base font-bold text-rose-400 hover:text-white transition-all cursor-pointer hover:shadow-lg hover:shadow-rose-500/10"
+                            title="Delete Article"
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

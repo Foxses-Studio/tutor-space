@@ -5,6 +5,41 @@ import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
 
+export async function GET(request: Request) {
+  try {
+    await connectToDatabase()
+
+    const cookieStore = await cookies()
+    const payloadToken = cookieStore.get('payload-token')?.value
+
+    if (!payloadToken) {
+      return NextResponse.json({ error: 'Unauthorized: Session missing.' }, { status: 401 })
+    }
+
+    const decoded = verifyToken(payloadToken)
+    if (!decoded || !decoded.id) {
+      return NextResponse.json({ error: 'Unauthorized: Session invalid.' }, { status: 401 })
+    }
+
+    const user = await User.findById(decoded.id).lean()
+    if (!user || !['admin', 'staff', 'instructor'].includes(user.role)) {
+      return NextResponse.json({ error: 'Forbidden: Insufficient permissions.' }, { status: 403 })
+    }
+
+    let query = {}
+    if (user.role === 'instructor') {
+      query = { instructor: user._id }
+    }
+
+    const courses = await Course.find(query).select('title _id').sort({ title: 1 }).lean()
+
+    return NextResponse.json({ success: true, courses })
+  } catch (error: any) {
+    console.error('GET Courses API Error:', error)
+    return NextResponse.json({ error: error.message || 'Failed to fetch courses.' }, { status: 500 })
+  }
+}
+
 export async function POST(request: Request) {
   try {
     await connectToDatabase()

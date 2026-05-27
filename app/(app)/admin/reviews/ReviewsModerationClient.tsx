@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { FiStar, FiCheck, FiX, FiClock, FiSearch, FiPlus } from 'react-icons/fi'
+import React, { useState, useEffect } from 'react'
+import { FiStar, FiCheck, FiX, FiClock, FiSearch, FiPlus, FiCalendar } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import Link from 'next/link'
 
@@ -38,6 +38,25 @@ export default function ReviewsModerationClient({ initialReviews }: { initialRev
   const [search, setSearch] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
 
+  // Pop-up free inline state variables
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  // Listen to success query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const successType = params.get('success')
+    if (successType === 'added') {
+      setSuccessMsg('Student review successfully logged and approved!')
+    }
+
+    if (successType) {
+      window.history.replaceState({}, document.title, window.location.pathname)
+      const timer = setTimeout(() => setSuccessMsg(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   const filtered = reviews.filter(r => {
     const matchStatus = filterStatus === 'all' || r.status === filterStatus
     const matchSearch = !search ||
@@ -51,6 +70,9 @@ export default function ReviewsModerationClient({ initialReviews }: { initialRev
 
   async function updateStatus(reviewId: string, newStatus: 'approved' | 'rejected') {
     setUpdating(reviewId)
+    setSuccessMsg(null)
+    setErrorMsg(null)
+
     try {
       const res = await fetch('/api/admin/reviews/moderate', {
         method: 'POST',
@@ -61,18 +83,31 @@ export default function ReviewsModerationClient({ initialReviews }: { initialRev
       if (!res.ok) throw new Error(data.error)
 
       setReviews(prev => prev.map(r => r._id === reviewId ? { ...r, status: newStatus } : r))
-      Swal.fire({
-        icon: 'success',
-        title: newStatus === 'approved' ? 'Review Approved' : 'Review Rejected',
-        timer: 1200, showConfirmButton: false, background: '#121829', color: '#fff'
-      })
+      setSuccessMsg(`Review successfully ${newStatus === 'approved' ? 'approved and made live' : 'rejected and hidden'}.`)
+      setTimeout(() => setSuccessMsg(null), 4000)
     } catch (err: any) {
-      Swal.fire({ icon: 'error', title: 'Update Failed', text: err.message, background: '#121829', color: '#fff' })
-    } finally { setUpdating(null) }
+      setErrorMsg(err.message || 'Could not moderate review.')
+      setTimeout(() => setErrorMsg(null), 5000)
+    } finally {
+      setUpdating(null)
+    }
   }
 
   return (
     <div className="px-6 py-8 space-y-6 container mx-auto">
+      
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-lg font-bold text-base animate-fadeIn">
+          {successMsg}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-450 rounded-lg font-bold text-base animate-fadeIn">
+          {errorMsg}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -112,77 +147,137 @@ export default function ReviewsModerationClient({ initialReviews }: { initialRev
         </div>
       </div>
 
-      {/* Reviews Grid */}
+      {/* Reviews Table */}
       {filtered.length === 0 ? (
         <div className="bg-[#121829] border border-zinc-800 rounded-lg p-16 text-center">
           <FiStar className="h-10 w-10 text-zinc-700 mx-auto mb-4" />
           <p className="text-base font-semibold text-zinc-500">No reviews match your current filter.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filtered.map(review => {
-            const conf = statusConfig[review.status]
-            const Icon = conf.icon
-            const isUpdating = updating === review._id
-            const initials = (review.student?.name || 'AN').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden shadow-lg">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-base font-sans border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-850 text-zinc-400 font-bold bg-[#070b16]/50 text-sm tracking-wider uppercase">
+                  <th className="px-6 py-4">Student / Reviewer</th>
+                  <th className="px-6 py-4">Target Course</th>
+                  <th className="px-6 py-4">Rating Tier</th>
+                  <th className="px-6 py-4">Student Testimonial</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/10 font-semibold text-zinc-300">
+                {filtered.map(review => {
+                  const conf = statusConfig[review.status]
+                  const Icon = conf.icon
+                  const isUpdating = updating === review._id
+                  const initials = (review.student?.name || 'AN')
+                    .split(' ')
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 2)
 
-            return (
-              <div key={review._id} className="bg-[#121829] border border-zinc-800 rounded-lg p-5 space-y-4 hover:border-zinc-700 transition-colors">
-                {/* Header row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[#615fff]/15 border border-[#615fff]/20 flex items-center justify-center font-bold text-[#615fff] text-base shrink-0">
-                      {initials}
-                    </div>
-                    <div>
-                      <p className="font-bold text-white text-base leading-tight">{review.student?.name || 'Anonymous'}</p>
-                      <p className="text-sm font-semibold text-zinc-500 mt-0.5">{review.student?.email}</p>
-                    </div>
-                  </div>
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-sm font-bold ${conf.color} ${conf.bg} ${conf.border}`}>
-                    <Icon className="h-3.5 w-3.5" />
-                    {conf.label}
-                  </div>
-                </div>
+                  return (
+                    <tr key={review._id} className="hover:bg-[#070b16]/30 transition-colors">
+                      {/* Student / Reviewer */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-[#615fff]/15 border border-[#615fff]/20 flex items-center justify-center font-bold text-[#615fff] text-base shrink-0 select-none">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="text-white font-bold text-base leading-tight">
+                              {review.student?.name || 'Anonymous'}
+                            </p>
+                            <p className="text-zinc-500 text-sm font-semibold mt-0.5">
+                              {review.student?.email || 'No email provided'}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
 
-                {/* Course & rating */}
-                {review.course && (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-zinc-400 truncate max-w-[60%]">
-                      <span className="text-zinc-600 font-semibold">Course:</span> {review.course.title}
-                    </p>
-                    <StarDisplay rating={review.rating} />
-                  </div>
-                )}
+                      {/* Target Course */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {review.course ? (
+                          <div className="max-w-[200px]">
+                            <p className="text-white font-bold text-base truncate" title={review.course.title}>
+                              {review.course.title}
+                            </p>
+                            <p className="text-zinc-500 text-xs font-semibold mt-0.5">
+                              slug: {review.course.slug}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-zinc-500 font-semibold">General Feedback</span>
+                        )}
+                      </td>
 
-                {/* Comment */}
-                <blockquote className="text-base font-semibold text-zinc-300 leading-relaxed border-l-2 border-[#615fff]/40 pl-3 line-clamp-4">
-                  &ldquo;{review.comment}&rdquo;
-                </blockquote>
+                      {/* Rating Tier */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="space-y-1">
+                          <StarDisplay rating={review.rating} />
+                          <span className="text-zinc-500 text-xs font-bold block">{review.rating} / 5 stars</span>
+                        </div>
+                      </td>
 
-                {/* Date */}
-                <p className="text-sm font-semibold text-zinc-600">
-                  {new Date(review.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                </p>
+                      {/* Student Testimonial */}
+                      <td className="px-6 py-4">
+                        <div className="max-w-md space-y-1.5">
+                          <blockquote className="text-zinc-300 font-semibold text-base italic leading-relaxed line-clamp-2" title={review.comment}>
+                            &ldquo;{review.comment}&rdquo;
+                          </blockquote>
+                          <div className="flex items-center gap-1.5 text-zinc-550 text-xs font-bold">
+                            <FiCalendar className="h-3.5 w-3.5 shrink-0" />
+                            <span>
+                              {new Date(review.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
 
-                {/* Action buttons */}
-                <div className="flex gap-3 pt-1">
-                  <button onClick={() => updateStatus(review._id, 'approved')}
-                    disabled={isUpdating || review.status === 'approved'}
-                    className="flex-1 py-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/25 hover:border-emerald-500 text-emerald-400 hover:text-white font-bold text-base transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                    <FiCheck className="h-4.5 w-4.5" />
-                    {isUpdating ? 'Updating...' : 'Approve'}
-                  </button>
-                  <button onClick={() => updateStatus(review._id, 'rejected')}
-                    disabled={isUpdating || review.status === 'rejected'}
-                    className="flex-1 py-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/25 hover:border-rose-500 text-rose-400 hover:text-white font-bold text-base transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                    <FiX className="h-4.5 w-4.5" />
-                    {isUpdating ? 'Updating...' : 'Reject'}
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+                      {/* Status */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-bold ${conf.color} ${conf.bg} ${conf.border}`}>
+                          <Icon className="h-3.5 w-3.5" />
+                          {conf.label}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="inline-flex gap-2">
+                          <button
+                            onClick={() => updateStatus(review._id, 'approved')}
+                            disabled={isUpdating || review.status === 'approved'}
+                            className="px-3.5 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 border border-emerald-500/25 hover:border-emerald-500 text-emerald-400 hover:text-white font-bold text-base transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                            title="Approve Review"
+                          >
+                            <FiCheck className="h-4.5 w-4.5" />
+                            <span>{isUpdating && updating === review._id ? 'Updating...' : 'Approve'}</span>
+                          </button>
+                          <button
+                            onClick={() => updateStatus(review._id, 'rejected')}
+                            disabled={isUpdating || review.status === 'rejected'}
+                            className="px-3.5 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/25 hover:border-rose-500 text-rose-400 hover:text-white font-bold text-base transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                            title="Reject Review"
+                          >
+                            <FiX className="h-4.5 w-4.5" />
+                            <span>{isUpdating && updating === review._id ? 'Updating...' : 'Reject'}</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

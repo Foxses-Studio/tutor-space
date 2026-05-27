@@ -174,7 +174,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
   return (
     <section
       id="courses"
-      className="py-20 md:py-28 px-6 bg-[#ffffff] border-t border-zinc-100 relative overflow-hidden"
+      className="py-20 md:py-28 px-6 bg-[#F1F5FD] border-t border-zinc-100 relative overflow-hidden"
     >
 
       {/* Background spotlights */}
@@ -199,7 +199,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
             variants={sectionHeadVariants}
             initial="hidden"
             animate={headInView ? 'visible' : 'hidden'}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold font-sans text-zinc-900 tracking-tight leading-[1.2]"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold font-sans text-[#0A163A] tracking-tight leading-[1.2]"
           >
             Become In Demand On the <br className="hidden sm:block" /> Job Market Today!
           </motion.h2>
@@ -223,10 +223,10 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ y: -1 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                className={`relative flex items-center gap-2 px-5 py-3.5 rounded-lg border font-bold text-base whitespace-nowrap transition-colors duration-300 cursor-pointer overflow-hidden ${
+                  className={`relative flex items-center gap-2 px-5 py-3.5 rounded-lg border font-bold text-base whitespace-nowrap transition-colors duration-300 cursor-pointer overflow-hidden ${
                   isActive
                     ? 'bg-[#615fff] text-white border-transparent shadow-md shadow-[#615fff]/20'
-                    : 'bg-white text-zinc-500 border-zinc-200/80 hover:border-[#615fff]/30 hover:text-zinc-800 hover:bg-[#615fff]/4'
+                    : 'bg-white text-[#4F5B7C] border-zinc-200/80 hover:border-[#615fff]/30 hover:text-[#0A163A] hover:bg-[#615fff]/4'
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -323,17 +323,17 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                         </div>
 
                         {/* Title */}
-                        <h3 className="text-2xl sm:text-3xl font-bold text-zinc-900 leading-snug tracking-tight">
+                        <h3 className="text-2xl sm:text-3xl font-bold text-[#0A163A] leading-snug tracking-tight">
                           {featuredCourse.title}
                         </h3>
 
                         {/* Summary */}
-                        <p className="text-base sm:text-lg font-semibold text-zinc-500 leading-relaxed max-w-xl line-clamp-3">
+                        <p className="text-base sm:text-lg font-semibold text-[#4F5B7C] leading-relaxed max-w-xl line-clamp-3">
                           {featuredCourse.summary}
                         </p>
 
                         {/* Meta stats */}
-                        <div className="flex flex-wrap items-center gap-5 pt-2 border-b border-zinc-100 pb-4 text-base font-bold text-zinc-500">
+                        <div className="flex flex-wrap items-center gap-5 pt-2 border-b border-zinc-100 pb-4 text-base font-bold text-[#4F5B7C]">
                           {featuredCourse.duration && (
                             <span className="flex items-center gap-2">
                               <FiClock className="h-5 w-5 text-zinc-400" />
@@ -447,23 +447,23 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                           <div className="space-y-2">
                             
                             {/* Metadata (Duration, Level, Learners) */}
-                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-zinc-400 text-base font-semibold mb-2">
+                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[#4F5B7C] text-base font-semibold mb-2">
                               {course.duration ? (
-                                <span className="flex items-center gap-1 text-zinc-500">
+                                <span className="flex items-center gap-1 text-[#4F5B7C]">
                                   <FiClock className="h-4 w-4 text-zinc-400 shrink-0" />
                                   <span>{course.duration}</span>
                                 </span>
                               ) : null}
                               {course.duration ? <span className="w-1.5 h-1.5 rounded-full bg-zinc-200" /> : null}
                               
-                              <span className="text-zinc-500 font-medium">
+                              <span className="text-[#4F5B7C] font-medium">
                                 {getLevelLabel(course.level)}
                               </span>
                               
                               {course.enrollmentCount && course.enrollmentCount > 0 ? (
                                 <>
                                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-200" />
-                                  <span className="flex items-center gap-1 text-zinc-500">
+                                  <span className="flex items-center gap-1 text-[#4F5B7C]">
                                     <FiUsers className="h-4 w-4 text-zinc-400 shrink-0" />
                                     <span>{course.enrollmentCount} learners</span>
                                   </span>
@@ -478,7 +478,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                             
                             {/* Instructor */}
                             {course.instructor && (
-                              <p className="text-base text-zinc-500 font-semibold truncate pt-0.5">
+                              <p className="text-base text-[#4F5B7C] font-semibold truncate pt-0.5">
                                 By {course.instructor.name}
                               </p>
                             )}

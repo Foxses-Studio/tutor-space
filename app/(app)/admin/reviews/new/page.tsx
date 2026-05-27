@@ -36,7 +36,7 @@ export default async function NewReviewPage() {
 
   // 2. Fetch dependencies
   const [coursesDocs, studentsDocs] = await Promise.all([
-    Course.find({ status: 'published' }).select('title').lean(),
+    Course.find().select('title').lean(),
     Student.find({ status: 'active' }).select('name email').lean(),
   ])
 
@@ -53,7 +53,7 @@ export default async function NewReviewPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-[#070b16] text-white">
+    <div className="min-h-screen bg-[#121212] text-white">
       <ReviewFormClient
         courses={courses}
         students={students}

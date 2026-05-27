@@ -40,10 +40,10 @@ export default function EnrollButton({
     return (
       <button
         onClick={handleEnrollClick}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base shadow-lg shadow-emerald-600/15 hover:shadow-emerald-600/25 transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 whitespace-nowrap"
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#615fff]/10 hover:bg-[#615fff]/20 text-[#615fff] border border-[#615fff]/30 font-bold text-base transition-all duration-300 cursor-pointer"
       >
-        <FiCheck className="h-5 w-5" />
-        <span>Already Enrolled (Go to Course Player)</span>
+        <FiCheck className="h-4.5 w-4.5 shrink-0" />
+        <span>Go to Course</span>
       </button>
     )
   }

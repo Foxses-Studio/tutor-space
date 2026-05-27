@@ -63,17 +63,30 @@ export default function MyCoursesPage() {
 
         // Fetch student's enrollments
         const enrollmentsRes = await fetch('/api/enrollments?depth=2')
+        let fetchedEnrollments: EnrollmentItem[] = []
         if (enrollmentsRes.ok) {
           const enrollmentsData = await enrollmentsRes.json()
           if (enrollmentsData.docs) {
-            setEnrollments(enrollmentsData.docs)
+            fetchedEnrollments = enrollmentsData.docs
+            setEnrollments(fetchedEnrollments)
           }
         }
 
-        // Load course progress from localStorage
-        const savedProgress = localStorage.getItem('ts-course-progress')
-        const progressMap: Record<string, number> = savedProgress ? JSON.parse(savedProgress) : {}
-        setCourseProgress(progressMap)
+        // Fetch real progress from DB API
+        const progressRes = await fetch('/api/progress')
+        if (progressRes.ok) {
+          const progressData = await progressRes.json()
+          const completedLessonsMap: Record<string, string[]> = progressData.completedLessons || {}
+          const progressMap: Record<string, number> = {}
+          fetchedEnrollments.forEach((e) => {
+            if (e.course && e.course.id) {
+              const completedCount = (completedLessonsMap[e.course.id] || []).length
+              const totalLessons = e.course.totalLessons || 1
+              progressMap[e.course.id] = Math.min(Math.round((completedCount / totalLessons) * 100), 100)
+            }
+          })
+          setCourseProgress(progressMap)
+        }
 
       } catch (error) {
         console.error('Error fetching course data:', error)
@@ -86,19 +99,7 @@ export default function MyCoursesPage() {
   }, [router])
 
   const handleResumeLearning = (courseId: string, slug: string) => {
-    Swal.fire({
-      icon: 'success',
-      title: 'Resuming Course',
-      text: 'Loading curriculum and interactive lesson streams...',
-      timer: 800,
-      showConfirmButton: false,
-      background: '#121829',
-      color: '#ffffff',
-    })
-
-    setTimeout(() => {
-      router.push(`/courses/${slug}/watch`)
-    }, 800)
+    router.push(`/courses/${slug}/watch`)
   }
 
   if (loading) {
@@ -172,14 +173,14 @@ export default function MyCoursesPage() {
               const progress = courseProgress[course.id] ?? 0
 
               return (
-                <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
+                <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-200/50 hover:border-[#615fff]/30 transition-all duration-300 flex flex-col justify-between">
                   <div>
                     {/* Thumbnail with hover zoom */}
                     <div className="h-48 w-full bg-zinc-100 overflow-hidden relative">
                       <img 
                         src={thumbnailSrc} 
                         alt={course.title} 
-                        className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-500" 
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'
                         }}
@@ -213,7 +214,7 @@ export default function MyCoursesPage() {
                           {course.instructor && typeof course.instructor === 'object' ? course.instructor.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) : 'EX'}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-zinc-450 uppercase leading-none">Instructor</p>
+                          <p className="text-xs font-semibold text-zinc-500 uppercase leading-none">Instructor</p>
                           <p className="text-sm font-bold text-zinc-700 truncate mt-0.5">
                             {course.instructor && typeof course.instructor === 'object' ? course.instructor.name : 'Expert Instructor'}
                           </p>

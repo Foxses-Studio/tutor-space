@@ -1,34 +1,120 @@
+'use client'
+
 import React from 'react'
+import { motion } from 'framer-motion'
+import { FiBookOpen, FiAward, FiCalendar } from 'react-icons/fi'
 
 export default function Features() {
+  const featuresList = [
+    {
+      icon: <FiBookOpen className="h-6 w-6" />,
+      iconColor: 'text-[#10B981]',
+      iconBg: 'bg-[#10B981]/10',
+      iconBorder: 'border-[#10B981]/20',
+      title: 'Interactive Learning Experience',
+      description:
+        'Engage with hands-on projects, real-world simulations, and interactive content that makes learning stick and builds practical skills.',
+    },
+    {
+      icon: <FiAward className="h-6 w-6" />,
+      iconColor: 'text-[#84CC16]',
+      iconBg: 'bg-[#84CC16]/10',
+      iconBorder: 'border-[#84CC16]/20',
+      title: 'Expert-Led Instruction',
+      description:
+        'Learn from industry professionals and academic experts who bring real-world experience and cutting-edge knowledge to every lesson.',
+    },
+    {
+      icon: <FiCalendar className="h-6 w-6" />,
+      iconColor: 'text-[#8B5CF6]',
+      iconBg: 'bg-[#8B5CF6]/10',
+      iconBorder: 'border-[#8B5CF6]/20',
+      title: 'Flexible Study Schedule',
+      description:
+        'Study when it works for you with 24/7 access to all materials. Pause, rewind, and replay lessons at your own pace.',
+    },
+  ]
+
   return (
-    <section id="features" className="py-24 container mx-auto px-6">
-      <div className="text-center max-w-2xl mx-auto mb-16">
-        <h2 className="text-3xl md:text-4xl font-bold font-display text-white tracking-tight mb-4">Why Tutor Space?</h2>
-        <p className="text-zinc-400">A learning experience crafted to give you the highest industry outcomes.</p>
-      </div>
-      <div className="grid md:grid-cols-3 gap-8">
-        <div className="p-8 rounded-2xl border border-zinc-900 bg-zinc-950/30 hover:border-[#615fff]/20 hover:bg-zinc-900/20 transition-all group">
-          <div className="h-12 w-12 rounded-xl bg-[#615fff]/10 text-[#615fff] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            🎓
-          </div>
-          <h3 className="text-xl font-bold font-display text-white mb-3">Elite Instructors</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">Learn from verified developers and designers working in world-class companies.</p>
+    <section id="features" className="py-20 md:py-28 bg-[#FFFFFF] select-text">
+      <div className="container mx-auto px-6">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-16 md:mb-20">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="text-3xl md:text-5xl font-bold font-display text-[#0A163A] tracking-tight mb-6 leading-tight"
+          >
+            Empower Your Learning Journey
+          </motion.h2>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+            className="text-base md:text-lg text-[#4F5B7C] font-medium leading-relaxed"
+          >
+            Discover interactive courses, expert instructors, and flexible study options designed to help you reach your goals anytime, anywhere.
+          </motion.p>
         </div>
-        <div className="p-8 rounded-2xl border border-zinc-900 bg-zinc-950/30 hover:border-[#615fff]/20 hover:bg-zinc-900/20 transition-all group">
-          <div className="h-12 w-12 rounded-xl bg-[#615fff]/10 text-[#615fff] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            🎓
+
+        {/* Section Grid */}
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Column: Image with micro-animation */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="relative w-full h-[400px] md:h-[500px]"
+          >
+            <div className="w-full h-full relative overflow-hidden rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-zinc-100/50">
+              <img
+                src="/media/learning-journey.png"
+                alt="Student writing in notebook"
+                className="w-full h-full object-cover transform hover:scale-[1.03] transition-transform duration-700 ease-out"
+              />
+            </div>
+          </motion.div>
+
+          {/* Right Column: Cards Stack */}
+          <div className="flex flex-col gap-6">
+            {featuresList.map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-100px' }}
+                transition={{ duration: 0.6, delay: idx * 0.15, ease: 'easeOut' }}
+                className="p-6 md:p-8 bg-white border border-[#E2E8F0] rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:border-zinc-200 hover:-translate-y-0.5 transition-all duration-300 group flex flex-col md:flex-row gap-5 items-start"
+              >
+                {/* Icon Wrapper (Circular) */}
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-full ${item.iconBg} ${item.iconColor} border ${item.iconBorder} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}
+                >
+                  {item.icon}
+                </div>
+
+                {/* Content */}
+                <div className="space-y-2">
+                  <h3 className="text-lg md:text-xl font-bold text-[#0A163A] transition-colors duration-200">
+                    {item.title}
+                  </h3>
+                  <p className="text-base text-[#4F5B7C] font-normal leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
           </div>
-          <h3 className="text-xl font-bold font-display text-white mb-3">Lexical Content</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">Interact with dynamic courses, rich codes, block structures, and quizzes.</p>
+
         </div>
-        <div className="p-8 rounded-2xl border border-zinc-900 bg-zinc-950/30 hover:border-[#615fff]/20 hover:bg-zinc-900/20 transition-all group">
-          <div className="h-12 w-12 rounded-xl bg-[#615fff]/10 text-[#615fff] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            🎓
-          </div>
-          <h3 className="text-xl font-bold font-display text-white mb-3">Local REST API</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">Direct server-side data fetching bypasses HTTP latency for rapid loading times.</p>
-        </div>
+
       </div>
     </section>
   )

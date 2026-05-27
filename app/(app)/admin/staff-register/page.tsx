@@ -39,7 +39,9 @@ export default async function StaffRegisterPage() {
     email: member.email,
     phone: member.phone || '',
     role: member.role,
-    profilePic: member.profilePic ? { url: member.profilePic.url } : undefined,
+    designation: member.designation || '',
+    permissions: member.permissions || [],
+    profilePic: member.profilePic ? { id: member.profilePic._id.toString(), url: member.profilePic.url } : undefined,
     createdAt: member.createdAt ? new Date(member.createdAt).toISOString() : '',
   }))
 

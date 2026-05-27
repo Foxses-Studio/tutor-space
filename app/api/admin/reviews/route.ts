@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     // 2. Parse request body
     const body = await request.json()
-    const { course, studentId, studentName, studentEmail, rating, comment, status } = body
+    const { course, studentId, studentName, studentEmail, studentProfilePic, rating, comment, status } = body
 
     if (!course || !rating || !comment?.trim()) {
       return NextResponse.json({ error: 'Missing required fields: course, rating, comment.' }, { status: 400 })
@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         const newStudent = await Student.create({
           name: studentName.trim(),
           email: studentEmail.trim().toLowerCase(),
+          profilePic: studentProfilePic || undefined,
           status: 'active',
         })
         finalStudentId = newStudent._id.toString()

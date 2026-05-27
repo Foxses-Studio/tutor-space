@@ -175,10 +175,10 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
   return (
     <div className="space-y-5">
       
-      {/* Metrics Cards Grid */}
+      {/* Metrics Cards Grid - Borderless */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {/* Card 1: Total Courses */}
-        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 flex items-center justify-between shadow-sm">
+        <div className="bg-[#121829] border-none rounded-lg p-6 flex items-center justify-between shadow-lg">
           <div className="space-y-1">
             <p className="text-sm font-bold text-zinc-450 uppercase tracking-wider select-none">Total Courses</p>
             <p className="text-3xl font-bold text-white tracking-tight">{totalCourses}</p>
@@ -189,7 +189,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
         </div>
 
         {/* Card 2: Published Courses */}
-        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 flex items-center justify-between shadow-sm">
+        <div className="bg-[#121829] border-none rounded-lg p-6 flex items-center justify-between shadow-lg">
           <div className="space-y-1">
             <p className="text-sm font-bold text-zinc-450 uppercase tracking-wider select-none">Published</p>
             <p className="text-3xl font-bold text-emerald-400 tracking-tight">{publishedCourses}</p>
@@ -200,22 +200,22 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
         </div>
 
         {/* Card 3: Draft Courses */}
-        <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 flex items-center justify-between shadow-sm">
+        <div className="bg-[#121829] border-none rounded-lg p-6 flex items-center justify-between shadow-lg">
           <div className="space-y-1">
             <p className="text-sm font-bold text-zinc-450 uppercase tracking-wider select-none">Drafts</p>
             <p className="text-3xl font-bold text-zinc-350 tracking-tight">{draftCourses}</p>
           </div>
-          <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center border border-zinc-700/50 select-none">
+          <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center border-none select-none">
             <FiList className="h-6 w-6 text-zinc-400" />
           </div>
         </div>
       </div>
 
-      {/* Search and Filters panel */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-[#121829] border border-zinc-800 p-4 rounded-lg shadow-sm">
+      {/* Search and Filters panel - Borderless */}
+      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-[#121829] border-none p-4 rounded-lg shadow-lg">
         
         {/* Search Input */}
-        <div className="flex-1 flex items-center gap-2.5 px-3 py-2 bg-[#070b16] border border-zinc-800 focus-within:border-[#615fff]/60 rounded-lg transition-colors">
+        <div className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 bg-[#070b16] border-none focus-within:ring-2 focus-within:ring-[#615fff]/40 rounded-lg transition-all">
           <FiSearch className="h-4.5 w-4.5 text-zinc-500" />
           <input
             type="text"
@@ -227,7 +227,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
         </div>
 
         {/* Tab Filters */}
-        <div className="flex bg-[#070b16] border border-zinc-850 p-1 rounded-lg">
+        <div className="flex bg-[#070b16] border-none p-1 rounded-lg">
           {(['all', 'published', 'draft'] as const).map((tab) => (
             <button
               key={tab}
@@ -245,8 +245,8 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
 
       </div>
 
-      {/* Courses Catalog Table */}
-      <div className="bg-[#121829] border border-zinc-800 rounded-lg shadow-sm overflow-hidden">
+      {/* Courses Catalog Table - Borderless */}
+      <div className="bg-[#121829] border-none rounded-lg shadow-lg overflow-hidden">
         {filteredCourses.length === 0 ? (
           <div className="p-16 text-center text-zinc-500 font-semibold text-base space-y-4">
             <FiBookOpen className="h-10 w-10 text-zinc-700 mx-auto" />
@@ -256,7 +256,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-base">
               <thead>
-                <tr className="bg-[#0b0e17] border-b border-zinc-800/40 text-zinc-450 font-bold text-sm uppercase tracking-wider">
+                <tr className="bg-[#070b16]/50 border-b border-zinc-800/40 text-zinc-400 font-bold text-sm uppercase tracking-wider">
                   <th className="px-6 py-4">Course Preview</th>
                   <th className="px-6 py-4">Price</th>
                   <th className="px-6 py-4">Category</th>
@@ -265,14 +265,14 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850">
+              <tbody className="divide-y divide-zinc-800/10">
                 {filteredCourses.map((c) => (
-                  <tr key={c.id} className="hover:bg-[#152347]/10 transition-colors">
+                  <tr key={c.id} className="hover:bg-[#070b16]/30 transition-colors">
                     {/* Preview details */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         {/* Thumbnail */}
-                        <div className="h-12 w-20 rounded-md overflow-hidden bg-[#070b16] border border-zinc-800 shrink-0 relative flex items-center justify-center">
+                        <div className="h-12 w-20 rounded-md overflow-hidden bg-[#070b16] border-none shrink-0 relative flex items-center justify-center shadow-sm">
                           {c.thumbnail ? (
                             <img src={c.thumbnail} alt={c.title} className="w-full h-full object-cover" />
                           ) : (
@@ -307,10 +307,10 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
                     <td className="px-4 py-4 text-center">
                       <button
                         onClick={() => handleToggleStatus(c.id, c.status)}
-                        className={`inline-flex px-3 py-1 rounded-full text-xs font-bold capitalize transition-all duration-200 cursor-pointer ${
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-bold capitalize transition-all duration-200 cursor-pointer border-none ${
                           c.status === 'published'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'bg-zinc-800 text-zinc-400 border border-zinc-700/80 hover:bg-zinc-750'
+                            ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-750'
                         }`}
                       >
                         {c.status}
@@ -325,7 +325,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
                         <Link
                           href={`/admin/lessons?courseId=${c.id}`}
                           title="Manage Syllabus Lessons"
-                          className="p-2 rounded bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white transition-colors"
+                          className="p-2 rounded bg-zinc-850 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors border-none"
                         >
                           <FiList className="h-4.5 w-4.5" />
                         </Link>
@@ -334,7 +334,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
                         <Link
                           href={`/admin/courses/${c.id}/edit`}
                           title="Edit Course Parameters"
-                          className="p-2 rounded bg-[#615fff]/10 hover:bg-[#615fff] border border-[#615fff]/20 hover:border-[#615fff] text-[#615fff] hover:text-white transition-all duration-200"
+                          className="p-2 rounded bg-[#615fff]/10 hover:bg-[#615fff] text-[#615fff] hover:text-white transition-all duration-200 border-none"
                         >
                           <FiEdit className="h-4.5 w-4.5" />
                         </Link>
@@ -344,7 +344,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
                           <button
                             onClick={() => handleDeleteCourse(c.id, c.title)}
                             title="Delete Course Permanently"
-                            className="p-2 rounded bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 hover:border-rose-500 text-rose-400 hover:text-white transition-all duration-200 cursor-pointer"
+                            className="p-2 rounded bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white transition-all duration-200 cursor-pointer border-none"
                           >
                             <FiTrash2 className="h-4.5 w-4.5" />
                           </button>

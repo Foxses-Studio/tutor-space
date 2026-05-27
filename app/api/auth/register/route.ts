@@ -11,7 +11,7 @@ import path from 'path'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, password, phone, profilePic, role, permissions } = body
+    const { name, email, password, phone, profilePic, role, permissions, designation } = body
 
     // 1. Basic validation
     if (!name || !email || !password) {
@@ -75,9 +75,11 @@ export async function POST(request: Request) {
     }
 
 
-    // 4. Process base64 profile picture upload if provided
+    // 4. Process profile picture if provided (either pre-existing ID string or base64 object)
     let profilePicId: string | undefined = undefined
-    if (profilePic && typeof profilePic === 'object' && profilePic.base64) {
+    if (profilePic && typeof profilePic === 'string') {
+      profilePicId = profilePic
+    } else if (profilePic && typeof profilePic === 'object' && profilePic.base64) {
       try {
         const base64Data = profilePic.base64.split(';base64,').pop() || profilePic.base64
         const buffer = Buffer.from(base64Data, 'base64')
@@ -130,6 +132,7 @@ export async function POST(request: Request) {
         phone: phone || undefined,
         profilePic: profilePicId || undefined,
         role: targetRole,
+        designation: designation || undefined,
         permissions: permissions || [],
       })
 

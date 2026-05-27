@@ -30,15 +30,19 @@ export default async function BlogsPage() {
     .sort({ createdAt: -1 })
     .lean()
 
-  const blogs = (blogsDocs as any[]).map(b => ({
-    id: b._id.toString(),
-    title: b.title,
-    content: typeof b.content === 'string' ? b.content : JSON.stringify(b.content),
-    authorName: b.author?.name || 'Unknown',
-    coverImageUrl: b.coverImage?.url || '',
-    publishedDate: b.publishedDate ? b.publishedDate.toISOString() : '',
-    tags: b.tags || [],
-  }))
+  const blogs = JSON.parse(JSON.stringify(
+    (blogsDocs as any[]).map(b => ({
+      id: b._id.toString(),
+      title: b.title || '',
+      content: typeof b.content === 'string' ? b.content : JSON.stringify(b.content || {}),
+      authorName: b.author?.name || 'Unknown',
+      coverImageUrl: b.coverImage?.url || '',
+      publishedDate: b.publishedDate ? b.publishedDate.toISOString() : '',
+      tags: (b.tags || []).map((t: any) => ({
+        tag: typeof t === 'string' ? t : (t?.tag || '')
+      })),
+    }))
+  ))
 
   return (
     <div className="min-h-screen bg-[#070b16] text-white">

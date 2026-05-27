@@ -4,23 +4,25 @@ import { Course } from '@/lib/db/models/Course'
 import { Category } from '@/lib/db/models/Category'
 import { Review } from '@/lib/db/models/Review'
 import { Enrollment } from '@/lib/db/models/Enrollment'
-import { FAQ } from '@/lib/db/models/FAQ'
+import { Blog } from '@/lib/db/models/Blog'
+import { User } from '@/lib/db/models/User'
 import Hero from '@/components/Hero'
 import Marquee from '@/components/Marquee'
 import Categories from '@/components/Categories'
 import type { CategoryItem } from '@/components/Categories'
+import Features from '@/components/Features'
 import Courses from '@/components/Courses'
 import Reviews from '@/components/Reviews'
-import FAQComponent from '@/components/FAQ'
+import BlogSection from '@/components/BlogSection'
 import CTASection from '@/components/CTASection'
 import type { CourseDoc, CategoryDoc } from '@/components/Courses'
 import type { ReviewDoc } from '@/components/Reviews'
-import type { FAQDoc } from '@/components/FAQ'
+import type { BlogDoc } from '@/components/BlogSection'
 
 export default async function Home() {
   await connectToDatabase()
 
-  const [coursesDocs, categoriesDocs, reviewsDocs, faqsDocs] = await Promise.all([
+  const [coursesDocs, categoriesDocs, reviewsDocs, blogsDocs] = await Promise.all([
     Course.find({ status: 'published' })
       .sort({ createdAt: -1 })
       .limit(12)
@@ -40,10 +42,16 @@ export default async function Home() {
       })
       .populate('course')
       .lean(),
-    FAQ.find({ isActive: true })
-      .sort({ order: 1 })
-      .limit(20)
-      .lean(),
+    Blog.find()
+      .populate({
+        path: 'author',
+        select: 'name profilePic',
+        populate: { path: 'profilePic', select: 'url' }
+      })
+      .populate({ path: 'coverImage', select: 'url alt' })
+      .sort({ publishedDate: -1, createdAt: -1 })
+      .limit(3)
+      .lean()
   ])
 
   const courseIds = coursesDocs.map((c: any) => c._id)
@@ -127,13 +135,22 @@ export default async function Home() {
     };
   })
 
-  const faqs: FAQDoc[] = faqsDocs.map((doc: any) => ({
-    id: doc._id.toString(),
-    question: doc.question,
-    answer: doc.answer,
-    order: doc.order,
-    isActive: doc.isActive,
-  }))
+  const blogs: BlogDoc[] = JSON.parse(JSON.stringify(
+    (blogsDocs as any[]).map(b => ({
+      id: b._id.toString(),
+      title: b.title || '',
+      content: typeof b.content === 'string' ? b.content : JSON.stringify(b.content || {}),
+      authorName: b.author?.name || 'Unknown',
+      authorProfilePicUrl: b.author?.profilePic?.url || '',
+      coverImageUrl: b.coverImage?.url || '',
+      publishedDate: b.publishedDate ? b.publishedDate.toISOString() : '',
+      tags: (b.tags || []).map((t: any) => ({
+        tag: typeof t === 'string' ? t : (t?.tag || '')
+      })),
+    }))
+  ))
+
+
 
   return (
     <div className="min-h-screen bg-[#ffffff] text-[#0A163A] font-sans relative overflow-hidden flex flex-col">
@@ -146,6 +163,9 @@ export default async function Home() {
       {/* 2nd Section: Course Categories Grid - real DB data */}
       <Categories categories={categories} />
 
+      {/* Features Section: Empower Your Learning Journey */}
+      <Features />
+
       {/* 3rd Section: Course Showcase & Filter */}
       <Courses
         initialCourses={courses}
@@ -155,8 +175,8 @@ export default async function Home() {
       {/* 4th Section: Student Testimonials Carousel */}
       <Reviews reviews={reviews} />
 
-      {/* 5th Section: FAQ Accordion */}
-      <FAQComponent faqs={faqs} />
+      {/* 5.5th Section: Blog Posts */}
+      <BlogSection blogs={blogs} />
 
       {/* 6th Section: CTA with floating learner avatars */}
       <CTASection />

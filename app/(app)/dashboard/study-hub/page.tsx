@@ -53,23 +53,26 @@ export default function StudyHubPage() {
           }
         }
 
-        // Calculate actual daily login streaks from localStorage
-        const savedHistory = localStorage.getItem('ts-login-history')
-        let history: string[] = savedHistory ? JSON.parse(savedHistory) : []
-        setLoginDates(history)
+        // Fetch real login streak from DB API
+        const progressRes = await fetch('/api/progress')
+        if (progressRes.ok) {
+          const progressData = await progressRes.json()
+          const loginDatesFromAPI: string[] = progressData.loginDates || []
+          setLoginDates(loginDatesFromAPI)
 
-        let streak = 0
-        let checkDate = new Date()
-        while (true) {
-          const checkStr = checkDate.toISOString().split('T')[0]
-          if (history.includes(checkStr)) {
-            streak++
-            checkDate.setDate(checkDate.getDate() - 1)
-          } else {
-            break
+          let streak = 0
+          let checkDate = new Date()
+          while (true) {
+            const checkStr = checkDate.toISOString().split('T')[0]
+            if (loginDatesFromAPI.includes(checkStr)) {
+              streak++
+              checkDate.setDate(checkDate.getDate() - 1)
+            } else {
+              break
+            }
           }
+          setStreakCount(streak || 1)
         }
-        setStreakCount(streak || 1)
 
       } catch (error) {
         console.error('Error fetching study hub data:', error)

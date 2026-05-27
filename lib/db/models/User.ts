@@ -7,6 +7,7 @@ export interface IUser extends Document {
   phone?: string
   profilePic?: mongoose.Types.ObjectId | string
   role: 'admin' | 'staff' | 'instructor'
+  designation?: string
   resetPasswordToken?: string
   resetPasswordExpiration?: Date
   permissions?: string[]
@@ -20,6 +21,7 @@ const UserSchema = new Schema<IUser>(
     phone: { type: String },
     profilePic: { type: Schema.Types.ObjectId, ref: 'Media' },
     role: { type: String, enum: ['admin', 'staff', 'instructor'], default: 'staff', required: true },
+    designation: { type: String },
     resetPasswordToken: { type: String },
     resetPasswordExpiration: { type: Date },
     permissions: { type: [String], default: [] },

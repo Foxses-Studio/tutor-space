@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { FiChevronLeft, FiChevronRight, FiStar } from 'react-icons/fi'
+import React from 'react'
+import { FiStar } from 'react-icons/fi'
 
 // ─── Exported Types ──────────────────────────────────────────────────────────
 
@@ -31,8 +30,6 @@ interface ReviewsProps {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const GAP = 24 // px — must match gap-6
-
 function getStudentName(student: ReviewDoc['student']): string {
   if (!student || typeof student === 'string') return 'Anonymous'
   return student.name
@@ -46,7 +43,12 @@ function getProfilePicUrl(student: ReviewDoc['student']): string | null {
 }
 
 function getInitials(name: string): string {
-  return name.split(' ').map((n) => n[0]).join('').toUpperCase().substring(0, 2)
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -58,7 +60,9 @@ function StarDisplay({ rating }: { rating: string }) {
       {[1, 2, 3, 4, 5].map((s) => (
         <FiStar
           key={s}
-          className={`h-4 w-4 ${s <= count ? 'text-amber-400 fill-amber-400' : 'text-zinc-300'}`}
+          className={`h-4.5 w-4.5 ${
+            s <= count ? 'text-amber-400 fill-amber-400' : 'text-zinc-200'
+          }`}
         />
       ))}
     </div>
@@ -78,7 +82,7 @@ function ReviewAvatar({ student }: { student: ReviewDoc['student'] }) {
     )
   }
   return (
-    <div className="h-12 w-12 rounded-full bg-[#615fff]/15 border-2 border-white shadow-sm flex items-center justify-center font-bold text-base text-[#615fff] shrink-0">
+    <div className="h-12 w-12 rounded-full bg-[#615fff]/15 border-2 border-white shadow-sm flex items-center justify-center font-bold text-base text-[#615fff] shrink-0 select-none">
       {getInitials(name)}
     </div>
   )
@@ -86,27 +90,25 @@ function ReviewAvatar({ student }: { student: ReviewDoc['student'] }) {
 
 function ReviewCard({ review }: { review: ReviewDoc }) {
   return (
-    <div className="relative bg-[#f5f4ff] border border-[#615fff]/10 rounded-lg p-6 flex flex-col gap-5 h-full overflow-hidden">
-      {/* Decorative quote */}
-      <span className="absolute top-3 right-5 text-8xl font-bold text-[#615fff]/10 leading-none select-none font-display pointer-events-none">
-        ❝
-      </span>
-
+    <div className="relative bg-white border border-zinc-100 rounded-lg p-6 flex flex-col gap-4 shadow-sm hover:shadow-md hover:border-[#615fff]/20 transition-all">
+      {/* Star rating */}
       <StarDisplay rating={review.rating} />
 
+      {/* Testimonial Quote */}
       <p className="text-base font-semibold text-zinc-700 leading-relaxed flex-1 relative z-10">
         &ldquo;{review.comment}&rdquo;
       </p>
 
-      <div className="border-t border-[#615fff]/10" />
+      <div className="border-t border-zinc-100" />
 
+      {/* Reviewer Meta info */}
       <div className="flex items-center gap-3">
         <ReviewAvatar student={review.student} />
         <div className="min-w-0">
-          <p className="text-base font-bold text-zinc-800 leading-tight truncate">
+          <p className="text-base font-bold text-[#0A163A] leading-tight truncate">
             {getStudentName(review.student)}
           </p>
-          <p className="text-base font-semibold text-zinc-400 mt-0.5">Verified Student</p>
+          <p className="text-sm font-semibold text-zinc-400 mt-0.5">Verified Student</p>
         </div>
       </div>
     </div>
@@ -116,147 +118,112 @@ function ReviewCard({ review }: { review: ReviewDoc }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Reviews({ reviews }: ReviewsProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [cardWidth, setCardWidth] = useState(0)
-  const [visibleCount, setVisibleCount] = useState(3)
-
-  // Measure container on mount + resize to compute exact card width
-  useEffect(() => {
-    const measure = () => {
-      if (!containerRef.current) return
-      const cw = containerRef.current.clientWidth
-      const vc = cw >= 1024 ? 3 : cw >= 640 ? 2 : 1
-      setVisibleCount(vc)
-      setCardWidth((cw - (vc - 1) * GAP) / vc)
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    if (containerRef.current) ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
-
   if (reviews.length === 0) return null
 
-  const maxIndex = Math.max(0, reviews.length - visibleCount)
-  const translateX = cardWidth > 0 ? -(currentIndex * (cardWidth + GAP)) : 0
+  // Distribute reviews dynamically across columns.
+  // We duplicate arrays dynamically to create seamless infinite scrolling.
+  const getColumnItems = (colIndex: number) => {
+    let baseItems = [...reviews]
+    if (reviews.length >= 6) {
+      baseItems = reviews.filter((_, idx) => idx % 3 === colIndex)
+    } else {
+      // Offset by colIndex to make each column unique
+      baseItems = [...reviews.slice(colIndex), ...reviews.slice(0, colIndex)]
+    }
 
-  const goNext = () => setCurrentIndex((i) => Math.min(i + 1, maxIndex))
-  const goPrev = () => setCurrentIndex((i) => Math.max(i - 1, 0))
+    // Ensure there are enough items for smooth vertical marquee
+    let list = [...baseItems]
+    while (list.length < 5) {
+      list = [...list, ...baseItems]
+    }
+
+    // Duplicate list once to allow mathematically perfect loop
+    return [...list, ...list]
+  }
+
+  const col1 = getColumnItems(0)
+  const col2 = getColumnItems(1)
+  const col3 = getColumnItems(2)
 
   return (
-    <section className="py-20 md:py-28 px-6 bg-white border-t border-zinc-100 relative overflow-hidden">
-      {/* Ambient glow */}
+    <section className="py-20 md:py-28 px-6 bg-[#fcfdfe] border-t border-zinc-100 relative overflow-hidden">
+      {/* CSS Keyframe injections for infinite continuous scroll */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes marqueeUp {
+              0% { transform: translateY(0); }
+              100% { transform: translateY(-50%); }
+            }
+            @keyframes marqueeDown {
+              0% { transform: translateY(-50%); }
+              100% { transform: translateY(0); }
+            }
+            .animate-marquee-up {
+              animation: marqueeUp 38s linear infinite;
+            }
+            .animate-marquee-down {
+              animation: marqueeDown 38s linear infinite;
+            }
+            .animate-marquee-up:hover,
+            .animate-marquee-down:hover {
+              animation-play-state: paused;
+            }
+          `,
+        }}
+      />
+
+      {/* Ambient background glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#615fff]/3 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="container mx-auto relative z-10">
-
-        {/* Heading */}
-        <div className="text-center mb-14">
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-base font-bold text-[#615fff] mb-3 tracking-wide uppercase"
-          >
-            Student Testimonials
-          </motion.p>
-          <motion.h2
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold font-sans text-zinc-900 tracking-tight leading-[1.2]"
-          >
-            What Learners Are{' '}
-            <span className="text-[#615fff]">Saying</span>{' '}
-            <br className="hidden sm:block" />
-            About Tutor Space
-          </motion.h2>
+        {/* Title / Heading Section */}
+        <div className="text-center mb-16">
+          <p className="text-base font-bold text-[#615fff] mb-3 tracking-wide uppercase">
+            Hear from our students
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold font-sans text-[#0A163A] tracking-tight leading-[1.2] max-w-2xl mx-auto">
+            Hear directly from our learners! Discover their experiences and insights as they navigate their educational.
+          </h2>
         </div>
 
-        {/* Carousel track */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
-        >
-          <div className="overflow-hidden" ref={containerRef}>
-            <motion.div
-              className="flex"
-              style={{ gap: `${GAP}px` }}
-              animate={{ x: translateX }}
-              transition={{ type: 'spring', stiffness: 320, damping: 32, mass: 0.9 }}
-            >
-              {reviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="shrink-0"
-                  style={{
-                    width: cardWidth > 0
-                      ? `${cardWidth}px`
-                      : `calc(${100 / visibleCount}% - ${(GAP * (visibleCount - 1)) / visibleCount}px)`,
-                  }}
-                >
-                  <ReviewCard review={review} />
-                </div>
-              ))}
-            </motion.div>
+        {/* 3-Column Marquee Grid */}
+        <div className="relative h-[680px] overflow-hidden rounded-lg">
+          {/* Top Fade Gradient */}
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#fcfdfe] to-transparent z-20 pointer-events-none" />
+
+          {/* Bottom Fade Gradient */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#fcfdfe] to-transparent z-20 pointer-events-none" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+            {/* Column 1: Scrolls Up */}
+            <div className="relative h-full overflow-hidden">
+              <div className="flex flex-col gap-6 animate-marquee-up">
+                {col1.map((review, idx) => (
+                  <ReviewCard key={`col1-${review.id}-${idx}`} review={review} />
+                ))}
+              </div>
+            </div>
+
+            {/* Column 2: Scrolls Down */}
+            <div className="relative h-full overflow-hidden hidden md:block">
+              <div className="flex flex-col gap-6 animate-marquee-down">
+                {col2.map((review, idx) => (
+                  <ReviewCard key={`col2-${review.id}-${idx}`} review={review} />
+                ))}
+              </div>
+            </div>
+
+            {/* Column 3: Scrolls Up */}
+            <div className="relative h-full overflow-hidden hidden lg:block">
+              <div className="flex flex-col gap-6 animate-marquee-up">
+                {col3.map((review, idx) => (
+                  <ReviewCard key={`col3-${review.id}-${idx}`} review={review} />
+                ))}
+              </div>
+            </div>
           </div>
-        </motion.div>
-
-        {/* Navigation */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.5, delay: 0.25, ease: 'easeOut' }}
-          className="flex items-center justify-center gap-5 mt-10"
-        >
-          {/* Prev */}
-          <button
-            onClick={goPrev}
-            disabled={currentIndex === 0}
-            className={`h-11 w-11 rounded-full border-2 flex items-center justify-center transition-all duration-300 cursor-pointer ${
-              currentIndex === 0
-                ? 'border-zinc-200 text-zinc-300 cursor-not-allowed'
-                : 'border-[#615fff] text-[#615fff] hover:bg-[#615fff] hover:text-white'
-            }`}
-          >
-            <FiChevronLeft className="h-5 w-5" />
-          </button>
-
-          {/* Dot indicators — one per card */}
-          <div className="flex items-center gap-2">
-            {reviews.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentIndex(Math.min(i, maxIndex))}
-                className={`rounded-full transition-all duration-300 cursor-pointer ${
-                  i === currentIndex
-                    ? 'h-2.5 w-6 bg-[#615fff]'
-                    : 'h-2.5 w-2.5 bg-zinc-200 hover:bg-[#615fff]/40'
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Next */}
-          <button
-            onClick={goNext}
-            disabled={currentIndex === maxIndex}
-            className={`h-11 w-11 rounded-full border-2 flex items-center justify-center transition-all duration-300 cursor-pointer ${
-              currentIndex === maxIndex
-                ? 'border-zinc-200 text-zinc-300 cursor-not-allowed'
-                : 'border-[#615fff] text-[#615fff] hover:bg-[#615fff] hover:text-white'
-            }`}
-          >
-            <FiChevronRight className="h-5 w-5" />
-          </button>
-        </motion.div>
-
+        </div>
       </div>
     </section>
   )

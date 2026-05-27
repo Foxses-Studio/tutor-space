@@ -2,7 +2,17 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FiUserPlus, FiSearch, FiMail, FiPhone, FiTrash2, FiUser, FiCalendar, FiFilter } from 'react-icons/fi'
+import {
+  FiUserPlus,
+  FiSearch,
+  FiMail,
+  FiPhone,
+  FiTrash2,
+  FiUser,
+  FiCalendar,
+  FiFilter,
+  FiEdit2
+} from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface StaffMember {
@@ -11,8 +21,11 @@ interface StaffMember {
   email: string
   phone?: string
   role: 'admin' | 'staff' | 'instructor'
+  designation?: string
   createdAt: string
+  permissions?: string[]
   profilePic?: {
+    id?: string
     url: string
   }
 }
@@ -26,26 +39,35 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'staff' | 'instructor'>('all')
 
-  const handleDeleteStaff = async (id: string, name: string) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: `Do you want to delete ${name}'s faculty account? This cannot be undone.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete!',
-      cancelButtonText: 'Cancel',
-      background: '#121829',
-      color: '#ffffff',
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3f3f46',
-      customClass: {
-        popup: 'rounded-lg border border-zinc-800',
-        confirmButton: 'rounded-lg text-base font-bold px-6 py-2.5 bg-rose-600',
-        cancelButton: 'rounded-lg text-base font-bold px-6 py-2.5',
-      },
-    })
+  // Pop-up free inline alert and confirm states
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-    if (!result.isConfirmed) return
+  // Listen to success query parameter
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const successType = params.get('success')
+    if (successType === 'registered') {
+      setSuccessMsg('Faculty member account has been registered successfully!')
+    } else if (successType === 'updated') {
+      setSuccessMsg('Faculty member profile details updated successfully!')
+    } else if (successType === 'deleted') {
+      setSuccessMsg('Faculty member account has been deleted.')
+    }
+
+    if (successType) {
+      // Clear URL params without full page reload
+      window.history.replaceState({}, document.title, window.location.pathname)
+      const timer = setTimeout(() => setSuccessMsg(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  const executeDeleteStaff = async (id: string, name: string) => {
+    setConfirmDeleteId(null)
+    setSuccessMsg(null)
+    setErrorMsg(null)
 
     try {
       const res = await fetch(`/api/admin/staff/${id}`, {
@@ -58,27 +80,12 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
         throw new Error(data.error || 'Failed to delete staff member.')
       }
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Deleted!',
-        text: `${name}'s account has been successfully deleted.`,
-        background: '#121829',
-        color: '#ffffff',
-        confirmButtonColor: '#615fff',
-        timer: 1500,
-        showConfirmButton: false,
-      })
-
+      setSuccessMsg(`${name}'s account has been successfully deleted.`)
+      setTimeout(() => setSuccessMsg(null), 4000)
       router.refresh()
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: err.message || 'Could not delete staff member.',
-        background: '#121829',
-        color: '#ffffff',
-        confirmButtonColor: '#615fff',
-      })
+      setErrorMsg(err.message || 'Could not delete staff member.')
+      setTimeout(() => setErrorMsg(null), 5000)
     }
   }
 
@@ -93,31 +100,45 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
   })
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filters Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#121829] border border-zinc-800 rounded-lg p-4">
+    <div className="space-y-6 select-text">
+      
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 rounded-lg font-bold text-base animate-fadeIn">
+          {successMsg}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-450 rounded-lg font-bold text-base animate-fadeIn">
+          {errorMsg}
+        </div>
+      )}
+      
+      {/* Search and Filters Bar - Borderless */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#18181b] border-none rounded-lg p-4 shadow-md">
+        
         {/* Search */}
         <div className="relative flex-1 max-w-md">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-550 h-5 w-5" />
+          <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-450 h-5 w-5" />
           <input
             type="text"
             placeholder="Search by name, email, or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#070b16] border border-zinc-850 focus:border-[#615fff]/70 text-white rounded-lg pl-10 pr-4 py-2.5 text-base font-semibold outline-none transition-colors"
+            className="w-full bg-[#242427] border-none focus:ring-2 focus:ring-[#615fff]/40 text-white rounded-lg pl-11 pr-4 py-2.5 text-base font-semibold outline-none transition-all shadow-inner"
           />
         </div>
 
         {/* Filters and CTA */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#070b16] border border-zinc-850 p-1.5 rounded-lg">
-            <FiFilter className="text-zinc-500 h-4.5 w-4.5 ml-2" />
+          <div className="flex items-center gap-2 bg-[#242427] p-1.5 rounded-lg shadow-inner">
+            <FiFilter className="text-zinc-550 h-4.5 w-4.5 ml-2" />
             <div className="flex gap-1">
               {(['all', 'admin', 'instructor', 'staff'] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => setRoleFilter(r)}
-                  className={`px-3 py-1 rounded text-sm font-bold capitalize select-none cursor-pointer transition-all ${
+                  className={`px-3.5 py-1.5 rounded text-sm font-bold capitalize select-none cursor-pointer transition-all border-none ${
                     roleFilter === r
                       ? 'bg-[#615fff] text-white shadow-sm'
                       : 'text-zinc-400 hover:text-white'
@@ -131,26 +152,26 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
 
           <button
             onClick={() => router.push('/admin/staff-register/new')}
-            className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg transition-colors cursor-pointer select-none"
+            className="inline-flex items-center gap-2 px-4.5 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg transition-all cursor-pointer select-none border-none shadow-lg shadow-[#615fff]/15"
           >
             <FiUserPlus className="h-5 w-5" />
-            Register Faculty
+            <span>Register Faculty</span>
           </button>
         </div>
       </div>
 
-      {/* Faculty and Staff Table */}
-      <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden">
+      {/* Faculty and Staff Table - Borderless */}
+      <div className="bg-[#18181b] border-none rounded-lg overflow-hidden shadow-lg">
         {filteredStaff.length === 0 ? (
-          <div className="text-center py-12 space-y-2">
-            <FiUser className="h-12 w-12 text-zinc-700 mx-auto" />
-            <p className="text-base font-semibold text-zinc-450">No faculty or staff members match the query.</p>
+          <div className="text-center py-16 space-y-2">
+            <FiUser className="h-12 w-12 text-zinc-600 mx-auto" />
+            <p className="text-base font-semibold text-zinc-400">No faculty or staff members match the query.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-base font-sans border-collapse">
               <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 font-bold bg-[#0e1322]/50 text-sm tracking-wider uppercase">
+                <tr className="border-b border-zinc-800/40 text-zinc-450 font-bold bg-[#141416]/50 text-sm tracking-wider uppercase">
                   <th className="px-6 py-4">Faculty Member</th>
                   <th className="px-6 py-4">Privilege Role</th>
                   <th className="px-6 py-4">Contact Details</th>
@@ -158,22 +179,26 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60 font-semibold text-zinc-200">
+              <tbody className="divide-y divide-zinc-800/20 font-semibold text-zinc-350">
                 {filteredStaff.map((member) => (
-                  <tr key={member.id} className="hover:bg-[#070b16]/30 transition-colors">
+                  <tr key={member.id} className="hover:bg-[#242427]/30 transition-colors">
+                    
                     {/* Member Column */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
                         {member.profilePic?.url ? (
-                          <img src={member.profilePic.url} alt={member.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
+                          <img src={member.profilePic.url} alt={member.name} className="h-10 w-10 rounded-full object-cover shrink-0 shadow-sm" />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-[#615fff]/15 flex items-center justify-center font-bold text-base text-[#615fff] uppercase shrink-0 select-none">
+                          <div className="h-10 w-10 rounded-full bg-[#615fff]/15 flex items-center justify-center font-bold text-base text-[#615fff] uppercase shrink-0 select-none shadow-sm">
                             {member.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                           </div>
                         )}
                         <div>
-                          <p className="text-white font-bold text-base">{member.name}</p>
-                          <p className="text-zinc-550 text-sm font-semibold mt-0.5">ID: {member.id}</p>
+                          <p className="text-white font-bold text-base leading-tight">{member.name}</p>
+                          {member.designation && (
+                            <p className="text-[#a5b4fc] text-xs font-bold mt-1 tracking-wide">{member.designation}</p>
+                          )}
+                          <p className="text-zinc-500 text-[10px] font-semibold mt-1">ID: {member.id}</p>
                         </div>
                       </div>
                     </td>
@@ -182,10 +207,10 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2.5 py-1 rounded text-xs font-bold capitalize select-none ${
                         member.role === 'admin'
-                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/20'
+                          ? 'bg-rose-500/10 text-rose-400 border-none'
                           : member.role === 'instructor'
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-zinc-850 text-zinc-350 border border-zinc-800'
+                          ? 'bg-emerald-500/10 text-emerald-400 border-none'
+                          : 'bg-zinc-850 text-zinc-300 border-none'
                       }`}>
                         {member.role}
                       </span>
@@ -200,7 +225,7 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
                         </div>
                         {member.phone && (
                           <div className="flex items-center gap-1.5 text-zinc-500 text-sm">
-                            <FiPhone className="h-3.5 w-3.5 text-zinc-650 shrink-0" />
+                            <FiPhone className="h-3.5 w-3.5 text-zinc-600 shrink-0" />
                             <span>{member.phone}</span>
                           </div>
                         )}
@@ -224,14 +249,41 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
                     </td>
 
                     {/* Actions */}
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => handleDeleteStaff(member.id, member.name)}
-                        className="p-2 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer border border-transparent hover:border-rose-500/20 inline-flex items-center"
-                        title="Delete Account"
-                      >
-                        <FiTrash2 className="h-5 w-5" />
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap text-right space-x-1.5 min-w-[140px]">
+                      {confirmDeleteId === member.id ? (
+                        <div className="inline-flex items-center gap-1.5 bg-[#242427] p-1 rounded-lg border border-rose-500/25">
+                          <span className="text-xs font-bold text-rose-400 px-1">Confirm?</span>
+                          <button
+                            onClick={() => executeDeleteStaff(member.id, member.name)}
+                            className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-xs font-bold transition-colors cursor-pointer border-none"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded text-xs font-bold transition-colors cursor-pointer border-none"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => router.push(`/admin/staff-register/${member.id}/edit`)}
+                            className="p-2 text-zinc-500 hover:text-[#615fff] hover:bg-[#615fff]/10 rounded-lg transition-all cursor-pointer border-none inline-flex items-center"
+                            title="Edit Profile"
+                          >
+                            <FiEdit2 className="h-4.5 w-4.5" />
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(member.id)}
+                            className="p-2 text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer border-none inline-flex items-center"
+                            title="Delete Account"
+                          >
+                            <FiTrash2 className="h-4.5 w-4.5" />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -240,6 +292,7 @@ export default function StaffListPageClient({ initialStaff }: StaffListPageClien
           </div>
         )}
       </div>
+
     </div>
   )
 }

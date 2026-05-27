@@ -10,6 +10,7 @@ export interface IEnrollment extends Document {
   billingPhone?: string
   billingAddress?: string
   couponCode?: string
+  completedLessons: string[] // Array of lesson IDs completed by the student
   createdAt: Date
   updatedAt: Date
 }
@@ -25,6 +26,7 @@ const EnrollmentSchema = new Schema<IEnrollment>(
     billingPhone: String,
     billingAddress: String,
     couponCode: String,
+    completedLessons: { type: [String], default: [] },
   },
   { collection: 'enrollments', timestamps: true }
 )

@@ -245,7 +245,7 @@ export default function Categories({ categories }: CategoriesProps) {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight leading-[1.2] max-w-4xl mx-auto"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0A163A] tracking-tight leading-[1.2] max-w-4xl mx-auto"
           >
             Explore diverse learning paths within our course{' '}
             <span className="relative inline-block text-[#615fff] whitespace-nowrap">
@@ -277,7 +277,7 @@ export default function Categories({ categories }: CategoriesProps) {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
-            className="text-base sm:text-lg font-semibold text-zinc-500 max-w-2xl mx-auto pt-2 leading-relaxed"
+            className="text-base sm:text-lg font-semibold text-[#4F5B7C] max-w-2xl mx-auto pt-2 leading-relaxed"
           >
             Our carefully curated course categories are designed to help you explore different fields,
             gain new skills, and advance your knowledge.
@@ -299,7 +299,7 @@ export default function Categories({ categories }: CategoriesProps) {
               <motion.div key={cat.id} variants={cardVariants} className="h-full">
                 <Link
                   href={`/courses?category=${cat.slug}`}
-                  className="bg-white rounded-lg border border-zinc-200 p-5 md:p-6 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-[#615fff]/30 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer h-full"
+                  className="bg-white rounded-lg border border-[#E2E8F0] p-5 md:p-6 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-[#615fff]/30 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer h-full"
                 >
                   {/* Icon container — light lavender square matching original design */}
                   <div
@@ -309,7 +309,7 @@ export default function Categories({ categories }: CategoriesProps) {
                     <CategoryIconEl iconData={iconData} name={cat.name} fallbackIndex={index} />
                   </div>
 
-                  <span className="text-base font-bold text-zinc-800 group-hover:text-[#615fff] transition-colors leading-snug">
+                  <span className="text-base font-bold text-[#0A163A] group-hover:text-[#615fff] transition-colors leading-snug">
                     {cat.name}
                   </span>
                 </Link>

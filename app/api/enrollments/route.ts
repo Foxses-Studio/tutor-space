@@ -50,14 +50,19 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const studentQueryParam = searchParams.get('student')
 
-    // Determine query target student ID
-    let targetStudentId = userId
-    if (isAdminOrStaff && studentQueryParam) {
-      targetStudentId = studentQueryParam
+    // Determine query target student ID/filter criteria
+    let query: any = { student: userId }
+    if (isAdminOrStaff) {
+      if (studentQueryParam) {
+        query = { student: studentQueryParam }
+      } else {
+        query = {} // Admin/Staff querying all student enrollments
+      }
     }
 
-    // Fetch enrollments with populated course detail structures
-    const docs = await Enrollment.find({ student: targetStudentId })
+    // Fetch enrollments with populated student and course detail structures
+    const docs = await Enrollment.find(query)
+      .populate('student', 'name email')
       .populate({
         path: 'course',
         populate: [

@@ -100,54 +100,39 @@ export default function StudentDashboard() {
           }
         }
 
-        // Load completed lessons from localStorage and calculate actual percentage progress
-        const savedProgress = localStorage.getItem('ts-course-progress')
-        let progressMap: Record<string, number> = savedProgress ? JSON.parse(savedProgress) : {}
-        let updated = false
+        // Fetch real progress data from API (DB-backed, cross-device)
+        const progressRes = await fetch('/api/progress')
+        if (progressRes.ok) {
+          const progressData = await progressRes.json()
+          const completedLessonsMap: Record<string, string[]> = progressData.completedLessons || {}
+          const loginDatesFromAPI: string[] = progressData.loginDates || []
 
-        fetchedEnrollments.forEach((e) => {
-          if (e.course && e.course.id) {
-            const completedList = localStorage.getItem(`ts-completed-lessons-${e.course.id}`)
-            const completedCount = completedList ? JSON.parse(completedList).length : 0
-            const totalLessons = e.course.totalLessons || 1
-            const percentage = Math.min(Math.round((completedCount / totalLessons) * 100), 100)
-            
-            if (progressMap[e.course.id] !== percentage) {
-              progressMap[e.course.id] = percentage
-              updated = true
+          // Build progress percentage map from DB data
+          const progressMap: Record<string, number> = {}
+          fetchedEnrollments.forEach((e) => {
+            if (e.course && e.course.id) {
+              const completedCount = (completedLessonsMap[e.course.id] || []).length
+              const totalLessons = e.course.totalLessons || 1
+              progressMap[e.course.id] = Math.min(Math.round((completedCount / totalLessons) * 100), 100)
+            }
+          })
+          setCourseProgress(progressMap)
+
+          // Set login streak from DB
+          setLoginDates(loginDatesFromAPI)
+          let streak = 0
+          let checkDate = new Date()
+          while (true) {
+            const checkStr = checkDate.toISOString().split('T')[0]
+            if (loginDatesFromAPI.includes(checkStr)) {
+              streak++
+              checkDate.setDate(checkDate.getDate() - 1)
+            } else {
+              break
             }
           }
-        })
-
-        if (updated) {
-          localStorage.setItem('ts-course-progress', JSON.stringify(progressMap))
+          setStreakCount(streak || 1)
         }
-        setCourseProgress(progressMap)
-
-        // Calculate actual daily login streaks
-        const today = new Date().toISOString().split('T')[0]
-        const savedHistory = localStorage.getItem('ts-login-history')
-        let history: string[] = savedHistory ? JSON.parse(savedHistory) : []
-        
-        if (!history.includes(today)) {
-          history.push(today)
-          if (history.length > 30) history = history.slice(-30)
-          localStorage.setItem('ts-login-history', JSON.stringify(history))
-        }
-        setLoginDates(history)
-
-        let streak = 0
-        let checkDate = new Date()
-        while (true) {
-          const checkStr = checkDate.toISOString().split('T')[0]
-          if (history.includes(checkStr)) {
-            streak++
-            checkDate.setDate(checkDate.getDate() - 1)
-          } else {
-            break
-          }
-        }
-        setStreakCount(streak || 1)
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -160,19 +145,7 @@ export default function StudentDashboard() {
   }, [router])
 
   const handleResumeLearning = (courseId: string, slug: string) => {
-    Swal.fire({
-      icon: 'success',
-      title: 'Resuming Course',
-      text: 'Loading curriculum and interactive lesson streams...',
-      timer: 800,
-      showConfirmButton: false,
-      background: '#121829',
-      color: '#ffffff',
-    })
-
-    setTimeout(() => {
-      router.push(`/courses/${slug}/watch`)
-    }, 800)
+    router.push(`/courses/${slug}/watch`)
   }
 
   const handleRegisterSeat = (webinarTitle: string) => {
@@ -184,19 +157,19 @@ export default function StudentDashboard() {
     })
   }
 
-  // Calculate dynamic stats based on actual course progress
+  // Calculate dynamic stats based on actual course progress from DB
   const totalCompletedLessons = enrollments.reduce((sum, e) => {
     if (!e.course || !e.course.id) return sum
-    const completedList = localStorage.getItem(`ts-completed-lessons-${e.course.id}`)
-    const completedCount = completedList ? JSON.parse(completedList).length : 0
-    return sum + completedCount
+    const progress = courseProgress[e.course.id] ?? 0
+    const totalLessons = e.course.totalLessons || 0
+    return sum + Math.round((progress / 100) * totalLessons)
   }, 0)
 
   const totalLearningHours = enrollments.reduce((sum, e) => {
     if (!e.course || !e.course.id) return sum
-    const completedList = localStorage.getItem(`ts-completed-lessons-${e.course.id}`)
-    const completedCount = completedList ? JSON.parse(completedList).length : 0
-    // Estimate 1.25 hours per completed lesson, or fallback to default
+    const progress = courseProgress[e.course.id] ?? 0
+    const totalLessons = e.course.totalLessons || 0
+    const completedCount = Math.round((progress / 100) * totalLessons)
     return sum + Number((completedCount * 1.25).toFixed(1))
   }, 0)
 
@@ -331,14 +304,14 @@ export default function StudentDashboard() {
                 const progress = courseProgress[course.id] ?? 0
 
                 return (
-                  <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
+                  <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-200/50 hover:border-[#615fff]/30 transition-all duration-300 flex flex-col justify-between">
                     <div>
                       {/* Thumbnail with hover zoom */}
                       <div className="h-48 w-full bg-zinc-100 overflow-hidden relative">
                         <img 
                           src={thumbnailSrc} 
                           alt={course.title} 
-                          className="h-full w-full object-cover group-hover:scale-103 transition-transform duration-500" 
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'
                           }}
@@ -372,7 +345,7 @@ export default function StudentDashboard() {
                             {course.instructor && typeof course.instructor === 'object' ? course.instructor.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) : 'EX'}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs font-semibold text-zinc-450 uppercase leading-none">Instructor</p>
+                            <p className="text-xs font-semibold text-zinc-500 uppercase leading-none">Instructor</p>
                             <p className="text-sm font-bold text-zinc-700 truncate mt-0.5">
                               {course.instructor && typeof course.instructor === 'object' ? course.instructor.name : 'Expert Instructor'}
                             </p>
@@ -428,7 +401,7 @@ export default function StudentDashboard() {
                 const isActive = loginDates.includes(day.dateStr)
                 return (
                   <div key={idx} className="flex flex-col items-center gap-1.5">
-                    <span className="text-sm font-bold text-zinc-450">{day.label}</span>
+                    <span className="text-sm font-bold text-zinc-500">{day.label}</span>
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive ? 'bg-orange-500 text-white font-bold' : 'bg-zinc-200 text-zinc-400 font-bold'}`}>
                       {isActive ? '✓' : ''}
                     </div>
@@ -474,7 +447,7 @@ export default function StudentDashboard() {
                           {isUpcoming ? 'Upcoming' : 'Ended'}
                         </span>
                       </div>
-                      <p className="text-sm font-semibold text-zinc-450 truncate">{webinar.courseTitle}</p>
+                      <p className="text-sm font-semibold text-zinc-500 truncate">{webinar.courseTitle}</p>
                       <p className="text-sm font-bold text-[#615fff]">{formattedDate} ({webinar.livePlatform.toUpperCase()})</p>
                       
                       {isUpcoming && webinar.liveUrl && (
@@ -489,7 +462,7 @@ export default function StudentDashboard() {
                             href={webinar.liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-3.5 py-2 rounded-lg bg-zinc-150 hover:bg-zinc-200 text-zinc-700 text-sm font-bold transition-colors"
+                            className="px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-sm font-bold transition-colors"
                           >
                             Join Webinar
                           </a>
