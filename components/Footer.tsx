@@ -16,7 +16,7 @@ const MAIN_PAGES = [
 ]
 
 const QUICK_LINKS = [
-  { label: 'Blogs',   href: '/#blogs',   match: '/blogs' },
+  { label: 'Blogs',   href: '/blogs',   match: '/blogs' },
   { label: 'Career',  href: '/#career',  match: '/career' },
   { label: 'Contact', href: '/contact',  match: '/contact' },
 ]

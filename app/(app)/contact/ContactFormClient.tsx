@@ -192,7 +192,7 @@ export default function ContactFormClient() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Shahriar Rahman"
-                  className="w-full bg-[#f8fafc] border border-zinc-200 focus:border-[#615fff]/60 text-zinc-850 rounded-lg p-3 text-base font-semibold outline-none transition-all"
+                  className="w-full bg-[#f8fafc] border border-[#615fff]/60 focus:border-[#615fff] text-zinc-850 rounded-lg p-3 text-base font-semibold outline-none transition-all"
                 />
               </div>
 

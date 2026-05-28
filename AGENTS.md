@@ -150,6 +150,8 @@ When creating, editing, or refactoring UI components, developers and AI agents M
 2. **Layout & Borders:**
    - **Maximum Border Radius:** The absolute maximum border radius for cards, buttons, input fields, containers, and boxes is **8px** (Tailwind `rounded-lg` or equivalent). Do not use `rounded-xl`, `rounded-2xl`, `rounded-3xl` etc. (except for circular elements like avatars which can use `rounded-full`).
    - **Layout Containers & Max Widths:** Always use the standard Tailwind `container mx-auto` class wrappers for page-level structural margins and maximum boundaries. Using hardcoded max-width utilities (like `max-w-7xl` or custom max widths) on layout containers is strictly prohibited.
+   - **No Black Borders:** Absolutely DO NOT use pure black color borders (`border-black`, `border-zinc-950`, `#000000`, or dark unstyled borders) anywhere in the styling. Use premium soft borders (e.g., `border-zinc-200/80`, `border-slate-100`, or translucent brand colors like `border-[#615fff]/60`) instead.
+   - **Alternating Full-Width Backgrounds:** Every page's sections must utilize alternating or varying full-width background colors (e.g., `#ffffff` vs `#f8fafc` or matching custom brand colors/gradients) just like the home page to maintain a premium, distinct, and dynamic flow. Do not place all sections under a single continuous flat background.
 
 ---
 

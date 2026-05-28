@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import Courses from '@/components/Courses'
 import Reviews from '@/components/Reviews'
 import CTASection from '@/components/CTASection'
@@ -94,44 +95,130 @@ export default function InstructorsPageClient({
   // Slice to guarantee at least 8 elements, or more if DB has more
   const finalInstructors = combined.slice(0, Math.max(8, realInstructors.length))
 
+  // Framer Motion Animation Variants (Spring physics for bouncy premium transitions)
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.05,
+      },
+    },
+  }
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 35 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { type: "spring" as const, stiffness: 85, damping: 15 },
+    },
+  }
+
+  const cardsContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.25,
+      },
+    },
+  }
+
+  const cardAnim = {
+    hidden: { opacity: 0, y: 35, scale: 0.96 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { type: "spring" as const, stiffness: 75, damping: 13 },
+    },
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FAFAFB] via-[#F3F4F6]/40 to-[#ECEEFC]/50 select-text">
       
       {/* ── MENTORS GRID SECTION ── */}
       <section className="container mx-auto px-6 pt-36 pb-24 space-y-12">
         {/* Header Breadcrumbs and Heading Area */}
-        <div className="space-y-3">
+        <motion.div 
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="space-y-3"
+        >
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-1.5 text-base font-semibold text-zinc-500 mb-2 select-none">
-            <Link href="/" className="hover:text-zinc-850 transition-colors">Home</Link>
+          <motion.div 
+            variants={fadeInUp}
+            className="flex items-center gap-1.5 text-base font-semibold text-zinc-500 mb-2 select-none"
+          >
+            <Link href="/" className="hover:text-[#615fff] transition-colors">Home</Link>
             <span className="text-zinc-350 font-normal">/</span>
             <span className="text-[#0A163A]">Mentors</span>
-          </div>
-
-          {/* Heading with Dot Matrix */}
+          </motion.div>
+ 
+          {/* Heading with Dot Matrix and Word Mask Reveal */}
           <div className="flex justify-between items-center gap-10">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#0A163A] tracking-tight leading-tight select-text">
-              Meet Our Industry's<br />
-              <span className="text-[#615fff] bg-gradient-to-r from-[#615fff] to-[#5248e8] bg-clip-text text-transparent">
-                Leading Expert Mentors
-              </span>
-            </h1>
+            <motion.h1 
+              variants={staggerContainer}
+              className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#0A163A] tracking-tight leading-tight select-text flex flex-col items-start gap-1 py-1"
+            >
+              <div className="flex flex-wrap gap-x-2.5 overflow-hidden">
+                {"Meet Our".split(" ").map((word, i) => (
+                  <span key={i} className="relative inline-block overflow-hidden pb-1">
+                    <motion.span variants={fadeInUp} className="inline-block">
+                      {word}
+                    </motion.span>
+                  </span>
+                ))}
+                <span className="relative inline-block overflow-hidden pb-1">
+                  <motion.span variants={fadeInUp} className="inline-block">
+                    Industry's
+                  </motion.span>
+                </span>
+              </div>
+              
+              <div className="flex flex-wrap gap-x-2.5 overflow-hidden text-[#615fff]">
+                {"Leading Expert Mentors".split(" ").map((word, i) => (
+                  <span key={i} className="relative inline-block overflow-hidden pb-1">
+                    <motion.span variants={fadeInUp} className="inline-block">
+                      {word}
+                    </motion.span>
+                  </span>
+                ))}
+              </div>
+            </motion.h1>
             
             {/* Dot Matrix Decoration */}
-            <div className="hidden md:grid grid-cols-6 gap-2.5 shrink-0 pr-6 select-none opacity-80">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0.8, scale: 1 }}
+              transition={{ type: "spring" as const, stiffness: 60, damping: 15, delay: 0.4 }}
+              className="hidden md:grid grid-cols-6 gap-2.5 shrink-0 pr-6 select-none opacity-80"
+            >
               {Array.from({ length: 30 }).map((_, i) => (
                 <div key={i} className="h-1.5 w-1.5 rounded-full bg-zinc-300/80" />
               ))}
-            </div>
+            </motion.div>
           </div>
-        </div>
-
-        {/* Mentor Cards Grid - 4 Columns on Desktop */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+        </motion.div>
+ 
+        {/* Mentor Cards Grid - Staggered fade in up showing one by one */}
+        <motion.div 
+          variants={cardsContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8"
+        >
           {finalInstructors.map((instructor, idx) => (
-            <div
+            <motion.div
+              variants={cardAnim}
+              whileHover={{ y: -6, transition: { duration: 0.25, ease: 'easeOut' as const } }}
               key={idx}
-              className="bg-white rounded-lg p-3 shadow-md shadow-zinc-200/40 hover:shadow-lg hover:shadow-zinc-300/50 hover:-translate-y-1 transition-all duration-300 border border-zinc-100 flex flex-col group"
+              className="bg-white rounded-lg p-3 shadow-md shadow-zinc-200/40 hover:shadow-lg hover:shadow-zinc-300/50 transition-all duration-300 border border-zinc-100 flex flex-col group cursor-pointer"
             >
               {/* Photo Box with Solid Pastel BG */}
               <div className={`aspect-[10/9] ${instructor.bg} rounded-lg overflow-hidden relative flex items-end justify-center`}>
@@ -141,7 +228,7 @@ export default function InstructorsPageClient({
                   className="w-full h-full object-cover object-bottom transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
-
+ 
               {/* Text Info */}
               <div className="py-5 text-center space-y-1 bg-white">
                 <h3 className="text-lg font-bold text-[#0A163A] leading-tight select-text transition-colors group-hover:text-[#615fff]">
@@ -151,9 +238,9 @@ export default function InstructorsPageClient({
                   {instructor.role}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </section>
 
       {/* ── INTERACTIVE COURSES SECTION ── */}
