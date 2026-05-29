@@ -31,10 +31,19 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') // 'quiz' | 'assignment'
     const status = searchParams.get('status') // 'pending' | 'graded'
+    const studentId = searchParams.get('studentId')
+    const courseId = searchParams.get('courseId')
 
     const filter: any = {}
-    if (type) filter.type = type
     if (status) filter.status = status
+    if (studentId) filter.student = studentId
+    if (courseId) filter.course = courseId
+
+    if (type) {
+      filter.type = type
+    } else if (!studentId && !courseId) {
+      filter.type = 'assignment'
+    }
 
     const submissions = await Submission.find(filter)
       .populate('student', 'name email phone')

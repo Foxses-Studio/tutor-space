@@ -223,16 +223,16 @@ export default function Categories({ categories }: CategoriesProps) {
       {/* Floating decoration images */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <img src="/icon_image/67af701a7fe66816db9422cd_Hero_20Vactor_204.png" alt=""
-          className="float-a absolute w-24 h-24 md:w-32 md:h-32 object-contain"
+          className="float-a absolute w-24 h-24 md:w-32 md:h-32 object-contain hidden lg:block"
           style={{ top: '8%', left: '3%' }} />
         <img src="/icon_image/67af701acb74e60e725c6099_Hero_20Vactor_203.png" alt=""
-          className="float-b absolute w-24 h-24 md:w-32 md:h-32 object-contain"
+          className="float-b absolute w-24 h-24 md:w-32 md:h-32 object-contain hidden lg:block"
           style={{ top: '6%', right: '3%' }} />
         <img src="/icon_image/67af9b9a66f48f117f548b1a_CTA_20Vector.png" alt=""
-          className="float-c absolute w-20 h-20 md:w-28 md:h-28 object-contain"
+          className="float-c absolute w-20 h-20 md:w-28 md:h-28 object-contain hidden lg:block"
           style={{ bottom: '8%', left: '4%' }} />
         <img src="/icon_image/man.png" alt=""
-          className="float-d absolute w-24 h-24 md:w-32 md:h-32 object-contain"
+          className="float-d absolute w-24 h-24 md:w-32 md:h-32 object-contain hidden lg:block"
           style={{ bottom: '6%', right: '3%' }} />
       </div>
 

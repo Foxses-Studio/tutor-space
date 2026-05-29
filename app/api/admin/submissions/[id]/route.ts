@@ -30,7 +30,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params
     const body = await request.json()
-    const { marksObtained, feedback } = body
+    const { marksObtained, feedback, googleDriveLink } = body
 
     if (typeof marksObtained !== 'number') {
       return NextResponse.json({ error: 'marksObtained (number) is required.' }, { status: 400 })
@@ -43,6 +43,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     submission.marksObtained = marksObtained
     submission.feedback = feedback || ''
+    if (googleDriveLink !== undefined) {
+      submission.googleDriveLink = googleDriveLink
+    }
     submission.status = 'graded'
     submission.gradedAt = new Date()
 

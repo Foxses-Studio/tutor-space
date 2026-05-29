@@ -108,6 +108,7 @@ export default function DashboardLayout({
     { label: 'Overview', href: '/dashboard', icon: FiLayout },
     { label: 'My Courses', href: '/dashboard/courses', icon: FiBookOpen },
     { label: 'Study Hub', href: '/dashboard/study-hub', icon: FiBook },
+    { label: 'My Certificates', href: '/dashboard/certificates', icon: FiAward },
     { label: 'My Reviews', href: '/dashboard/reviews', icon: FiStar },
     { label: 'Profile Settings', href: '/dashboard/profile', icon: FiUser },
   ]
@@ -170,7 +171,7 @@ export default function DashboardLayout({
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold text-white truncate leading-tight">{user.name}</p>
               <p className="text-sm font-semibold text-[#615fff] truncate mt-0.5">
-                {user.role === 'admin' ? 'Admin Account' : 'Student Account'}
+                Student Account
               </p>
             </div>
           </div>
@@ -251,7 +252,7 @@ export default function DashboardLayout({
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold text-white truncate leading-none">{user.name}</p>
               <p className="text-sm font-semibold text-[#615fff] truncate mt-1">
-                {user.role === 'admin' ? 'Admin' : 'Student'}
+                Student
               </p>
             </div>
           </div>
@@ -340,7 +341,7 @@ export default function DashboardLayout({
               <div className="hidden sm:block">
                 <p className="text-base font-bold text-zinc-800 leading-none">{user.name}</p>
                 <p className="text-sm font-semibold text-zinc-400 mt-1">
-                  {user.role === 'admin' ? 'Admin' : 'Student'}
+                  Student
                 </p>
               </div>
             </div>

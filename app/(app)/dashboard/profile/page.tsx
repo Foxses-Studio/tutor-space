@@ -251,7 +251,7 @@ export default function StudentProfile() {
 
           <h3 className="text-lg font-bold text-zinc-800">{name || 'Student Account'}</h3>
           <p className="text-base font-semibold text-[#615fff] mt-1 uppercase tracking-wider">
-            {user.role}
+            {['admin', 'staff', 'instructor'].includes(user.role) ? 'student' : user.role}
           </p>
           <p className="text-sm font-semibold text-zinc-400 mt-4 leading-relaxed max-w-xs">
             Upload a high-quality JPG or PNG picture. Images are cropped into exact sizes automatically.

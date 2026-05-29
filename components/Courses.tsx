@@ -212,7 +212,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
           variants={sectionHeadVariants}
           initial="hidden"
           animate={headInView ? 'visible' : 'hidden'}
-          className="flex items-center justify-start lg:justify-center gap-3 overflow-x-auto pb-4 mb-12 no-scrollbar -mx-6 px-6 lg:mx-0 lg:px-0"
+          className="hidden md:flex flex-wrap items-center justify-center gap-3 mb-12 px-4"
         >
           {tabs.map((tab) => {
             const Icon = tab.icon
@@ -274,7 +274,7 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                   initial="hidden"
                   animate={cardsInView ? 'visible' : 'hidden'}
                   whileHover={{ y: -3, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
-                  className="bg-white rounded-lg border border-zinc-200/80 p-5 md:p-6 shadow-sm hover:shadow-lg hover:border-[#615fff]/20 transition-all duration-300"
+                  className="hidden md:block bg-white rounded-lg border border-zinc-200/80 p-5 md:p-6 shadow-sm hover:shadow-lg hover:border-[#615fff]/20 transition-all duration-300"
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
@@ -371,16 +371,16 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                       </div>
 
                       {/* Price & CTA */}
-                      <div className="flex items-center justify-between pt-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
                         <span className="text-3xl font-bold text-[#615fff]">
                           {formatPrice(featuredCourse.price)}
                         </span>
                         <Link
                           href={`/courses/${featuredCourse.slug}`}
-                          className="px-5 py-3 border border-zinc-200 rounded-lg font-bold text-base text-zinc-800 hover:border-[#615fff]/30 hover:bg-[#615fff]/4 transition-all flex items-center gap-3 bg-white shadow-sm group"
+                          className="px-6 py-3 bg-[#615fff] hover:bg-[#5248e8] text-white rounded-lg font-bold text-base transition-all duration-300 flex items-center gap-3 shadow-md shadow-[#615fff]/10 hover:shadow-[#615fff]/20 group border-none cursor-pointer"
                         >
                           <span>View Details</span>
-                          <span className="h-7 w-7 rounded-full bg-[#615fff]/10 group-hover:bg-[#615fff] flex items-center justify-center text-[#615fff] group-hover:text-white transition-colors duration-300">
+                          <span className="h-7 w-7 rounded-full bg-white/20 group-hover:bg-white flex items-center justify-center text-white group-hover:text-[#615fff] transition-colors duration-300">
                             <FiArrowUpRight className="h-4 w-4" />
                           </span>
                         </Link>
@@ -393,16 +393,18 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
 
 
               {/* Regular Grid */}
-              {regularCourses.length > 0 && (
+              {filteredCourses.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {regularCourses.map((course, i) => (
+                  {filteredCourses.map((course, i) => (
                     <motion.div
                       key={course.id}
                       custom={i + 1}
                       variants={cardVariants}
                       initial="hidden"
                       animate={cardsInView ? 'visible' : 'hidden'}
-                      className="w-full flex justify-center sm:justify-start"
+                      className={`w-full flex justify-center sm:justify-start ${
+                        i === 0 ? 'md:hidden' : ''
+                      }`}
                     >
                       <Link
                         href={`/courses/${course.slug}`}
@@ -494,9 +496,9 @@ export default function Courses({ initialCourses, categories }: CoursesProps) {
                                 </span>
                               </div>
 
-                              <div className="px-4 py-2 border border-zinc-205 hover:bg-[#615fff]/5 group-hover:border-[#615fff]/30 rounded-lg text-base font-semibold text-zinc-800 transition-all duration-300 flex items-center gap-2 bg-white shrink-0 whitespace-nowrap">
+                              <div className="px-4 py-2 bg-[#615fff] group-hover:bg-[#5248e8] rounded-lg text-base font-bold text-white shadow-md shadow-[#615fff]/10 transition-all duration-300 flex items-center gap-2 shrink-0 whitespace-nowrap">
                                 <span>Enroll Now</span>
-                                <FiArrowRight className="h-4.5 w-4.5 text-zinc-500 transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
+                                <FiArrowRight className="h-4.5 w-4.5 text-white transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
                               </div>
                             </div>
                           </div>

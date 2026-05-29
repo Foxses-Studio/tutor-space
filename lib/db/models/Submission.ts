@@ -12,6 +12,7 @@ export interface ISubmission extends Document {
   marksObtained: number
   quizCorrectAnswers?: number
   quizTotalQuestions?: number
+  selectedAnswers?: number[]
   submittedAt: Date
   gradedAt?: Date
 }
@@ -29,6 +30,7 @@ const SubmissionSchema = new Schema<ISubmission>(
     marksObtained: { type: Number, required: true, min: 0, default: 0 },
     quizCorrectAnswers: Number,
     quizTotalQuestions: Number,
+    selectedAnswers: [Number],
     submittedAt: { type: Date, default: Date.now },
     gradedAt: Date,
   },

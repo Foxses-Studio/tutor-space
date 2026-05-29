@@ -96,8 +96,8 @@ export default function BlogSection({ blogs }: BlogSectionProps) {
 
           {/* View All Articles Button */}
           <Link
-            href="/courses"
-            className="inline-flex items-center gap-3.5 px-6 py-3 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg transition-all duration-300 shadow-lg shadow-[#615fff]/20 group shrink-0 cursor-pointer"
+            href="/blogs"
+            className="hidden md:inline-flex items-center gap-3.5 px-6 py-3 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg transition-all duration-300 shadow-lg shadow-[#615fff]/20 group shrink-0 cursor-pointer w-fit"
           >
             <span>View All Articles</span>
             <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-[#615fff] transition-transform group-hover:translate-x-0.5">

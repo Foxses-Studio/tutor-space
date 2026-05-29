@@ -12,7 +12,8 @@ import {
   FiEdit3, 
   FiExternalLink, 
   FiX, 
-  FiInfo 
+  FiInfo,
+  FiArrowLeft
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -45,7 +46,7 @@ export default function CertificatesPageClient() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   
-  // Modal states
+  // Modal/Page states
   const [activeRequest, setActiveRequest] = useState<CertificateRequest | null>(null)
   const [status, setStatus] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const [certificateUrl, setCertificateUrl] = useState('')
@@ -54,9 +55,57 @@ export default function CertificatesPageClient() {
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [studentSubmissions, setStudentSubmissions] = useState<any[]>([])
+  const [loadingGrades, setLoadingGrades] = useState(false)
+
   useEffect(() => {
     fetchRequests()
   }, [])
+
+  useEffect(() => {
+    if (!activeRequest) {
+      setStudentSubmissions([])
+      return
+    }
+
+    const currentRequest = activeRequest
+
+    async function loadStudentGrades() {
+      setLoadingGrades(true)
+      try {
+        const studentId = currentRequest.student?.id
+        const courseId = currentRequest.course?.id
+        if (!studentId || !courseId) return
+
+        const res = await fetch(`/api/admin/submissions?studentId=${studentId}&courseId=${courseId}`)
+        const data = await res.json()
+        if (res.ok && data.success) {
+          setStudentSubmissions(data.submissions || [])
+        } else {
+          console.error(data.error || 'Failed to load student grades.')
+        }
+      } catch (err) {
+        console.error('Error fetching student grades:', err)
+      } finally {
+        setLoadingGrades(false)
+      }
+    }
+
+    loadStudentGrades()
+  }, [activeRequest])
+
+  // Derived state for academic performance
+  const studentAssignments = studentSubmissions.filter((s: any) => s.type === 'assignment')
+  const studentQuizzes = studentSubmissions.filter((s: any) => s.type === 'quiz')
+
+  const totalAssignmentObtained = studentAssignments.reduce((sum: number, s: any) => sum + (s.marksObtained || 0), 0)
+  const totalAssignmentMax = studentAssignments.reduce((sum: number, s: any) => sum + (s.totalMarks || 0), 0)
+
+  const totalQuizObtained = studentQuizzes.reduce((sum: number, s: any) => sum + (s.marksObtained || 0), 0)
+  const totalQuizMax = studentQuizzes.reduce((sum: number, s: any) => sum + (s.totalMarks || 0), 0)
+
+  const totalQuizCorrect = studentQuizzes.reduce((sum: number, s: any) => sum + (s.quizCorrectAnswers || 0), 0)
+  const totalQuizQuestions = studentQuizzes.reduce((sum: number, s: any) => sum + (s.quizTotalQuestions || 0), 0)
 
   async function fetchRequests() {
     setLoading(true)
@@ -64,7 +113,7 @@ export default function CertificatesPageClient() {
       const res = await fetch('/api/admin/certificates')
       const data = await res.json()
       if (data.success) {
-        setRequests(data.requests)
+        setRequests(data.requests || [])
       } else {
         throw new Error(data.error || 'Failed to fetch requests.')
       }
@@ -92,16 +141,17 @@ export default function CertificatesPageClient() {
     setActiveRequest(null)
   }
 
-  // Direct PDF Uploader
+  // Direct PDF & Image Uploader
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.type !== 'application/pdf') {
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg']
+    if (!allowedTypes.includes(file.type)) {
       Swal.fire({
         icon: 'error',
         title: 'Invalid File',
-        text: 'Please select a valid PDF document.',
+        text: 'Please select a valid PDF document or Image file (PNG, JPG, JPEG).',
         background: '#121829',
         color: '#fff',
       })
@@ -111,7 +161,7 @@ export default function CertificatesPageClient() {
     setUploadingPdf(true)
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('alt', activeRequest ? `Certificate for ${activeRequest.student?.name} - ${activeRequest.course?.title}` : 'Certificate PDF')
+    formData.append('alt', activeRequest ? `Certificate for ${activeRequest.student?.name} - ${activeRequest.course?.title}` : 'Certificate')
 
     try {
       const res = await fetch('/api/admin/media/upload', {
@@ -119,13 +169,13 @@ export default function CertificatesPageClient() {
         body: formData,
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to upload PDF.')
+      if (!res.ok) throw new Error(data.error || 'Failed to upload document.')
       
       setCertificateUrl(data.media.url)
       Swal.fire({
         icon: 'success',
-        title: 'PDF Uploaded',
-        text: 'Certificate document uploaded successfully.',
+        title: 'Uploaded Successfully',
+        text: 'Certificate file uploaded to media library.',
         timer: 1500,
         showConfirmButton: false,
         background: '#121829',
@@ -135,7 +185,7 @@ export default function CertificatesPageClient() {
       Swal.fire({
         icon: 'error',
         title: 'Upload Failed',
-        text: err.message || 'Failed to upload certificate document.',
+        text: err.message || 'Failed to upload certificate file.',
         background: '#121829',
         color: '#fff',
       })
@@ -153,7 +203,7 @@ export default function CertificatesPageClient() {
       Swal.fire({
         icon: 'warning',
         title: 'Missing Document',
-        text: 'Please upload a certificate PDF or provide a URL before approving.',
+        text: 'Please upload a certificate PDF or Image file before approving.',
         background: '#121829',
         color: '#fff',
       })
@@ -251,11 +301,327 @@ export default function CertificatesPageClient() {
   const filteredRequests = requests.filter(req => {
     const nameMatch = req.student?.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                       req.student?.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const courseMatch = req.course?.title.toLowerCase().includes(searchTerm.toLowerCase())
+    const courseMatch = req.course?.title.toLowerCase().includes(searchTerm.toLowerCase()) || false
     const statusMatch = statusFilter === 'all' || req.status === statusFilter
     
     return (nameMatch || courseMatch) && statusMatch
   })
+
+  // If review is active, render the dedicated edit review page inline
+  if (activeRequest) {
+    return (
+      <div className="container mx-auto px-6 py-8 space-y-8 max-w-none">
+        
+        {/* Header Panel with Back Button */}
+        <div className="flex items-center gap-4 pb-4 border-b border-zinc-800/40 select-none">
+          <button
+            type="button"
+            onClick={handleCloseModal}
+            className="p-2.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 text-zinc-350 hover:text-white transition-colors cursor-pointer flex items-center justify-center shrink-0"
+            title="Back to request grid list"
+          >
+            <FiArrowLeft className="h-5 w-5" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold font-display text-white flex items-center gap-2">
+              <FiAward className="text-[#615fff]" /> Review Student Certificate
+            </h1>
+            <p className="text-base font-semibold text-zinc-455 mt-1">
+              Verify student syllabus progression and manage verified PDF/Image completions credentials
+            </p>
+          </div>
+        </div>
+
+        {/* Full-width 2-Column Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start w-full">
+          
+          {/* Left Panel: Student Profile & Completion Metrics */}
+          <div className="lg:col-span-1 space-y-6">
+
+            {/* Academic Performance Card */}
+            <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-850 pb-3 select-none font-display">
+                <FiAward className="text-indigo-400 h-5 w-5" /> Course Results & Grades
+              </h3>
+
+              {loadingGrades ? (
+                <div className="py-8 flex flex-col items-center justify-center gap-3">
+                  <div className="h-8 w-8 border-4 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-base font-semibold text-zinc-400 animate-pulse">Loading student grades...</p>
+                </div>
+              ) : studentSubmissions.length === 0 ? (
+                <div className="py-6 text-center text-zinc-400 space-y-1">
+                  <p className="text-base font-bold text-zinc-300">No grades registered yet</p>
+                  <p className="text-base font-semibold">Student has not submitted any assignments or quizzes.</p>
+                </div>
+              ) : (
+                <div className="space-y-6 font-sans">
+                  {/* Summary Scores */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Assignments Summary */}
+                    <div className="bg-slate-950 p-4 border border-zinc-850 rounded-lg">
+                      <p className="text-base font-bold text-zinc-400 uppercase tracking-wider">Assignments</p>
+                      {totalAssignmentMax > 0 ? (
+                        <div className="mt-1">
+                          <p className="text-xl font-bold text-white">
+                            {totalAssignmentObtained} / {totalAssignmentMax}
+                          </p>
+                          <p className="text-base font-semibold text-emerald-400 mt-0.5">
+                            {Math.round((totalAssignmentObtained / totalAssignmentMax) * 100)}% Average
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-base font-semibold text-zinc-500 mt-1">No assignments</p>
+                      )}
+                    </div>
+
+                    {/* Quizzes Summary */}
+                    <div className="bg-slate-950 p-4 border border-zinc-850 rounded-lg">
+                      <p className="text-base font-bold text-zinc-400 uppercase tracking-wider">Quizzes</p>
+                      {totalQuizQuestions > 0 ? (
+                        <div className="mt-1">
+                          <p className="text-xl font-bold text-white">
+                            {totalQuizCorrect} / {totalQuizQuestions} Qs
+                          </p>
+                          <p className="text-base font-semibold text-[#8a88ff] mt-0.5">
+                            {Math.round((totalQuizCorrect / totalQuizQuestions) * 100)}% Score
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-base font-semibold text-zinc-500 mt-1">No quizzes</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Detailed Results List */}
+                  <div className="space-y-3">
+                    <p className="text-base font-bold text-zinc-400 uppercase tracking-wider">Detailed Breakdown</p>
+                    <div className="max-h-60 overflow-y-auto space-y-2.5 pr-1 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+                      {studentSubmissions.map((sub: any) => (
+                        <div 
+                          key={sub.id} 
+                          className="bg-[#070b16] border border-zinc-850 p-3.5 rounded-lg flex items-center justify-between gap-4 text-base"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-bold text-white truncate text-base" title={sub.lesson?.title || 'Lesson task'}>
+                              {sub.lesson?.title || 'Lesson task'}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`inline-flex px-2 py-0.5 rounded text-base font-bold uppercase select-none ${
+                                sub.type === 'assignment' 
+                                  ? 'bg-[#615fff]/10 text-[#8a88ff] border border-[#615fff]/20'
+                                  : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                              }`}>
+                                {sub.type}
+                              </span>
+                              <span className="text-base font-semibold text-zinc-500">
+                                {new Date(sub.submittedAt).toLocaleDateString('en-BD', { day: '2-digit', month: 'short' })}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right shrink-0">
+                            {sub.type === 'quiz' ? (
+                              <div>
+                                <p className="font-bold text-white text-base">{sub.quizCorrectAnswers} / {sub.quizTotalQuestions} Qs</p>
+                                <p className="text-base font-semibold text-zinc-400 mt-0.5">{sub.marksObtained} Marks</p>
+                              </div>
+                            ) : (
+                              <div>
+                                <p className="font-bold text-white text-base">{sub.marksObtained} Marks</p>
+                                <p className="text-base font-semibold text-zinc-400 mt-0.5">out of {sub.totalMarks}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Student Context Card */}
+            <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-850 pb-3 select-none font-display">
+                <FiInfo className="text-[#8a88ff] h-5 w-5" /> Student Account Details
+              </h3>
+              
+              <div className="space-y-3 font-sans select-text">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student Name</p>
+                  <p className="text-base font-bold text-white mt-1">{activeRequest.student?.name || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Email Address</p>
+                  <p className="text-base font-semibold text-zinc-400 mt-0.5">{activeRequest.student?.email || 'N/A'}</p>
+                </div>
+                {activeRequest.student?.phone && (
+                  <div>
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Contact Number</p>
+                    <p className="text-base font-semibold text-zinc-400 mt-0.5">{activeRequest.student.phone}</p>
+                  </div>
+                )}
+                <div className="pt-3 border-t border-zinc-850">
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Course Syllabus Program</p>
+                  <p className="text-base font-bold text-[#8a88ff] mt-1">{activeRequest.course?.title || 'Unknown Syllabus'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Curriculum Progress Statistics Card */}
+            <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4 select-none">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-850 pb-3 font-display">
+                <FiCheckCircle className="text-emerald-400 h-5 w-5" /> Syllabus Progression
+              </h3>
+              
+              <div className="space-y-4 font-sans">
+                <div className="flex justify-between items-center">
+                  <span className="text-base font-semibold text-zinc-400">Total Completion</span>
+                  <span className={`text-xl font-bold ${
+                    activeRequest.progress === 100 ? 'text-emerald-400' : 'text-[#8a88ff]'
+                  }`}>
+                    {activeRequest.progress}%
+                  </span>
+                </div>
+                
+                {/* Visual completion progress bar */}
+                <div className="w-full bg-slate-950 h-3 rounded-lg overflow-hidden border border-zinc-850/40">
+                  <div 
+                    className={`h-full rounded-lg transition-all duration-300 ${
+                      activeRequest.progress === 100 ? 'bg-emerald-500' : 'bg-[#615fff]'
+                    }`}
+                    style={{ width: `${activeRequest.progress}%` }}
+                  />
+                </div>
+
+                <div className="bg-slate-950 p-4 border border-zinc-850 rounded-lg text-left text-base font-medium text-zinc-450 leading-relaxed">
+                  {activeRequest.progress === 100 ? (
+                    <span className="text-emerald-400 font-bold">✓ Student has completed 100% of curriculum requirements and is eligible for completion certificates download.</span>
+                  ) : (
+                    <span className="text-amber-400 font-semibold">⚠️ Student has not yet completed all curriculum requirements. Manual progress audits advised before release.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Right Panel: Grading/Update Form */}
+          <div className="lg:col-span-2 bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-850 pb-3 select-none font-display">
+              <FiEdit3 className="text-[#615fff] h-5 w-5" /> Manage Request Actions
+            </h3>
+            
+            <form onSubmit={handleSave} className="space-y-6">
+              
+              {/* Status Update Selection */}
+              <div className="flex flex-col gap-2 select-none font-sans">
+                <label className="text-base font-bold text-zinc-300">Set Request Status</label>
+                <select
+                  value={status}
+                  onChange={(e: any) => setStatus(e.target.value)}
+                  className="bg-[#070b16] border border-zinc-800 text-white rounded-lg p-3 text-base font-semibold outline-none w-full cursor-pointer focus:border-[#615fff]/80 transition-colors"
+                >
+                  <option value="pending">Pending Review</option>
+                  <option value="approved">Approve & Release Certificate</option>
+                  <option value="rejected">Reject Request</option>
+                </select>
+              </div>
+
+              {/* Certificate File Uploader (PDF or Image) */}
+              <div className="flex flex-col gap-2 font-sans">
+                <label className="text-base font-bold text-zinc-300 select-none">Certificate Document (PDF or Image) *</label>
+                
+                {uploadingPdf ? (
+                  <div className="border border-zinc-800 bg-[#070b16] p-10 rounded-lg text-center flex flex-col items-center justify-center gap-3 select-none">
+                    <div className="h-8 w-8 border-4 border-[#615fff] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-base font-semibold text-zinc-455">Uploading file to media library...</p>
+                  </div>
+                ) : certificateUrl ? (
+                  <div className="bg-[#070b16] border border-zinc-800 p-5 rounded-lg flex items-center justify-between gap-4 shadow-md select-text">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FiCheckCircle className="h-6 w-6 text-emerald-400 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-white">Certificate File Uploaded</p>
+                        <a
+                          href={certificateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-semibold text-[#8a88ff] hover:underline flex items-center gap-1.5 mt-0.5 truncate inline-block max-w-[320px]"
+                        >
+                          Open Uploaded File <FiExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-2 bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 text-white rounded-lg text-base font-bold transition-all cursor-pointer shrink-0 select-none"
+                    >
+                      Change File
+                    </button>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-zinc-800 hover:border-[#615fff]/60 bg-[#070b16] p-12 rounded-lg text-center cursor-pointer transition-colors select-none group"
+                  >
+                    <FiUploadCloud className="h-10 w-10 text-zinc-500 group-hover:text-[#615fff] mx-auto mb-3 transition-colors" />
+                    <p className="text-base font-bold text-white group-hover:text-[#8a88ff] transition-colors">Upload Certificate Document</p>
+                    <p className="text-sm font-semibold text-zinc-500 mt-1">Supports PDF, PNG, JPG, or JPEG formats</p>
+                  </div>
+                )}
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/pdf, image/png, image/jpeg, image/jpg"
+                  onChange={handlePdfUpload}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Admin Notes */}
+              <div className="flex flex-col gap-2 font-sans">
+                <label className="text-base font-bold text-zinc-300 select-none">Administrative Notes / Reasons</label>
+                <textarea
+                  rows={4}
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                  placeholder="Provide guidance details or feedback notes for the student..."
+                  className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full resize-none focus:ring-1 focus:ring-[#615fff]/80 transition-all font-sans"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-4 pt-4 border-t border-zinc-850 select-none font-sans">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-5 py-3 border border-zinc-800 hover:border-zinc-700 bg-transparent text-zinc-350 hover:text-white font-bold text-base rounded-lg flex-1 cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || uploadingPdf}
+                  className="px-5 py-3 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg flex-1 cursor-pointer transition-all shadow-md shadow-[#615fff]/15 border-none disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save Updates'}
+                </button>
+              </div>
+            </form>
+
+          </div>
+
+        </div>
+
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-6 py-8 space-y-6">
@@ -266,7 +632,7 @@ export default function CertificatesPageClient() {
           <h1 className="text-3xl font-bold font-display text-white flex items-center gap-2">
             <FiAward className="text-[#615fff]" /> Student Certificate Requests
           </h1>
-          <p className="text-base font-semibold text-zinc-450 mt-1">
+          <p className="text-base font-semibold text-zinc-455 mt-1">
             Review student lecture progress and upload completed PDF certificates
           </p>
         </div>
@@ -312,7 +678,7 @@ export default function CertificatesPageClient() {
         ) : filteredRequests.length === 0 ? (
           <div className="p-16 text-center space-y-4">
             <FiAward className="h-12 w-12 text-zinc-700 mx-auto" />
-            <p className="text-base font-semibold text-zinc-500">
+            <p className="text-base font-semibold text-zinc-550">
               No matching certificate requests found.
             </p>
           </div>
@@ -405,7 +771,7 @@ export default function CertificatesPageClient() {
                           </button>
                           <button
                             onClick={() => handleDelete(req)}
-                            className="p-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-450 hover:text-white transition-all inline-flex items-center cursor-pointer shadow-sm"
+                            className="p-2.5 rounded-lg bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 text-rose-455 hover:text-white transition-all inline-flex items-center cursor-pointer shadow-sm"
                             title="Delete request"
                           >
                             <FiTrash2 className="h-4.5 w-4.5" />
@@ -420,167 +786,6 @@ export default function CertificatesPageClient() {
           </div>
         )}
       </div>
-
-      {/* Review Modal Dialog Backdrop */}
-      {activeRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            onClick={handleCloseModal}
-            className="fixed inset-0 bg-slate-950/65 backdrop-blur-md cursor-pointer"
-          />
-
-          {/* Modal Container */}
-          <div className="bg-[#121829] border border-zinc-800 rounded-lg overflow-hidden shadow-2xl w-full max-w-xl relative z-10 animate-scaleUp">
-            
-            {/* Header */}
-            <div className="px-6 py-4.5 border-b border-zinc-850 bg-[#070b16] flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <FiAward className="text-[#615fff]" /> Review Request
-              </h3>
-              <button 
-                type="button" 
-                onClick={handleCloseModal}
-                className="p-1.5 rounded hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer border-none"
-              >
-                <FiX className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
-              {/* Student info box */}
-              <div className="bg-[#070b16] border border-zinc-850 p-4 rounded-lg space-y-2 select-text">
-                <p className="text-xs font-bold text-zinc-450 uppercase tracking-widest">Student Information</p>
-                <p className="text-base font-bold text-white">{activeRequest.student?.name}</p>
-                <p className="text-sm font-semibold text-zinc-400">{activeRequest.student?.email} | {activeRequest.student?.phone}</p>
-                <p className="text-sm font-bold text-indigo-400 pt-1 border-t border-zinc-850/50 mt-2">
-                  Course: <span className="text-white">{activeRequest.course?.title}</span>
-                </p>
-              </div>
-
-              {/* Progress and status overview */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#070b16] border border-zinc-850 p-3.5 rounded-lg text-center">
-                  <p className="text-xs font-bold text-zinc-450 uppercase tracking-wider">Student Progress</p>
-                  <p className={`text-2xl font-bold mt-1.5 ${
-                    activeRequest.progress === 100 ? 'text-emerald-400' : 'text-[#8a88ff]'
-                  }`}>
-                    {activeRequest.progress}% Complete
-                  </p>
-                </div>
-                <div className="bg-[#070b16] border border-zinc-850 p-3.5 rounded-lg text-center">
-                  <p className="text-xs font-bold text-zinc-450 uppercase tracking-wider">Current Request Status</p>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider mt-2.5 ${
-                    activeRequest.status === 'approved'
-                      ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                      : activeRequest.status === 'rejected'
-                      ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-                      : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                  }`}>
-                    {activeRequest.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* Status Update Selection */}
-              <div className="flex flex-col gap-2">
-                <label className="text-base font-bold text-zinc-300">Set Request Status</label>
-                <select
-                  value={status}
-                  onChange={(e: any) => setStatus(e.target.value)}
-                  className="bg-[#070b16] border border-zinc-800 text-white rounded-lg p-3 text-base font-semibold outline-none w-full cursor-pointer"
-                >
-                  <option value="pending">Pending Review</option>
-                  <option value="approved">Approve & Release Certificate</option>
-                  <option value="rejected">Reject Request</option>
-                </select>
-              </div>
-
-              {/* Certificate URL with PDF Uploader */}
-              <div className="flex flex-col gap-2">
-                <label className="text-base font-bold text-zinc-300 flex items-center justify-between">
-                  <span>Certificate PDF Document URL</span>
-                  {certificateUrl && (
-                    <a 
-                      href={certificateUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-xs font-bold text-[#615fff] flex items-center gap-1 hover:underline"
-                    >
-                      View Document <FiExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={certificateUrl}
-                    onChange={(e) => setCertificateUrl(e.target.value)}
-                    placeholder="https://tutorspace.com/media/certificate.pdf"
-                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none flex-1 font-mono"
-                  />
-                  
-                  {/* Hidden input trigger */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handlePdfUpload}
-                    className="hidden"
-                  />
-
-                  <button
-                    type="button"
-                    disabled={uploadingPdf}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-4.5 bg-zinc-850 hover:bg-zinc-800 border border-zinc-800 text-white rounded-lg flex items-center justify-center shrink-0 transition-colors cursor-pointer select-none disabled:opacity-50"
-                  >
-                    {uploadingPdf ? (
-                      <div className="h-5 w-5 border-2 border-[#615fff] border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <FiUploadCloud className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-                <p className="text-xs font-semibold text-zinc-500">
-                  Upload the completed student PDF certificate directly or paste an external hosted link.
-                </p>
-              </div>
-
-              {/* Admin Notes */}
-              <div className="flex flex-col gap-2">
-                <label className="text-base font-bold text-zinc-300">Administrative Notes / Reasons</label>
-                <textarea
-                  rows={3}
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="e.g. Excellent work! Certificate approved and released to the dashboard."
-                  className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full resize-none"
-                />
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-3 pt-3 border-t border-zinc-850">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="px-5 py-3 border border-zinc-800 hover:border-zinc-700 bg-transparent text-zinc-300 hover:text-white font-bold text-base rounded-lg flex-1 cursor-pointer transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-5 py-3 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg flex-1 cursor-pointer transition-all shadow-md shadow-[#615fff]/15"
-                >
-                  {saving ? 'Saving...' : 'Save Updates'}
-                </button>
-              </div>
-
-            </form>
-
-          </div>
-        </div>
-      )}
 
     </div>
   )

@@ -303,6 +303,51 @@ export default function BlogDetailsClient({ blog, recommendedBlogs }: BlogDetail
                 </Link>
               </motion.div>
 
+              {/* Recommended Blogs Sidebar Widget */}
+              {recommendedBlogs && recommendedBlogs.length > 0 && (
+                <motion.div 
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
+                  className="bg-[#f8fafc] border border-zinc-200/80 rounded-lg p-6 space-y-5 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  <h3 className="text-base font-bold text-zinc-900 uppercase tracking-wider pb-2 border-b border-zinc-200/80">
+                    More Articles
+                  </h3>
+                  <div className="space-y-4">
+                    {recommendedBlogs.slice(0, 3).map((rec) => (
+                      <Link
+                        key={rec.id}
+                        href={`/blogs/${rec.id}`}
+                        className="flex items-center gap-3.5 group cursor-pointer"
+                      >
+                        {rec.coverImageUrl ? (
+                          <div className="w-20 h-16 rounded-lg bg-zinc-100 border border-zinc-200/80 overflow-hidden shrink-0 relative">
+                            <img
+                              src={rec.coverImageUrl}
+                              alt={rec.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-20 h-16 rounded-lg bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-350 shrink-0">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 4a2 2 0 00-2-2v3m2 3V10m0 0l-3-3m3 3h-3" />
+                            </svg>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <h4 className="text-base font-bold text-zinc-800 leading-snug line-clamp-2 group-hover:text-[#615fff] transition-colors">
+                            {rec.title}
+                          </h4>
+                          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
+                            <span>{formatDate(rec.publishedDate)}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
             </aside>
           </motion.div>
         </div>

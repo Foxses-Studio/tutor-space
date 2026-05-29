@@ -38,12 +38,12 @@ export default function SubmissionsPageClient() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'graded'>('all')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'quiz' | 'assignment'>('all')
 
   // Grading modal state
   const [activeSubmission, setActiveSubmission] = useState<SubmissionItem | null>(null)
   const [marksInput, setMarksInput] = useState<number>(0)
   const [feedbackInput, setFeedbackInput] = useState('')
+  const [editDriveLink, setEditDriveLink] = useState('')
   const [saving, setSaving] = useState(false)
 
   async function fetchSubmissions() {
@@ -77,6 +77,7 @@ export default function SubmissionsPageClient() {
     setActiveSubmission(sub)
     setMarksInput(sub.status === 'graded' ? sub.marksObtained : sub.lesson?.totalMarks || 100)
     setFeedbackInput(sub.feedback || '')
+    setEditDriveLink(sub.googleDriveLink || '')
   }
 
   const handleCloseGradeModal = () => {
@@ -107,6 +108,7 @@ export default function SubmissionsPageClient() {
         body: JSON.stringify({
           marksObtained: Number(marksInput),
           feedback: feedbackInput,
+          googleDriveLink: editDriveLink,
         }),
       })
 
@@ -150,10 +152,7 @@ export default function SubmissionsPageClient() {
     // Status filter
     const matchesStatus = statusFilter === 'all' || sub.status === statusFilter
 
-    // Type filter
-    const matchesType = typeFilter === 'all' || sub.type === typeFilter
-
-    return matchesSearch && matchesStatus && matchesType
+    return matchesSearch && matchesStatus
   })
 
   // Counters
@@ -169,7 +168,7 @@ export default function SubmissionsPageClient() {
         <div>
           <h1 className="text-3xl font-bold font-display text-white">Grading & Submissions</h1>
           <p className="text-base font-semibold text-zinc-455 mt-1">
-            Grade assignment drive links and view student auto-graded quiz completions
+            Grade student assignment submissions and drive links
           </p>
         </div>
       </div>
@@ -221,23 +220,6 @@ export default function SubmissionsPageClient() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          {/* Type Filter Buttons */}
-          <div className="flex bg-[#070b16] border border-zinc-800 rounded-lg p-1">
-            {(['all', 'quiz', 'assignment'] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTypeFilter(t)}
-                className={`px-4 py-1.5 rounded-lg text-base font-bold transition-all cursor-pointer capitalize ${
-                  typeFilter === t
-                    ? 'bg-[#615fff] text-white'
-                    : 'text-zinc-400 hover:text-white'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
           {/* Status Filter Buttons */}
           <div className="flex bg-[#070b16] border border-zinc-800 rounded-lg p-1">
             {(['all', 'pending', 'graded'] as const).map((s) => (
@@ -277,7 +259,6 @@ export default function SubmissionsPageClient() {
                 <tr className="border-b border-zinc-800 bg-[#070b16]/50 text-zinc-400 select-none">
                   <th className="px-6 py-4 text-base font-bold">Student</th>
                   <th className="px-6 py-4 text-base font-bold">Course / Lesson</th>
-                  <th className="px-6 py-4 text-base font-bold text-center">Type</th>
                   <th className="px-6 py-4 text-base font-bold text-center">Submission Link</th>
                   <th className="px-6 py-4 text-base font-bold text-center">Score / Marks</th>
                   <th className="px-6 py-4 text-base font-bold text-center">Status</th>
@@ -299,20 +280,9 @@ export default function SubmissionsPageClient() {
                       <p className="text-base font-semibold text-zinc-500 mt-0.5 truncate" title={sub.course?.title}>{sub.course?.title || 'Unknown Course'}</p>
                     </td>
 
-                    {/* Type badge */}
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-base font-bold capitalize select-none ${
-                        sub.type === 'assignment'
-                          ? 'bg-[#615fff]/10 text-[#8a88ff] border border-[#615fff]/20'
-                          : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                      }`}>
-                        {sub.type}
-                      </span>
-                    </td>
-
                     {/* Google Drive submission Link */}
                     <td className="px-6 py-4 text-center">
-                      {sub.type === 'assignment' && sub.googleDriveLink ? (
+                      {sub.googleDriveLink ? (
                         <a
                           href={sub.googleDriveLink}
                           target="_blank"
@@ -352,16 +322,12 @@ export default function SubmissionsPageClient() {
 
                     {/* Grading Actions trigger */}
                     <td className="px-6 py-4 text-center">
-                      {sub.type === 'assignment' ? (
-                        <button
-                          onClick={() => handleOpenGradeModal(sub)}
-                          className="px-4 py-2 bg-gradient-to-r from-[#615fff] to-[#5248e8] hover:from-[#5248e8] hover:to-[#4338ca] text-white rounded-lg text-base font-bold shadow-md shadow-[#615fff]/15 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer border-none"
-                        >
-                          {sub.status === 'graded' ? 'Update Grade' : 'Grade Assignment'}
-                        </button>
-                      ) : (
-                        <span className="text-base text-zinc-500 font-semibold select-none">Auto-graded</span>
-                      )}
+                      <button
+                        onClick={() => handleOpenGradeModal(sub)}
+                        className="px-4 py-2 bg-gradient-to-r from-[#615fff] to-[#5248e8] hover:from-[#5248e8] hover:to-[#4338ca] text-white rounded-lg text-base font-bold shadow-md shadow-[#615fff]/15 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer border-none"
+                      >
+                        {sub.status === 'graded' ? 'Update Grade' : 'Grade Assignment'}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -435,6 +401,20 @@ export default function SubmissionsPageClient() {
                   onChange={(e) => setMarksInput(Number(e.target.value))}
                   placeholder="e.g. 85"
                   className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+                />
+              </div>
+
+              {/* Google Drive Link input */}
+              <div className="flex flex-col gap-2">
+                <label className="text-base font-bold text-zinc-300 select-none">
+                  Google Drive Submission Link
+                </label>
+                <input
+                  type="url"
+                  value={editDriveLink}
+                  onChange={(e) => setEditDriveLink(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                  className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
                 />
               </div>
 

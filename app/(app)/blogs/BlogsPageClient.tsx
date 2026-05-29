@@ -31,6 +31,15 @@ function formatDate(dateStr?: Date | string): string {
   return `${day} ${month} ${year}`
 }
 
+// Helper to strip HTML tags for safe preview rendering
+function getPlainPreview(htmlContent: string, maxLength = 120): string {
+  if (!htmlContent) return ''
+  const stripped = htmlContent.replace(/<[^>]*>/g, ' ')
+  const cleaned = stripped.replace(/\s+/g, ' ').trim()
+  if (cleaned.length <= maxLength) return cleaned
+  return cleaned.substring(0, maxLength) + '...'
+}
+
 // Calculate reading time
 function calculateReadingTime(htmlContent: string): number {
   if (!htmlContent) return 1
@@ -215,99 +224,62 @@ export default function BlogsPageClient({ initialBlogs }: BlogsPageClientProps) 
                   return (
                     <motion.article
                       layout
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.25 }}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 20 }}
+                      transition={{ duration: 0.4 }}
                       key={blog.id}
-                      className="bg-white border border-zinc-200 hover:border-[#615fff]/30 rounded-lg hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden group"
+                      className="flex flex-col gap-4 group"
                     >
-                      {/* Cover Image Block */}
-                      <Link href={`/blogs/${blog.id}`} className="aspect-[16/10] overflow-hidden bg-zinc-50 border-b border-zinc-200/80 block relative">
+                      {/* Cover Image Block - Rounded-lg, fully self-contained */}
+                      <Link 
+                        href={`/blogs/${blog.id}`} 
+                        className="aspect-[16/10] overflow-hidden bg-zinc-50 rounded-lg block relative shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer"
+                      >
                         {blog.coverImageUrl ? (
                           <img
                             src={blog.coverImageUrl}
                             alt={blog.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02] ease-out rounded-lg"
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-300 bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0]">
+                          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-350 bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] rounded-lg">
                             <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 4a2 2 0 00-2-2v3m2 3V10m0 0l-3-3m3 3h-3" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 4a2 2 0 00-2-2v3m2 3V10m0 0l-3-3m3 3h-3" />
                             </svg>
                           </div>
                         )}
                       </Link>
 
-                      {/* Body Content Block */}
-                      <div className="p-6 flex-1 flex flex-col gap-4">
-                        {/* Tags / Badges */}
-                        <div className="flex flex-wrap gap-2">
-                          {blog.tags && blog.tags.length > 0 ? (
-                            blog.tags.slice(0, 2).map((t, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2.5 py-0.5 bg-[#615fff]/10 text-[#615fff] font-bold text-xs rounded-lg uppercase tracking-wider"
-                              >
-                                #{t.tag}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-zinc-100 text-zinc-500 font-bold text-xs rounded-lg uppercase tracking-wider">
-                              <FiTag className="h-3.5 w-3.5" />
-                              Article
-                            </span>
-                          )}
-                        </div>
-
+                      {/* Content Block */}
+                      <div className="flex flex-col gap-2.5">
                         {/* Headline */}
-                        <h2 className="text-xl font-bold text-zinc-900 leading-snug line-clamp-2 group-hover:text-[#615fff] transition-colors">
+                        <h3 className="text-xl font-bold text-[#0A163A] leading-snug line-clamp-2 hover:text-[#615fff] transition-colors duration-200">
                           <Link href={`/blogs/${blog.id}`}>{blog.title}</Link>
-                        </h2>
+                        </h3>
 
-                        {/* Meta information row (Min 16px font size on readable content, keeping icons small and text readable) */}
-                        <div className="flex items-center gap-4 text-zinc-400 text-sm font-semibold mt-auto pt-4 border-t border-zinc-100">
-                          <div className="flex items-center gap-3">
-                            {blog.authorProfilePicUrl ? (
-                              <img
-                                src={blog.authorProfilePicUrl}
-                                alt={blog.authorName}
-                                className="h-8 w-8 rounded-full object-cover shrink-0 border border-zinc-200"
-                              />
-                            ) : (
-                              <div className="h-8 w-8 rounded-full bg-[#615fff]/10 flex items-center justify-center text-[#615fff] font-bold uppercase text-xs shrink-0">
-                                {blog.authorName[0]}
-                              </div>
-                            )}
-                            <span className="text-zinc-700 font-bold text-sm truncate max-w-[100px]" title={blog.authorName}>
-                              {blog.authorName}
-                            </span>
-                          </div>
-                          
-                          <span className="h-3 w-px bg-zinc-200 shrink-0" />
-                          
-                          <span className="flex items-center gap-1.5 text-zinc-550 text-xs shrink-0">
-                            <FiCalendar className="h-4 w-4 text-zinc-400" />
-                            {formattedDate}
-                          </span>
-                          
-                          <span className="flex items-center gap-1.5 text-zinc-550 text-xs shrink-0">
-                            <FiClock className="h-4 w-4 text-zinc-400" />
-                            {readingTime} min
-                          </span>
+                        {/* Description */}
+                        <p className="text-base font-semibold text-[#4F5B7C] leading-relaxed line-clamp-2">
+                          {getPlainPreview(blog.content, 120)}
+                        </p>
+
+                        {/* Author Info Row (Matching Screenshot exactly: [Avatar] Name • Date) */}
+                        <div className="flex items-center gap-2.5 text-base font-semibold text-[#4F5B7C] mt-2.5">
+                          {blog.authorProfilePicUrl ? (
+                            <img
+                              src={blog.authorProfilePicUrl}
+                              alt={blog.authorName}
+                              className="h-6 w-6 rounded-full object-cover shrink-0 border border-zinc-150"
+                            />
+                          ) : (
+                            <div className="h-6 w-6 rounded-full bg-[#615fff]/10 flex items-center justify-center text-[#615fff] font-bold text-xs uppercase shrink-0 select-none">
+                              {blog.authorName[0]}
+                            </div>
+                          )}
+                          <span className="text-[#0A163A] font-bold">{blog.authorName}</span>
+                          <span className="text-zinc-300 select-none">•</span>
+                          <span className="text-zinc-400 font-semibold">{formattedDate}</span>
                         </div>
-
-                        {/* Direct Read Article Callout link (Minimum 16px size!) */}
-                        <div className="pt-2">
-                          <Link
-                            href={`/blogs/${blog.id}`}
-                            className="inline-flex items-center gap-2 text-base font-bold text-[#615fff] hover:text-[#5248e8] transition-colors"
-                          >
-                            <span>Read Article</span>
-                            <FiArrowRight className="h-4.5 w-4.5 transition-transform group-hover:translate-x-1" />
-                          </Link>
-                        </div>
-
                       </div>
                     </motion.article>
                   )

@@ -142,68 +142,31 @@ export default function InstructorsPageClient({
       
       {/* ── MENTORS GRID SECTION ── */}
       <section className="container mx-auto px-6 pt-36 pb-24 space-y-12">
-        {/* Header Breadcrumbs and Heading Area */}
-        <motion.div 
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-3"
-        >
-          {/* Breadcrumbs */}
-          <motion.div 
-            variants={fadeInUp}
-            className="flex items-center gap-1.5 text-base font-semibold text-zinc-500 mb-2 select-none"
-          >
+        {/* Centered Header Section (Matching User Design) */}
+        <div className="text-center max-w-3xl mx-auto space-y-5">
+          {/* Centered Breadcrumbs */}
+          <div className="flex items-center justify-center gap-1.5 text-base font-semibold text-zinc-500 mb-2 select-none">
             <Link href="/" className="hover:text-[#615fff] transition-colors">Home</Link>
-            <span className="text-zinc-350 font-normal">/</span>
+            <span className="text-zinc-300 font-normal">/</span>
             <span className="text-[#0A163A]">Mentors</span>
-          </motion.div>
- 
-          {/* Heading with Dot Matrix and Word Mask Reveal */}
-          <div className="flex justify-between items-center gap-10">
-            <motion.h1 
-              variants={staggerContainer}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#0A163A] tracking-tight leading-tight select-text flex flex-col items-start gap-1 py-1"
-            >
-              <div className="flex flex-wrap gap-x-2.5 overflow-hidden">
-                {"Meet Our".split(" ").map((word, i) => (
-                  <span key={i} className="relative inline-block overflow-hidden pb-1">
-                    <motion.span variants={fadeInUp} className="inline-block">
-                      {word}
-                    </motion.span>
-                  </span>
-                ))}
-                <span className="relative inline-block overflow-hidden pb-1">
-                  <motion.span variants={fadeInUp} className="inline-block">
-                    Industry's
-                  </motion.span>
-                </span>
-              </div>
-              
-              <div className="flex flex-wrap gap-x-2.5 overflow-hidden text-[#615fff]">
-                {"Leading Expert Mentors".split(" ").map((word, i) => (
-                  <span key={i} className="relative inline-block overflow-hidden pb-1">
-                    <motion.span variants={fadeInUp} className="inline-block">
-                      {word}
-                    </motion.span>
-                  </span>
-                ))}
-              </div>
-            </motion.h1>
-            
-            {/* Dot Matrix Decoration */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 0.8, scale: 1 }}
-              transition={{ type: "spring" as const, stiffness: 60, damping: 15, delay: 0.4 }}
-              className="hidden md:grid grid-cols-6 gap-2.5 shrink-0 pr-6 select-none opacity-80"
-            >
-              {Array.from({ length: 30 }).map((_, i) => (
-                <div key={i} className="h-1.5 w-1.5 rounded-full bg-zinc-300/80" />
-              ))}
-            </motion.div>
           </div>
-        </motion.div>
+
+          {/* Centered Badge Pill */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#615fff]/8 border border-[#615fff]/15 rounded-full select-none shadow-sm shadow-[#615fff]/5">
+            <span className="w-2 h-2 rounded-full bg-[#615fff] animate-pulse" />
+            <span className="text-sm font-bold text-[#615fff] uppercase tracking-wider">Instructor</span>
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#0A163A] tracking-tight leading-[1.2]">
+            Meet Our Expert <span className="text-[#615fff]">Instructors</span>
+          </h1>
+
+          {/* Description */}
+          <p className="text-base sm:text-lg font-semibold text-[#4F5B7C] leading-relaxed max-w-2xl mx-auto">
+            Learn from industry professionals who bring real-world experience, creativity, and insights into every lesson.
+          </p>
+        </div>
  
         {/* Mentor Cards Grid - Staggered fade in up showing one by one */}
         <motion.div 

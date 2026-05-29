@@ -10,6 +10,7 @@ import {
   FiCheckCircle, 
   FiClock, 
   FiCheck, 
+  FiX,
   FiArrowLeft, 
   FiAward, 
   FiBookOpen, 
@@ -20,7 +21,8 @@ import {
   FiMaximize,
   FiMonitor,
   FiXCircle,
-  FiFileText
+  FiFileText,
+  FiHelpCircle
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -172,26 +174,12 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
       })
       const data = await res.json()
       if (res.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Request Submitted!',
-          text: 'Your certificate request has been successfully created. The admin will review and upload your PDF certificate shortly!',
-          background: '#1a1a1a',
-          color: '#ffffff',
-          confirmButtonColor: '#615fff'
-        })
         loadCertificateStatus()
       } else {
         throw new Error(data.error || 'Failed to request certificate.')
       }
     } catch (err: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Request Failed',
-        text: err.message || 'Failed to submit certificate request.',
-        background: '#1a1a1a',
-        color: '#ffffff',
-      })
+      console.error('Auto-request certificate failed:', err)
     } finally {
       setLoadingCert(false)
     }
@@ -347,7 +335,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     // 3. Prevent Copying
     const handleCopy = (e: ClipboardEvent) => {
       if (!window.location.pathname.includes('/watch')) return
-      e.clipboardData?.setData('text/plain', 'Tutor Space Anti-Piracy Shield: Copying content is disabled on this player.')
+      e.clipboardData?.setData('text/plain', 'Copying content is disabled on this player.')
       e.preventDefault()
     }
     document.addEventListener('copy', handleCopy)
@@ -516,6 +504,13 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
   const completedCount = completedLessonIds.length
   const progressPercentage = Math.round((completedCount / sortedLessons.length) * 100)
 
+  // Auto-request certificate when 100% progress is reached and there is no request logged yet
+  useEffect(() => {
+    if (progressPercentage === 100 && !certRequest && !loadingCert && sortedLessons.length > 0) {
+      handleRequestCertificate()
+    }
+  }, [progressPercentage, certRequest, loadingCert, sortedLessons.length])
+
   // Date parsing for live classes
   const liveDateObj = currentLesson.liveDate ? new Date(currentLesson.liveDate) : null
   const formattedLiveDate = liveDateObj
@@ -641,7 +636,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
           const showPreSubmitted = submission && !retakeQuiz && !quizCompleted
 
           return (
-            <div className="w-full h-full bg-[#080d1a] text-white p-6 sm:p-8 flex flex-col justify-between select-none relative overflow-y-auto">
+            <div className="w-full h-full bg-[#080d1a] text-white p-6 sm:p-8 flex flex-col justify-between select-none relative overflow-y-auto overflow-x-hidden">
               {/* Decorative glows */}
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#615fff 1.5px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
               <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#615fff]/10 rounded-full blur-2xl pointer-events-none" />
@@ -664,41 +659,114 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
               {/* Main Quiz Content */}
               {showPreSubmitted ? (
-                // Display pre-submitted quiz result details
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-5 animate-fadeIn font-sans">
-                  <div className="h-16 w-16 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/5">
-                    <FiCheckCircle className="h-8 w-8 text-emerald-400 animate-bounce" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold font-display text-white">Quiz Already Completed</h3>
-                    <p className="text-base font-semibold text-zinc-400 leading-relaxed max-w-sm mx-auto">
-                      You have already submitted and completed this evaluation test. Below are your logged grade details!
-                    </p>
+                // Display pre-submitted quiz result details and review list
+                <div className="flex-1 flex flex-col p-4 sm:p-6 space-y-6 animate-fadeIn font-sans overflow-y-auto overflow-x-hidden max-h-full">
+                  {/* Results Header Summary */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/60 p-5 border border-zinc-800 rounded-lg shadow-xl backdrop-blur-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-lg flex items-center justify-center shrink-0">
+                        <FiCheckCircle className="h-6 w-6 text-emerald-400" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="text-xl font-bold text-white leading-tight">Quiz Already Completed</h3>
+                        <p className="text-base text-zinc-400 mt-0.5">Below are your logged grade details and question review.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6 text-base font-sans">
+                      <div className="text-center sm:text-right">
+                        <p className="text-base font-bold text-zinc-400 uppercase tracking-wide">Accuracy</p>
+                        <p className="text-lg font-bold text-white">
+                          {submission.quizCorrectAnswers} / {submission.quizTotalQuestions} Correct
+                        </p>
+                      </div>
+                      <div className="h-8 w-px bg-zinc-800 hidden sm:block" />
+                      <div className="text-center sm:text-right">
+                        <p className="text-base font-bold text-zinc-400 uppercase tracking-wide">Marks</p>
+                        <p className="text-lg font-bold text-emerald-400">
+                          {submission.marksObtained} / {submission.totalMarks} Marks
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="w-full max-w-xs bg-slate-950 p-5 border border-zinc-850/80 rounded-lg flex items-center justify-between">
-                    <div className="text-left">
-                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Accuracy</p>
-                      <p className="text-xl font-bold text-white mt-0.5">
-                        {submission.quizCorrectAnswers} / {submission.quizTotalQuestions} Correct
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Marks Obtained</p>
-                      <p className="text-xl font-bold text-emerald-400 mt-0.5">
-                        {submission.marksObtained} / {submission.totalMarks} Marks
-                      </p>
+                  {/* Question Answers Review Section */}
+                  <div className="space-y-4 text-left">
+                    <h4 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-2">
+                      <FiBookOpen className="h-5 w-5 text-[#8a88ff]" />
+                      Question & Answer Review
+                    </h4>
+
+                    <div className="space-y-4">
+                      {(currentLesson.quizQuestions || []).map((q: any, qIdx: number) => {
+                        const userAnsIndex = submission.selectedAnswers ? submission.selectedAnswers[qIdx] : null
+                        const isCorrect = userAnsIndex === q.correctAnswerIndex
+
+                        return (
+                          <div key={qIdx} className="bg-slate-950/60 p-4 border border-zinc-800 rounded-lg space-y-3">
+                            <div className="flex items-start gap-2.5 justify-between">
+                              <h5 className="text-base font-bold text-white select-text">
+                                {qIdx + 1}. {q.questionText}
+                              </h5>
+                              {userAnsIndex !== null && userAnsIndex !== undefined && userAnsIndex !== -1 ? (
+                                isCorrect ? (
+                                  <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-base font-semibold rounded-lg shrink-0">
+                                    Correct
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-base font-semibold rounded-lg shrink-0">
+                                    Incorrect
+                                  </span>
+                                )
+                              ) : (
+                                <span className="px-2.5 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-400 text-base font-semibold rounded-lg shrink-0">
+                                  Submitted
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              {q.options.map((option: string, optIdx: number) => {
+                                const isCorrectOpt = optIdx === q.correctAnswerIndex
+                                const isUserSelectedOpt = userAnsIndex === optIdx
+
+                                let optBgBorder = 'bg-slate-900/35 border-zinc-850 text-zinc-350'
+                                if (isCorrectOpt) {
+                                  optBgBorder = 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                                } else if (isUserSelectedOpt && !isCorrect) {
+                                  optBgBorder = 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+                                }
+
+                                return (
+                                  <div
+                                    key={optIdx}
+                                    className={`p-3 rounded-lg border text-base font-medium flex items-center justify-between select-text ${optBgBorder}`}
+                                  >
+                                    <span className="leading-tight">{option}</span>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      {isCorrectOpt && (
+                                        <span className="text-emerald-400 text-base font-bold flex items-center gap-1 uppercase tracking-wide">
+                                          <FiCheck className="h-4 w-4" /> Correct
+                                        </span>
+                                      )}
+                                      {isUserSelectedOpt && !isCorrectOpt && (
+                                        <span className="text-rose-400 text-base font-bold flex items-center gap-1 uppercase tracking-wide">
+                                          <FiX className="h-4 w-4" /> Selected
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setRetakeQuiz(true)}
-                      className="px-5 py-2.5 rounded-lg border border-zinc-850 hover:border-zinc-700 text-zinc-350 hover:text-white text-base font-bold cursor-pointer transition-colors"
-                    >
-                      Retake Quiz
-                    </button>
+                  {/* Actions (Next Lesson / Close) */}
+                  <div className="flex items-center justify-end gap-3 pt-2">
                     {sortedLessons.findIndex(l => l.id === currentLesson.id) < sortedLessons.length - 1 && (
                       <button
                         type="button"
@@ -739,7 +807,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                   </div>
 
                   {/* Options list */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 items-center overflow-y-auto max-h-[220px] pr-1 font-sans">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 items-center overflow-y-auto overflow-x-hidden max-h-[220px] pr-1 font-sans">
                     {currentLesson.quizQuestions[currentQuestionIndex].options.map((option, idx) => {
                       const isSelected = selectedAnswers[currentQuestionIndex] === idx
                       return (
@@ -809,6 +877,10 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                               handleToggleComplete(currentLesson.id)
                             }
 
+                            const answersArray = Array.from({ length: questions.length }, (_, idx) => 
+                              selectedAnswers[idx] !== undefined ? selectedAnswers[idx] : -1
+                            )
+
                             try {
                               await fetch('/api/submissions', {
                                 method: 'POST',
@@ -818,7 +890,8 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                                   lessonId: currentLesson.id,
                                   type: 'quiz',
                                   quizCorrectAnswers: correctCount,
-                                  quizTotalQuestions: questions.length
+                                  quizTotalQuestions: questions.length,
+                                  selectedAnswers: answersArray
                                 })
                               })
                               fetchSubmissions()
@@ -848,66 +921,132 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                   </div>
                 </div>
               ) : (
-                // Quiz completed congrats page
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-5 animate-fadeIn font-sans">
-                  <div className="h-16 w-16 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/5">
-                    <FiAward className="h-8 w-8 animate-bounce" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold font-display text-white">Quiz Results Summary</h3>
-                    <p className="text-sm font-semibold text-zinc-400 leading-relaxed max-w-sm mx-auto">
-                      Outstanding job! You scored <span className="text-emerald-400 font-bold">{quizScore} out of {currentLesson.quizQuestions.length}</span> correct answers. Your course progress has been automatically updated!
-                    </p>
-                  </div>
+                // Quiz completed congrats page with live question/answers review list
+                 <div className="flex-1 flex flex-col p-4 sm:p-6 space-y-6 animate-fadeIn font-sans overflow-y-auto overflow-x-hidden max-h-full">
+                   {/* Results Header Summary */}
+                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/60 p-5 border border-zinc-800 rounded-lg shadow-xl backdrop-blur-sm">
+                     <div className="flex items-center gap-4">
+                       <div className="h-12 w-12 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-lg flex items-center justify-center shrink-0">
+                         <FiAward className="h-6 w-6 text-emerald-400" />
+                       </div>
+                       <div className="text-left">
+                         <h3 className="text-xl font-bold text-white leading-tight">Quiz Results Summary</h3>
+                         <p className="text-base text-zinc-400 mt-0.5">Awesome job! Below is your live performance review.</p>
+                       </div>
+                     </div>
 
-                  {/* Progress ring or visual score bar */}
-                  <div className="w-full max-w-xs bg-slate-950 p-4 border border-zinc-850/80 rounded-lg flex items-center justify-between">
-                    <div className="text-left">
-                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Accuracy</p>
-                      <p className="text-xl font-bold text-white mt-0.5">
-                        {Math.round((quizScore / currentLesson.quizQuestions.length) * 100)}% Correct
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Marks Obtained</p>
-                      <p className="text-xl font-bold text-emerald-400 mt-0.5">
-                        {Math.round((quizScore / currentLesson.quizQuestions.length) * (currentLesson.totalMarks || 100))} / {currentLesson.totalMarks || 100}
-                      </p>
-                    </div>
-                  </div>
+                     <div className="flex items-center gap-6">
+                       <div className="text-center sm:text-right">
+                         <p className="text-base font-bold text-zinc-400 uppercase tracking-wide">Accuracy</p>
+                         <p className="text-lg font-bold text-white">
+                           {Math.round((quizScore / currentLesson.quizQuestions.length) * 100)}% Correct
+                         </p>
+                       </div>
+                       <div className="h-8 w-px bg-zinc-800 hidden sm:block" />
+                       <div className="text-center sm:text-right">
+                         <p className="text-base font-bold text-zinc-400 uppercase tracking-wide">Marks</p>
+                         <p className="text-lg font-bold text-emerald-400">
+                           {Math.round((quizScore / currentLesson.quizQuestions.length) * (currentLesson.totalMarks || 100))} / {currentLesson.totalMarks || 100}
+                         </p>
+                       </div>
+                     </div>
+                   </div>
 
-                  {/* Retake and next lesson navigation */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedAnswers({})
-                        setCurrentQuestionIndex(0)
-                        setQuizCompleted(false)
-                        setQuizScore(0)
-                      }}
-                      className="px-5 py-2.5 rounded-lg border border-zinc-850 hover:border-zinc-700 text-zinc-350 hover:text-white text-base font-bold cursor-pointer transition-colors"
-                    >
-                      Retake Quiz
-                    </button>
-                    {sortedLessons.findIndex(l => l.id === currentLesson.id) < sortedLessons.length - 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextIdx = sortedLessons.findIndex(l => l.id === currentLesson.id) + 1
-                          if (nextIdx < sortedLessons.length) {
-                            const nextL = sortedLessons[nextIdx]
-                            setActiveLesson(nextL)
-                            router.replace(`/courses/${course.slug}/watch?lesson=${nextL.id}`)
-                          }
-                        }}
-                        className="px-6 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg cursor-pointer transition-all shadow-md shadow-[#615fff]/15 border-none"
-                      >
-                        Next Lesson
-                      </button>
-                    )}
-                  </div>
-                </div>
+                   {/* Question Answers Review Section */}
+                   <div className="space-y-4 text-left">
+                     <h4 className="text-lg font-bold text-white flex items-center gap-2 border-b border-zinc-800 pb-2">
+                       <FiBookOpen className="h-5 w-5 text-[#8a88ff]" />
+                       Question & Answer Review
+                     </h4>
+
+                     <div className="space-y-4">
+                       {(currentLesson.quizQuestions || []).map((q: any, qIdx: number) => {
+                         const userAnsIndex = selectedAnswers[qIdx]
+                         const isCorrect = userAnsIndex === q.correctAnswerIndex
+
+                         return (
+                           <div key={qIdx} className="bg-slate-950/60 p-4 border border-zinc-800 rounded-lg space-y-3">
+                             <div className="flex items-start gap-2.5 justify-between">
+                               <h5 className="text-base font-bold text-white select-text">
+                                 {qIdx + 1}. {q.questionText}
+                               </h5>
+                               {userAnsIndex !== null && userAnsIndex !== undefined ? (
+                                 isCorrect ? (
+                                   <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-base font-semibold rounded-lg shrink-0">
+                                     Correct
+                                   </span>
+                                 ) : (
+                                   <span className="px-2.5 py-0.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-base font-semibold rounded-lg shrink-0">
+                                     Incorrect
+                                   </span>
+                                 )
+                               ) : (
+                                 <span className="px-2.5 py-0.5 bg-zinc-800 border border-zinc-700 text-zinc-400 text-base font-semibold rounded-lg shrink-0">
+                                   Not Answered
+                                 </span>
+                               )}
+                             </div>
+
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                               {q.options.map((option: string, optIdx: number) => {
+                                 const isCorrectOpt = optIdx === q.correctAnswerIndex
+                                 const isUserSelectedOpt = userAnsIndex === optIdx
+
+                                 let optBgBorder = 'bg-slate-900/35 border-zinc-850 text-zinc-350'
+                                 if (isCorrectOpt) {
+                                   optBgBorder = 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                                 } else if (isUserSelectedOpt && !isCorrect) {
+                                   optBgBorder = 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+                                 }
+
+                                 return (
+                                   <div
+                                     key={optIdx}
+                                     className={`p-3 rounded-lg border text-base font-medium flex items-center justify-between select-text ${optBgBorder}`}
+                                   >
+                                     <span className="leading-tight">{option}</span>
+                                     <div className="flex items-center gap-1.5 shrink-0">
+                                       {isCorrectOpt && (
+                                         <span className="text-emerald-400 text-base font-bold flex items-center gap-1 uppercase tracking-wide">
+                                           <FiCheck className="h-4 w-4" /> Correct
+                                         </span>
+                                       )}
+                                       {isUserSelectedOpt && !isCorrectOpt && (
+                                         <span className="text-rose-400 text-base font-bold flex items-center gap-1 uppercase tracking-wide">
+                                           <FiX className="h-4 w-4" /> Selected
+                                         </span>
+                                       )}
+                                     </div>
+                                   </div>
+                                 )
+                               })}
+                             </div>
+                           </div>
+                         )
+                       })}
+                     </div>
+                   </div>
+
+                   {/* Actions */}
+                   <div className="flex items-center justify-end gap-3 pt-2">
+                     {sortedLessons.findIndex(l => l.id === currentLesson.id) < sortedLessons.length - 1 && (
+                       <button
+                         type="button"
+                         onClick={() => {
+                           const nextIdx = sortedLessons.findIndex(l => l.id === currentLesson.id) + 1
+                           if (nextIdx < sortedLessons.length) {
+                             const nextL = sortedLessons[nextIdx]
+                             setActiveLesson(nextL)
+                             router.replace(`/courses/${course.slug}/watch?lesson=${nextL.id}`)
+                           }
+                         }}
+                         className="px-6 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg cursor-pointer transition-all shadow-md shadow-[#615fff]/15 border-none"
+                       >
+                         Next Lesson
+                       </button>
+                     )}
+                   </div>
+                 </div>
               )}
             </div>
           )
@@ -977,7 +1116,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
           }
 
           return (
-            <div className="w-full h-full bg-[#080d1a] text-white p-6 sm:p-8 flex flex-col justify-between select-none relative overflow-y-auto font-sans">
+            <div className="w-full h-full bg-[#080d1a] text-white p-6 sm:p-8 flex flex-col justify-between select-none relative overflow-y-auto overflow-x-hidden font-sans">
               {/* Decorative glows */}
               <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#615fff 1.5px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
               <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#615fff]/10 rounded-full blur-2xl pointer-events-none" />
@@ -1046,7 +1185,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                 )}
 
                 {/* Submit Drive link form */}
-                {!isGraded && (
+                {!submission && (
                   <form onSubmit={handleDriveSubmission} className="space-y-4">
                     <div className="flex flex-col gap-2">
                       <label className="text-base font-bold text-zinc-300">Google Drive Attachment Link *</label>
@@ -1185,17 +1324,12 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
           
           {!certRequest ? (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-zinc-650 leading-relaxed">
-                Outstanding! You have completed 100% of the syllabus program. Claim your verified PDF credentials now!
+              <p className="text-sm font-semibold text-zinc-500 leading-relaxed animate-pulse">
+                Congratulations on completing the course! Creating your completion certificate request...
               </p>
-              <button
-                type="button"
-                disabled={loadingCert}
-                onClick={handleRequestCertificate}
-                className="w-full py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold shadow-md shadow-[#615fff]/15 hover:scale-[1.01] transition-all cursor-pointer border-none flex items-center justify-center"
-              >
-                {loadingCert ? 'Submitting...' : 'Request Certificate'}
-              </button>
+              <div className="w-full h-1.5 bg-slate-200 rounded-lg overflow-hidden">
+                <div className="h-full bg-[#615fff] rounded-lg animate-pulse" style={{ width: '60%' }} />
+              </div>
             </div>
           ) : certRequest.status === 'pending' ? (
             <div className="space-y-2">
@@ -1264,6 +1398,10 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                   <FiCheckCircle className="h-5 w-5 text-emerald-600 fill-emerald-50 shrink-0" />
                 ) : lesson.lessonType === 'live' ? (
                   <FiRadio className={`h-5 w-5 shrink-0 ${isActive ? 'text-rose-500' : 'text-rose-400'}`} />
+                ) : lesson.lessonType === 'quiz' ? (
+                  <FiHelpCircle className={`h-5 w-5 shrink-0 ${isActive ? 'text-amber-500' : 'text-amber-400'}`} />
+                ) : lesson.lessonType === 'assignment' ? (
+                  <FiFileText className={`h-5 w-5 shrink-0 ${isActive ? 'text-[#615fff]' : 'text-zinc-400'}`} />
                 ) : (
                   <FiVideo className={`h-5 w-5 shrink-0 ${isActive ? 'text-[#615fff]' : 'text-zinc-400'}`} />
                 )}
@@ -1277,8 +1415,22 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                 <div className="flex items-center gap-2 text-xs font-bold text-zinc-450 uppercase tracking-wide">
                   <span>{lesson.duration} mins</span>
                   <span>•</span>
-                  <span className={lesson.lessonType === 'live' ? 'text-rose-500' : ''}>
-                    {lesson.lessonType === 'live' ? 'Live Webinar' : 'Pre-recorded'}
+                  <span className={
+                    lesson.lessonType === 'live' 
+                      ? 'text-rose-500' 
+                      : lesson.lessonType === 'quiz'
+                      ? 'text-amber-500'
+                      : lesson.lessonType === 'assignment'
+                      ? 'text-[#615fff]'
+                      : ''
+                  }>
+                    {lesson.lessonType === 'live' 
+                      ? 'Live Webinar' 
+                      : lesson.lessonType === 'quiz' 
+                      ? 'Interactive Quiz' 
+                      : lesson.lessonType === 'assignment' 
+                      ? 'Assignment Task' 
+                      : 'Pre-recorded'}
                   </span>
                 </div>
               </div>

@@ -18,7 +18,7 @@ const NAV_LINKS = [
   { label: 'Home',        href: '/',            match: '/' },
   { label: 'Courses',     href: '/courses',     match: '/courses' },
   { label: 'Instructors', href: '/instructors', match: '/instructors' },
-  { label: 'About Us',    href: '#about-us',    match: '/about' },
+  { label: 'About Us',    href: '/about',       match: '/about' },
   { label: 'Contact Us',  href: '/contact',     match: '/contact' },
 ]
 
@@ -132,7 +132,7 @@ export default function Navbar() {
         </Link>
 
         {/* Middle: Navigation Menu (Desktop) */}
-        <nav className="hidden md:flex items-center gap-8 text-base font-semibold">
+        <nav className="hidden lg:flex items-center gap-8 text-base font-semibold">
           {NAV_LINKS.map((link) => {
             const active = isActive(link.match)
             return (
@@ -225,7 +225,7 @@ export default function Navbar() {
                         <p className="text-base font-bold text-zinc-800 truncate">{user.name}</p>
                         <p className="text-base text-zinc-500 truncate">{user.email}</p>
                         <span className="inline-block mt-2 px-2.5 py-0.5 rounded-lg bg-[#615fff]/10 text-xs font-bold text-[#615fff] uppercase">
-                          {user.role}
+                          {['admin', 'staff', 'instructor'].includes(user.role) ? 'student' : user.role}
                         </span>
                       </div>
 
@@ -310,7 +310,7 @@ export default function Navbar() {
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`p-2 md:hidden transition-colors ${
+            className={`p-2 lg:hidden transition-colors ${
               isScrolled ? 'text-zinc-500 hover:text-zinc-900' : 'text-[#0A163A]/70 hover:text-[#0A163A]'
             }`}
           >
@@ -328,7 +328,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden bg-white px-6 py-4 shadow-2xl shadow-zinc-200/50 overflow-hidden"
+            className="lg:hidden bg-white px-6 py-4 shadow-2xl shadow-zinc-200/50 overflow-hidden"
           >
             <nav className="flex flex-col gap-2 text-base font-semibold">
               {NAV_LINKS.map((link) => {

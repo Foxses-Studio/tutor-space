@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { courseId, lessonId, type, googleDriveLink, quizCorrectAnswers, quizTotalQuestions } = body
+    const { courseId, lessonId, type, googleDriveLink, quizCorrectAnswers, quizTotalQuestions, selectedAnswers } = body
 
     if (!courseId || !lessonId || !type) {
       return NextResponse.json({ success: false, error: 'Missing required parameters.' }, { status: 400 })
@@ -105,6 +105,7 @@ export async function POST(request: Request) {
         marksObtained,
         quizCorrectAnswers: type === 'quiz' ? quizCorrectAnswers : undefined,
         quizTotalQuestions: type === 'quiz' ? quizTotalQuestions : undefined,
+        selectedAnswers: type === 'quiz' ? selectedAnswers : undefined,
         submittedAt: new Date(),
       },
       { upsert: true, new: true }
