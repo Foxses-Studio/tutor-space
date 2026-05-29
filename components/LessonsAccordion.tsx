@@ -3,14 +3,14 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiVideo, FiRadio, FiEye, FiChevronDown, FiChevronUp, FiClock, FiX, FiPlay, FiLock } from 'react-icons/fi'
+import { FiVideo, FiRadio, FiEye, FiChevronDown, FiChevronUp, FiClock, FiX, FiPlay, FiLock, FiHelpCircle, FiFileText } from 'react-icons/fi'
 
 interface LessonItem {
   id: string
   title: string
   slug: string
   order: number
-  lessonType: 'recorded' | 'live'
+  lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
   duration: number
   isPreviewable: boolean
   livePlatform?: string
@@ -95,10 +95,18 @@ export default function LessonsAccordion({
                   <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
                     lesson.lessonType === 'live'
                       ? 'bg-rose-50/8 text-rose-500'
+                      : lesson.lessonType === 'quiz'
+                      ? 'bg-amber-50/8 text-amber-500'
+                      : lesson.lessonType === 'assignment'
+                      ? 'bg-[#615fff]/10 text-[#615fff]'
                       : 'bg-zinc-100 text-zinc-550'
                   }`}>
                     {lesson.lessonType === 'live' ? (
                       <FiRadio className="h-4.5 w-4.5" />
+                    ) : lesson.lessonType === 'quiz' ? (
+                      <FiHelpCircle className="h-4.5 w-4.5" />
+                    ) : lesson.lessonType === 'assignment' ? (
+                      <FiFileText className="h-4.5 w-4.5" />
                     ) : (
                       <FiVideo className="h-4.5 w-4.5" />
                     )}
@@ -109,12 +117,22 @@ export default function LessonsAccordion({
                     <h3 className="font-bold text-[#0A163A] text-base leading-snug truncate">
                       {lesson.order}. {lesson.title}
                     </h3>
-                    <span className="text-base font-semibold text-zinc-450 whitespace-nowrap">
+                    <span className="text-base font-semibold text-zinc-455 whitespace-nowrap">
                       ({lesson.duration} mins)
                     </span>
                     {lesson.lessonType === 'live' && (
                       <span className="text-base font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100 shrink-0">
                         Live • {lesson.livePlatform || 'Zoom'}
+                      </span>
+                    )}
+                    {lesson.lessonType === 'quiz' && (
+                      <span className="text-base font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-100 shrink-0">
+                        Interactive Quiz
+                      </span>
+                    )}
+                    {lesson.lessonType === 'assignment' && (
+                      <span className="text-base font-bold text-[#615fff] bg-[#615fff]/5 px-2 py-0.5 rounded-lg border border-[#615fff]/10 shrink-0">
+                        Assignment
                       </span>
                     )}
                   </div>
@@ -196,6 +214,10 @@ export default function LessonsAccordion({
                             <p className="text-base font-semibold text-zinc-650 leading-relaxed font-sans">
                               {lesson.lessonType === 'live'
                                 ? 'Join our interactive Live Lecture broadcasted on ' + (lesson.livePlatform || 'Zoom') + '. You can ask questions in real-time and engage with other students.'
+                                : lesson.lessonType === 'quiz'
+                                ? 'Test your comprehension with an interactive Multiple Choice Quiz. Secure a passing score to validate your understanding of the lecture topic.'
+                                : lesson.lessonType === 'assignment'
+                                ? 'Complete this hands-on assignment evaluation task. Once completed, submit your secure Google Drive link in the watch player watch room for teacher grading.'
                                 : 'This is a premium pre-recorded high-definition video lesson. Complete the video lectures and hands-on worksheets at your own comfortable pace.'}
                             </p>
                             

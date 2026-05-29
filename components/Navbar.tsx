@@ -15,11 +15,11 @@ interface User {
 }
 
 const NAV_LINKS = [
-  { label: 'Home',        href: '/',           match: '/' },
-  { label: 'Courses',     href: '/courses',    match: '/courses' },
+  { label: 'Home',        href: '/',            match: '/' },
+  { label: 'Courses',     href: '/courses',     match: '/courses' },
   { label: 'Instructors', href: '/instructors', match: '/instructors' },
-  { label: 'About Us',    href: '#about-us',   match: '/about' },
-  { label: 'Contact Us',  href: '/contact',    match: '/contact' },
+  { label: 'About Us',    href: '#about-us',    match: '/about' },
+  { label: 'Contact Us',  href: '/contact',     match: '/contact' },
 ]
 
 export default function Navbar() {

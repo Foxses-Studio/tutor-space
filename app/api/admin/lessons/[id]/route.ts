@@ -83,6 +83,7 @@ export async function PUT(
       duration: finalDuration,
       isPreviewable: body.isPreviewable ?? lesson.isPreviewable,
       autoGenerateZoom: finalAutoGenerateZoom,
+      quizQuestions: finalLessonType === 'quiz' ? (body.quizQuestions ?? lesson.quizQuestions) : undefined,
     })
     await lesson.save()
 

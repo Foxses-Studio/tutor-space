@@ -18,21 +18,31 @@ import {
   FiCalendar, 
   FiExternalLink,
   FiMaximize,
-  FiMonitor
+  FiMonitor,
+  FiXCircle,
+  FiFileText
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
+
+interface QuizQuestion {
+  questionText: string
+  options: string[]
+  correctAnswerIndex: number
+}
 
 interface LessonItem {
   id: string
   title: string
   slug: string
   order: number
-  lessonType: 'recorded' | 'live'
+  lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
   duration: number
   isPreviewable: boolean
   livePlatform?: string
   liveDate?: string
   videoUrl?: string
+  quizQuestions?: QuizQuestion[]
+  totalMarks?: number
 }
 
 interface CourseItem {
@@ -95,6 +105,112 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
   // Active blackout state to shield video when user switches tabs or takes screenshots
   const [isBlackout, setIsBlackout] = useState(false)
 
+  // Quiz states
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
+  const [quizCompleted, setQuizCompleted] = useState(false)
+  const [quizScore, setQuizScore] = useState(0)
+  const [retakeQuiz, setRetakeQuiz] = useState(false)
+
+  // Certificate states
+  const [certRequest, setCertRequest] = useState<{ status: string; certificateUrl: string | null } | null>(null)
+  const [loadingCert, setLoadingCert] = useState(false)
+
+  // Student Evaluation Submissions
+  const [submissionsMap, setSubmissionsMap] = useState<Record<string, any>>({})
+  const [driveLinkInput, setDriveLinkInput] = useState('')
+  const [submittingDrive, setSubmittingDrive] = useState(false)
+
+  const fetchSubmissions = async () => {
+    try {
+      const res = await fetch(`/api/submissions?courseId=${course.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.submissions) {
+          const map: Record<string, any> = {}
+          data.submissions.forEach((s: any) => {
+            const lessonId = s.lesson?._id || s.lesson
+            if (lessonId) {
+              map[lessonId.toString()] = s
+            }
+          })
+          setSubmissionsMap(map)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load submissions', err)
+    }
+  }
+
+  const loadCertificateStatus = async () => {
+    try {
+      const res = await fetch('/api/certificates')
+      if (res.ok) {
+        const data = await res.json()
+        const found = data.requests?.find((r: any) => r.courseId === course.id)
+        if (found) {
+          setCertRequest({
+            status: found.status,
+            certificateUrl: found.certificateUrl,
+          })
+        } else {
+          setCertRequest(null)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load certificate status', err)
+    }
+  }
+
+  const handleRequestCertificate = async () => {
+    setLoadingCert(true)
+    try {
+      const res = await fetch('/api/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: course.id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Request Submitted!',
+          text: 'Your certificate request has been successfully created. The admin will review and upload your PDF certificate shortly!',
+          background: '#1a1a1a',
+          color: '#ffffff',
+          confirmButtonColor: '#615fff'
+        })
+        loadCertificateStatus()
+      } else {
+        throw new Error(data.error || 'Failed to request certificate.')
+      }
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Request Failed',
+        text: err.message || 'Failed to submit certificate request.',
+        background: '#1a1a1a',
+        color: '#ffffff',
+      })
+    } finally {
+      setLoadingCert(false)
+    }
+  }
+
+  // Load certificate status on course mount
+  useEffect(() => {
+    loadCertificateStatus()
+  }, [course.id])
+
+  // Reset quiz states when active lesson changes
+  useEffect(() => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswers({})
+    setQuizCompleted(false)
+    setQuizScore(0)
+    setRetakeQuiz(false)
+  }, [activeLesson?.id])
+
   // Sort lessons by order
   const sortedLessons = [...lessons].sort((a, b) => a.order - b.order)
 
@@ -113,7 +229,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     }
   }, [searchParams, lessons])
 
-  // Load completed lessons from DB API on mount
+  // Load completed lessons & submissions from DB API on mount
   useEffect(() => {
     async function loadProgress() {
       try {
@@ -128,6 +244,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
       }
     }
     loadProgress()
+    fetchSubmissions()
   }, [course.id])
 
   // Fullscreen toggle handler
@@ -510,12 +627,462 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                 <span>Join Live Broadcast</span>
               </a>
             ) : (
-              <div className="py-2 px-4 rounded-lg bg-white/5 border border-white/10 text-slate-400 text-base font-bold select-none">
-                Link Activating at Class Time
-              </div>
+              <span className="py-2.5 px-4.5 rounded-lg bg-zinc-800 text-zinc-400 font-bold text-base whitespace-nowrap cursor-not-allowed inline-flex items-center gap-2 border border-zinc-700 select-none">
+                <FiLock className="h-4.5 w-4.5 text-zinc-500" />
+                <span>Link Not Available</span>
+              </span>
             )}
           </div>
         </div>
+      ) : currentLesson.lessonType === 'quiz' ? (
+        // Render stunning interactive quiz player layout
+        (() => {
+          const submission = submissionsMap[currentLesson.id]
+          const showPreSubmitted = submission && !retakeQuiz && !quizCompleted
+
+          return (
+            <div className="w-full h-full bg-[#080d1a] text-white p-6 sm:p-8 flex flex-col justify-between select-none relative overflow-y-auto">
+              {/* Decorative glows */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#615fff 1.5px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#615fff]/10 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Title and score or question counter */}
+              <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0 font-sans">
+                <span className="px-3.5 py-1 bg-[#615fff]/20 border border-[#615fff]/30 text-[#8a88ff] text-base font-bold rounded-lg flex items-center gap-2 uppercase tracking-wide animate-fadeIn">
+                  <FiAward className="h-4 w-4" />
+                  Interactive Quiz
+                </span>
+                <span className="text-base font-bold text-slate-400">
+                  {showPreSubmitted 
+                    ? 'Completed'
+                    : !quizCompleted 
+                    ? `Question ${currentQuestionIndex + 1} of ${currentLesson.quizQuestions?.length || 0}`
+                    : `Quiz Finished`
+                  }
+                </span>
+              </div>
+
+              {/* Main Quiz Content */}
+              {showPreSubmitted ? (
+                // Display pre-submitted quiz result details
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-5 animate-fadeIn font-sans">
+                  <div className="h-16 w-16 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/5">
+                    <FiCheckCircle className="h-8 w-8 text-emerald-400 animate-bounce" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold font-display text-white">Quiz Already Completed</h3>
+                    <p className="text-base font-semibold text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                      You have already submitted and completed this evaluation test. Below are your logged grade details!
+                    </p>
+                  </div>
+
+                  <div className="w-full max-w-xs bg-slate-950 p-5 border border-zinc-850/80 rounded-lg flex items-center justify-between">
+                    <div className="text-left">
+                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Accuracy</p>
+                      <p className="text-xl font-bold text-white mt-0.5">
+                        {submission.quizCorrectAnswers} / {submission.quizTotalQuestions} Correct
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Marks Obtained</p>
+                      <p className="text-xl font-bold text-emerald-400 mt-0.5">
+                        {submission.marksObtained} / {submission.totalMarks} Marks
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setRetakeQuiz(true)}
+                      className="px-5 py-2.5 rounded-lg border border-zinc-850 hover:border-zinc-700 text-zinc-350 hover:text-white text-base font-bold cursor-pointer transition-colors"
+                    >
+                      Retake Quiz
+                    </button>
+                    {sortedLessons.findIndex(l => l.id === currentLesson.id) < sortedLessons.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextIdx = sortedLessons.findIndex(l => l.id === currentLesson.id) + 1
+                          if (nextIdx < sortedLessons.length) {
+                            const nextL = sortedLessons[nextIdx]
+                            setActiveLesson(nextL)
+                            router.replace(`/courses/${course.slug}/watch?lesson=${nextL.id}`)
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg cursor-pointer transition-all shadow-md shadow-[#615fff]/15 border-none"
+                      >
+                        Next Lesson
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : !currentLesson.quizQuestions || currentLesson.quizQuestions.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 font-sans">
+                  <FiBookOpen className="h-12 w-12 text-slate-600 mb-3" />
+                  <p className="text-base font-bold text-slate-450">No questions defined for this quiz yet.</p>
+                </div>
+              ) : !quizCompleted ? (
+                // Active quiz question display
+                <div className="flex-1 flex flex-col justify-between py-6 gap-6 min-h-0">
+                  {/* Question Text */}
+                  <div className="space-y-3 shrink-0 font-sans">
+                    <div className="w-full bg-slate-950 h-2 rounded-lg overflow-hidden">
+                      <div 
+                        className="bg-[#615fff] h-full rounded-lg transition-all duration-300"
+                        style={{ width: `${((currentQuestionIndex + 1) / currentLesson.quizQuestions.length) * 100}%` }}
+                      />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold font-display leading-snug text-white select-text animate-fadeIn">
+                      {currentLesson.quizQuestions[currentQuestionIndex].questionText}
+                    </h3>
+                  </div>
+
+                  {/* Options list */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 items-center overflow-y-auto max-h-[220px] pr-1 font-sans">
+                    {currentLesson.quizQuestions[currentQuestionIndex].options.map((option, idx) => {
+                      const isSelected = selectedAnswers[currentQuestionIndex] === idx
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedAnswers({ ...selectedAnswers, [currentQuestionIndex]: idx })}
+                          className={`w-full p-4 rounded-lg border text-left font-bold text-base transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#615fff]/15 border-[#615fff] text-white shadow-lg shadow-[#615fff]/10'
+                              : 'bg-slate-950/45 border-zinc-800 text-zinc-350 hover:border-zinc-700 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 ${
+                              isSelected ? 'border-[#615fff] bg-[#615fff]' : 'border-zinc-700 bg-transparent'
+                            }`}>
+                              {isSelected && <FiCheck className="h-3 w-3 text-white" />}
+                            </div>
+                            <span className="select-text leading-tight">{option}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Back / Next actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-white/5 shrink-0 font-sans">
+                    <button
+                      type="button"
+                      disabled={currentQuestionIndex === 0}
+                      onClick={() => setCurrentQuestionIndex(currentQuestionIndex - 1)}
+                      className={`px-4 py-2.5 rounded-lg border text-base font-bold transition-all cursor-pointer ${
+                        currentQuestionIndex === 0
+                          ? 'border-zinc-850 text-zinc-650 cursor-not-allowed select-none'
+                          : 'border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-white'
+                      }`}
+                    >
+                      Back
+                    </button>
+
+                    {selectedAnswers[currentQuestionIndex] !== undefined ? (
+                      currentQuestionIndex < currentLesson.quizQuestions.length - 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                          className="px-5 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg cursor-pointer transition-all shadow-md shadow-[#615fff]/15 border-none"
+                        >
+                          Next Question
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const questions = currentLesson.quizQuestions || []
+                            let correctCount = 0
+                            questions.forEach((q, qIdx) => {
+                              if (selectedAnswers[qIdx] === q.correctAnswerIndex) {
+                                correctCount++
+                              }
+                            })
+                            setQuizScore(correctCount)
+                            setQuizCompleted(true)
+
+                            // Automatically mark the quiz lesson as completed!
+                            if (!completedLessonIds.includes(currentLesson.id)) {
+                              handleToggleComplete(currentLesson.id)
+                            }
+
+                            try {
+                              await fetch('/api/submissions', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  courseId: course.id,
+                                  lessonId: currentLesson.id,
+                                  type: 'quiz',
+                                  quizCorrectAnswers: correctCount,
+                                  quizTotalQuestions: questions.length
+                                })
+                              })
+                              fetchSubmissions()
+                            } catch (err) {
+                              console.error('Failed to save quiz score to DB', err)
+                            }
+
+                            Swal.fire({
+                              icon: 'success',
+                              title: 'Quiz Finished!',
+                              text: `You have successfully completed this quiz lesson! Correct answers: ${correctCount} of ${questions.length}.`,
+                              background: '#1a1a1a',
+                              color: '#ffffff',
+                              confirmButtonColor: '#615fff'
+                            })
+                          }}
+                          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base rounded-lg cursor-pointer transition-all shadow-md shadow-emerald-600/15 border-none"
+                        >
+                          Submit Quiz
+                        </button>
+                      )
+                    ) : (
+                      <div className="text-base font-bold text-zinc-500 animate-pulse bg-zinc-950 px-3 py-2 rounded border border-zinc-850">
+                        Select an answer to proceed
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Quiz completed congrats page
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-4 sm:p-6 space-y-5 animate-fadeIn font-sans">
+                  <div className="h-16 w-16 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/5">
+                    <FiAward className="h-8 w-8 animate-bounce" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold font-display text-white">Quiz Results Summary</h3>
+                    <p className="text-sm font-semibold text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                      Outstanding job! You scored <span className="text-emerald-400 font-bold">{quizScore} out of {currentLesson.quizQuestions.length}</span> correct answers. Your course progress has been automatically updated!
+                    </p>
+                  </div>
+
+                  {/* Progress ring or visual score bar */}
+                  <div className="w-full max-w-xs bg-slate-950 p-4 border border-zinc-850/80 rounded-lg flex items-center justify-between">
+                    <div className="text-left">
+                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Accuracy</p>
+                      <p className="text-xl font-bold text-white mt-0.5">
+                        {Math.round((quizScore / currentLesson.quizQuestions.length) * 100)}% Correct
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-base font-bold text-zinc-450 uppercase tracking-widest">Marks Obtained</p>
+                      <p className="text-xl font-bold text-emerald-400 mt-0.5">
+                        {Math.round((quizScore / currentLesson.quizQuestions.length) * (currentLesson.totalMarks || 100))} / {currentLesson.totalMarks || 100}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Retake and next lesson navigation */}
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedAnswers({})
+                        setCurrentQuestionIndex(0)
+                        setQuizCompleted(false)
+                        setQuizScore(0)
+                      }}
+                      className="px-5 py-2.5 rounded-lg border border-zinc-850 hover:border-zinc-700 text-zinc-350 hover:text-white text-base font-bold cursor-pointer transition-colors"
+                    >
+                      Retake Quiz
+                    </button>
+                    {sortedLessons.findIndex(l => l.id === currentLesson.id) < sortedLessons.length - 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextIdx = sortedLessons.findIndex(l => l.id === currentLesson.id) + 1
+                          if (nextIdx < sortedLessons.length) {
+                            const nextL = sortedLessons[nextIdx]
+                            setActiveLesson(nextL)
+                            router.replace(`/courses/${course.slug}/watch?lesson=${nextL.id}`)
+                          }
+                        }}
+                        className="px-6 py-2.5 bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base rounded-lg cursor-pointer transition-all shadow-md shadow-[#615fff]/15 border-none"
+                      >
+                        Next Lesson
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })()
+      ) : currentLesson.lessonType === 'assignment' ? (
+        // Render Assignment submission portal
+        (() => {
+          const submission = submissionsMap[currentLesson.id]
+          const isGraded = submission?.status === 'graded'
+
+          const handleDriveSubmission = async (e: React.FormEvent) => {
+            e.preventDefault()
+            if (!driveLinkInput.trim() || !driveLinkInput.startsWith('http')) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Validation Error',
+                text: 'Please input a valid URL link (e.g. Google Drive sharing URL).',
+                background: '#1a1a1a',
+                color: '#ffffff',
+              })
+              return
+            }
+
+            setSubmittingDrive(true)
+            try {
+              const res = await fetch('/api/submissions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  courseId: course.id,
+                  lessonId: currentLesson.id,
+                  type: 'assignment',
+                  googleDriveLink: driveLinkInput
+                })
+              })
+
+              const data = await res.json()
+              if (!res.ok) throw new Error(data.error || 'Failed to submit assignment.')
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Assignment Submitted!',
+                text: 'Your assignment Google Drive link has been logged successfully for instructor grading.',
+                background: '#1a1a1a',
+                color: '#ffffff',
+                confirmButtonColor: '#615fff'
+              })
+
+              // Mark lesson completed in client lists
+              if (!completedLessonIds.includes(currentLesson.id)) {
+                setCompletedLessonIds([...completedLessonIds, currentLesson.id])
+              }
+
+              setDriveLinkInput('')
+              fetchSubmissions()
+            } catch (err: any) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: err.message || 'Error occurred while saving assignment submission.',
+                background: '#1a1a1a',
+                color: '#ffffff',
+              })
+            } finally {
+              setSubmittingDrive(false)
+            }
+          }
+
+          return (
+            <div className="w-full h-full bg-[#080d1a] text-white p-6 sm:p-8 flex flex-col justify-between select-none relative overflow-y-auto font-sans">
+              {/* Decorative glows */}
+              <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#615fff 1.5px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#615fff]/10 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center border-b border-white/5 pb-4 shrink-0">
+                <span className="px-3.5 py-1 bg-[#615fff]/20 border border-[#615fff]/30 text-[#8a88ff] text-sm font-bold rounded-lg flex items-center gap-2 uppercase tracking-wide">
+                  <FiFileText className="h-4 w-4" />
+                  Assignment Portal
+                </span>
+                <span className="text-sm font-bold text-slate-400">
+                  Evaluation Marks: {currentLesson.totalMarks || 100}
+                </span>
+              </div>
+
+              {/* Portal content body */}
+              <div className="flex-1 py-6 space-y-5 flex flex-col justify-center max-w-xl mx-auto w-full min-h-0">
+                <div className="space-y-1.5 text-center sm:text-left">
+                  <h3 className="text-2xl font-bold font-display text-white">
+                    {currentLesson.order}. {currentLesson.title} Submission
+                  </h3>
+                  <p className="text-base font-medium text-zinc-400 leading-relaxed">
+                    Upload your project task deliverables inside your personal Google Drive, set sharing rights to **"Anyone with the link can view"**, and submit the URL below for grading.
+                  </p>
+                </div>
+
+                {/* Submissions Status Alerts */}
+                {submission && (
+                  <div className={`p-4 rounded-lg border text-left ${
+                    isGraded
+                      ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300'
+                      : 'bg-amber-950/20 border-amber-500/40 text-amber-300'
+                  }`}>
+                    <div className="flex items-center gap-2 font-bold text-base">
+                      {isGraded ? <FiCheckCircle /> : <FiClock />}
+                      <span>{isGraded ? 'Assignment Graded & Complete' : 'Submission Received - Evaluation Pending'}</span>
+                    </div>
+                    
+                    {isGraded && (
+                      <div className="mt-3 bg-slate-950/50 p-3.5 border border-emerald-500/20 rounded-lg space-y-2">
+                        <div className="flex justify-between text-base">
+                          <span className="font-bold text-zinc-450">Marks Obtained:</span>
+                          <span className="font-bold text-white">{submission.marksObtained} / {submission.totalMarks} Marks</span>
+                        </div>
+                        {submission.feedback && (
+                          <div className="text-base border-t border-emerald-500/10 pt-2 text-zinc-350">
+                            <span className="font-bold text-zinc-400 block mb-0.5">Instructor Feedback:</span>
+                            <span className="italic leading-relaxed">"{submission.feedback}"</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-2 text-base flex items-center gap-2">
+                      <span className="text-zinc-500 font-semibold">Your Submitted URL:</span>
+                      <a 
+                        href={submission.googleDriveLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-[#8a88ff] font-bold hover:underline truncate inline-block max-w-[280px]"
+                      >
+                        {submission.googleDriveLink}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Drive link form */}
+                {!isGraded && (
+                  <form onSubmit={handleDriveSubmission} className="space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-base font-bold text-zinc-300">Google Drive Attachment Link *</label>
+                      <input
+                        type="url"
+                        required
+                        value={driveLinkInput}
+                        onChange={(e) => setDriveLinkInput(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                        className="bg-slate-950 border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
+                      />
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      disabled={submittingDrive}
+                      className="w-full py-3.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base shadow-lg shadow-[#615fff]/15 hover:shadow-[#615fff]/25 transition-all cursor-pointer border-none flex items-center justify-center gap-2"
+                    >
+                      {submittingDrive ? (
+                        <>
+                          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Logging submission...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck className="h-5 w-5" />
+                          <span>{submission ? 'Update Submission Link' : 'Submit Assignment'}</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+          )
+        })()
       ) : (
         <div className="w-full h-full flex items-center justify-center text-zinc-400 bg-slate-950">
           <p className="text-base font-bold">Unsupported lesson style or format</p>
@@ -607,6 +1174,71 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
         <h2 className="text-lg font-bold text-zinc-900">Syllabus Curriculum</h2>
         <p className="text-sm font-semibold text-zinc-450 mt-0.5">Explore dynamic course lessons</p>
       </div>
+
+      {/* Dynamic Certificate widget */}
+      {progressPercentage === 100 && (
+        <div className="mx-4 mt-4 p-4 bg-slate-50 border border-zinc-200 rounded-lg flex flex-col gap-3 shadow-sm select-none animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <FiAward className="h-6 w-6 text-[#615fff]" />
+            <h3 className="text-base font-bold text-zinc-900 leading-tight">Course Completed! 🎓</h3>
+          </div>
+          
+          {!certRequest ? (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-zinc-650 leading-relaxed">
+                Outstanding! You have completed 100% of the syllabus program. Claim your verified PDF credentials now!
+              </p>
+              <button
+                type="button"
+                disabled={loadingCert}
+                onClick={handleRequestCertificate}
+                className="w-full py-2.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white text-sm font-bold shadow-md shadow-[#615fff]/15 hover:scale-[1.01] transition-all cursor-pointer border-none flex items-center justify-center"
+              >
+                {loadingCert ? 'Submitting...' : 'Request Certificate'}
+              </button>
+            </div>
+          ) : certRequest.status === 'pending' ? (
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-lg text-xs font-bold uppercase tracking-wider">
+                <FiClock className="h-3.5 w-3.5 animate-pulse" />
+                Pending Admin Review
+              </div>
+              <p className="text-sm font-semibold text-zinc-500 leading-relaxed mt-1">
+                Your certificate request is received. The admin will verify your lecture progress and publish the PDF shortly.
+              </p>
+            </div>
+          ) : certRequest.status === 'approved' && certRequest.certificateUrl ? (
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 rounded-lg text-xs font-bold uppercase tracking-wider">
+                <FiCheckCircle className="h-3.5 w-3.5" />
+                Released
+              </div>
+              <p className="text-sm font-semibold text-zinc-500 leading-relaxed">
+                Your official verified student completion certificate is available for download below!
+              </p>
+              <a
+                href={certRequest.certificateUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shadow-md shadow-emerald-600/15 hover:scale-[1.01] transition-all cursor-pointer border-none text-center flex items-center justify-center gap-1.5"
+              >
+                <span>Download Certificate (PDF)</span>
+                <FiExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-lg text-xs font-bold uppercase tracking-wider">
+                <FiXCircle className="h-3.5 w-3.5" />
+                Rejected
+              </div>
+              <p className="text-sm font-semibold text-zinc-500 leading-relaxed mt-1">
+                Your certificate request was rejected. Please review admin annotations or contact support.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100 p-4 space-y-2 max-h-[650px] pr-2">
         {sortedLessons.map((lesson) => {

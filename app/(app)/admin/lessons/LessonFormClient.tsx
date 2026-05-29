@@ -2,12 +2,18 @@
 
 import React, { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FiSave, FiX, FiVideo, FiRadio } from 'react-icons/fi'
+import { FiSave, FiX, FiVideo, FiRadio, FiHelpCircle, FiPlus, FiTrash2, FiFileText } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface CourseOption {
   id: string
   title: string
+}
+
+interface QuizQuestion {
+  questionText: string
+  options: string[]
+  correctAnswerIndex: number
 }
 
 interface LessonFormProps {
@@ -17,7 +23,7 @@ interface LessonFormProps {
     title: string
     slug: string
     order: number
-    lessonType: 'recorded' | 'live'
+    lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
     videoUrl?: string
     livePlatform?: string
     liveUrl?: string
@@ -26,6 +32,8 @@ interface LessonFormProps {
     isPreviewable: boolean
     courseId: string
     autoGenerateZoom?: boolean
+    quizQuestions?: QuizQuestion[]
+    totalMarks?: number
   }
 }
 
@@ -51,9 +59,10 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
   const [title, setTitle] = useState(initialData?.title || '')
   const [slug, setSlug] = useState(initialData?.slug || '')
   const [order, setOrder] = useState(initialData?.order || 1)
-  const [lessonType, setLessonType] = useState<'recorded' | 'live'>(
+  const [lessonType, setLessonType] = useState<'recorded' | 'live' | 'quiz' | 'assignment'>(
     initialData?.lessonType || 'recorded'
   )
+  const [totalMarks, setTotalMarks] = useState<number>(initialData?.totalMarks || 100)
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl || '')
   const [livePlatform, setLivePlatform] = useState(initialData?.livePlatform || 'zoom')
   const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl || '')
@@ -63,6 +72,11 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
   const [duration, setDuration] = useState(initialData?.duration || 60)
   const [isPreviewable, setIsPreviewable] = useState(initialData?.isPreviewable || false)
   const [autoGenerateZoom, setAutoGenerateZoom] = useState(initialData?.autoGenerateZoom || false)
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>(
+    initialData?.quizQuestions || [
+      { questionText: '', options: ['', '', '', ''], correctAnswerIndex: 0 }
+    ]
+  )
   const [saving, setSaving] = useState(false)
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +113,20 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
       return
     }
 
+    if (lessonType === 'quiz') {
+      const invalid = quizQuestions.some(q => !q.questionText.trim() || q.options.some(o => !o.trim()))
+      if (invalid) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Validation Error',
+          text: 'Please fill in all quiz question texts and option answers.',
+          background: '#121829',
+          color: '#fff',
+        })
+        return
+      }
+    }
+
     setSaving(true)
     try {
       const payload = {
@@ -114,6 +142,8 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
         duration,
         isPreviewable,
         autoGenerateZoom: lessonType === 'live' && livePlatform === 'zoom' ? autoGenerateZoom : false,
+        quizQuestions: lessonType === 'quiz' ? quizQuestions : undefined,
+        totalMarks: (lessonType === 'quiz' || lessonType === 'assignment') ? totalMarks : undefined,
       }
 
       const url = isEditMode ? `/api/admin/lessons/${initialData?.id}` : '/api/admin/lessons'
@@ -243,12 +273,19 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
             {/* Lesson Format / Type Selector */}
             <div className="flex flex-col gap-2 pt-2">
               <label className="text-base font-bold text-zinc-300">Lesson Format</label>
-              <div className="flex gap-3">
-                {(['recorded', 'live'] as const).map((type) => (
+              <div className="flex flex-wrap gap-3">
+                {(['recorded', 'live', 'quiz', 'assignment'] as const).map((type) => (
                   <button
                     key={type}
                     type="button"
-                    onClick={() => setLessonType(type)}
+                    onClick={() => {
+                      setLessonType(type)
+                      if (type === 'quiz') {
+                        setDuration(15) // default duration for quiz
+                      } else if (type === 'assignment') {
+                        setDuration(30) // default duration for assignment
+                      }
+                    }}
                     className={`flex items-center gap-2 px-5 py-3 rounded-lg font-bold text-base border transition-all cursor-pointer ${
                       lessonType === type
                         ? 'bg-[#615fff] border-[#615fff] text-white shadow-md shadow-[#615fff]/20'
@@ -257,10 +294,20 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                   >
                     {type === 'recorded' ? (
                       <FiVideo className="h-5 w-5" />
-                    ) : (
+                    ) : type === 'live' ? (
                       <FiRadio className="h-5 w-5" />
+                    ) : type === 'quiz' ? (
+                      <FiHelpCircle className="h-5 w-5" />
+                    ) : (
+                      <FiFileText className="h-5 w-5" />
                     )}
-                    {type === 'recorded' ? 'Recorded Video' : 'Live Interactive Session'}
+                    {type === 'recorded'
+                      ? 'Recorded Video'
+                      : type === 'live'
+                      ? 'Live Session'
+                      : type === 'quiz'
+                      ? 'Interactive Quiz'
+                      : 'Assignment'}
                   </button>
                 ))}
               </div>
@@ -278,7 +325,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                   className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
                 />
               </div>
-            ) : (
+            ) : lessonType === 'live' ? (
               <div className="space-y-4 animate-fadeIn">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
@@ -321,7 +368,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                       </div>
                       <span className="text-base font-bold text-zinc-300">Auto-generate Zoom Meeting Link</span>
                     </label>
-                    <p className="text-sm font-semibold text-zinc-400">
+                    <p className="text-base font-medium text-zinc-400">
                       When enabled, Tutor Space will automatically create a Zoom meeting using your Server-to-Server OAuth credentials.
                     </p>
                   </div>
@@ -341,6 +388,217 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                       autoGenerateZoom ? 'opacity-50 cursor-not-allowed select-none' : ''
                     }`}
                   />
+                </div>
+              </div>
+            ) : lessonType === 'assignment' ? (
+              <div className="space-y-4 border border-[#615fff]/25 rounded-lg p-6 bg-gradient-to-b from-[#121829] to-[#0d1222] shadow-2xl shadow-[#615fff]/5 animate-fadeIn">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2 border-b border-zinc-850 pb-3">
+                  <FiFileText className="text-[#615fff] h-6 w-6" /> Assignment Configuration
+                </h3>
+                
+                <div className="flex flex-col gap-2">
+                  <label className="text-base font-bold text-zinc-300">Assignment Evaluation Marks *</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={totalMarks}
+                    onChange={(e) => setTotalMarks(Number(e.target.value))}
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors animate-fadeIn"
+                  />
+                </div>
+                <p className="text-base font-semibold text-zinc-400">
+                  Students will see this assignment and submit a secure Google Drive link containing their work for grading.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6 border border-[#615fff]/25 rounded-lg p-6 bg-gradient-to-b from-[#121829] to-[#0d1222] shadow-2xl shadow-[#615fff]/5 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-800/60 pb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <FiHelpCircle className="text-[#615fff] h-6 w-6" /> Quiz Questions Builder
+                    </h3>
+                    <p className="text-base font-medium text-zinc-400 mt-1">
+                      Configure dynamic evaluation queries with dynamic option selection
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    {/* Quiz Total Marks */}
+                    <div className="flex items-center gap-2 bg-[#070b16] border border-zinc-800 px-3.5 py-2.5 rounded-lg">
+                      <span className="text-base font-bold text-zinc-400">Quiz Marks:</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={totalMarks}
+                        onChange={(e) => setTotalMarks(Number(e.target.value))}
+                        className="bg-transparent border-none text-white w-16 text-base font-bold outline-none text-center"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setQuizQuestions([...quizQuestions, { questionText: '', options: ['', '', '', ''], correctAnswerIndex: 0 }])}
+                      className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#615fff] to-[#5248e8] hover:from-[#5248e8] hover:to-[#4338ca] text-white rounded-lg text-base font-bold shadow-lg shadow-[#615fff]/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer border-none"
+                    >
+                      <FiPlus className="h-5 w-5" /> Add Question
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  {quizQuestions.map((q, qIdx) => (
+                    <div 
+                      key={qIdx} 
+                      className="bg-slate-950/40 backdrop-blur border border-zinc-800/80 hover:border-[#615fff]/30 p-6 rounded-lg space-y-6 transition-all duration-300 relative"
+                    >
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between pb-4 border-b border-zinc-850/50">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-[#615fff] to-[#5248e8] text-white font-bold text-base shadow-md shadow-[#615fff]/20 select-none">
+                            {String(qIdx + 1).padStart(2, '0')}
+                          </span>
+                          <div>
+                            <span className="text-base font-bold text-white block">Question Details</span>
+                            <span className="text-base font-medium text-zinc-400 block mt-0.5">Define your question and choices below</span>
+                          </div>
+                        </div>
+                        {quizQuestions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setQuizQuestions(quizQuestions.filter((_, idx) => idx !== qIdx))
+                            }}
+                            className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-lg transition-all duration-300 cursor-pointer flex items-center justify-center"
+                            title="Delete question"
+                          >
+                            <FiTrash2 className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Question Text */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-base font-bold text-zinc-300">Question Title / Text *</label>
+                        <input
+                          type="text"
+                          required
+                          value={q.questionText}
+                          onChange={(e) => {
+                            const newQuestions = [...quizQuestions]
+                            newQuestions[qIdx].questionText = e.target.value
+                            setQuizQuestions(newQuestions)
+                          }}
+                          placeholder="e.g. What does CSS stand for in web development?"
+                          className="bg-[#121829] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3.5 text-base font-semibold outline-none w-full transition-colors"
+                        />
+                      </div>
+
+                      {/* Options Section Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+                        <div>
+                          <h4 className="text-base font-bold text-zinc-300">Configure Options / Answers *</h4>
+                          <p className="text-base font-medium text-zinc-400 mt-0.5">Add up to 6 options and mark the correct one.</p>
+                        </div>
+                        {q.options.length < 6 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newQuestions = [...quizQuestions]
+                              newQuestions[qIdx].options.push('')
+                              setQuizQuestions(newQuestions)
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-[#615fff]/10 hover:bg-[#615fff]/20 border border-[#615fff]/20 hover:border-[#615fff]/40 text-[#8a88ff] hover:text-white rounded-lg text-base font-bold transition-all cursor-pointer"
+                          >
+                            <FiPlus className="h-5 w-5" /> Add Choice
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Options Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {q.options.map((opt: string, optIdx: number) => {
+                          const isCorrect = q.correctAnswerIndex === optIdx
+                          return (
+                            <div 
+                              key={optIdx} 
+                              className={`p-4 bg-[#121829] border rounded-lg flex flex-col gap-3.5 transition-all duration-300 relative group/opt ${
+                                isCorrect
+                                  ? 'border-emerald-500/50 bg-emerald-950/10 shadow-sm shadow-emerald-500/5'
+                                  : 'border-zinc-800/80 hover:border-zinc-700/80'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between select-none">
+                                <span className={`text-base font-bold ${
+                                  isCorrect ? 'text-emerald-400' : 'text-zinc-400'
+                                }`}>
+                                  Option {String.fromCharCode(65 + optIdx)} *
+                                </span>
+                                
+                                <div className="flex items-center gap-2">
+                                  {/* Set Correct Trigger */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newQuestions = [...quizQuestions]
+                                      newQuestions[qIdx].correctAnswerIndex = optIdx
+                                      setQuizQuestions(newQuestions)
+                                    }}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-base font-bold transition-all border cursor-pointer ${
+                                      isCorrect
+                                        ? 'bg-emerald-500/15 border-emerald-500/20 text-emerald-400'
+                                        : 'bg-zinc-850 border-zinc-800 text-zinc-550 hover:text-zinc-350'
+                                    }`}
+                                  >
+                                    {isCorrect ? '✓ Correct' : 'Set Correct'}
+                                  </button>
+
+                                  {/* Delete Option Trigger */}
+                                  {q.options.length > 2 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newQuestions = [...quizQuestions]
+                                        const deletedIdx = optIdx
+                                        const oldCorrect = newQuestions[qIdx].correctAnswerIndex
+                                        
+                                        newQuestions[qIdx].options = newQuestions[qIdx].options.filter((_, idx) => idx !== optIdx)
+                                        
+                                        if (oldCorrect === deletedIdx) {
+                                          newQuestions[qIdx].correctAnswerIndex = 0
+                                        } else if (oldCorrect > deletedIdx) {
+                                          newQuestions[qIdx].correctAnswerIndex = oldCorrect - 1
+                                        }
+                                        
+                                        setQuizQuestions(newQuestions)
+                                      }}
+                                      className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                                      title="Delete choice"
+                                    >
+                                      <FiTrash2 className="h-5 w-5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <input
+                                type="text"
+                                required
+                                value={opt}
+                                onChange={(e) => {
+                                  const newQuestions = [...quizQuestions]
+                                  newQuestions[qIdx].options[optIdx] = e.target.value
+                                  setQuizQuestions(newQuestions)
+                                }}
+                                placeholder={`Enter Option ${String.fromCharCode(65 + optIdx)} answer`}
+                                className={`bg-[#070b16] border rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors ${
+                                  isCorrect 
+                                    ? 'border-emerald-500/30 focus:border-emerald-500 text-white focus:ring-1 focus:ring-emerald-500' 
+                                    : 'border-zinc-800/80 focus:border-zinc-700/80 text-zinc-300 focus:text-white focus:ring-1 focus:ring-zinc-700'
+                                }`}
+                              />
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

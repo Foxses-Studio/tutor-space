@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiPlus, FiTrash2, FiUploadCloud, FiCheck, FiX, FiInfo, FiImage, FiVideo, FiRadio, FiEdit2 } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiUploadCloud, FiCheck, FiX, FiInfo, FiImage, FiVideo, FiRadio, FiEdit2, FiHelpCircle } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 import RichTextEditor from '@/components/RichTextEditor'
 import MediaPickerModal from '@/components/MediaPickerModal'
@@ -92,7 +92,7 @@ export default function CourseFormClient({
 
 
   // Curriculum lessons (edit mode only)
-  interface LessonSummary { id: string; title: string; order: number; lessonType: 'recorded' | 'live'; duration: number }
+  interface LessonSummary { id: string; title: string; order: number; lessonType: 'recorded' | 'live' | 'quiz'; duration: number }
   const [lessons, setLessons] = useState<LessonSummary[]>([])
   const [lessonsLoading, setLessonsLoading] = useState(false)
 
@@ -552,13 +552,21 @@ export default function CourseFormClient({
                         <p className="text-white font-bold text-base truncate">{lesson.title}</p>
                         <p className="text-zinc-500 text-sm font-semibold">{lesson.duration} min</p>
                       </div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-bold ${
+                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-sm font-bold ${
                         lesson.lessonType === 'live'
                           ? 'bg-rose-500/15 text-rose-400'
+                          : lesson.lessonType === 'quiz'
+                          ? 'bg-amber-500/15 text-amber-400'
                           : 'bg-zinc-800 text-zinc-400'
                       }`}>
-                        {lesson.lessonType === 'live' ? <FiRadio className="h-3 w-3" /> : <FiVideo className="h-3 w-3" />}
-                        {lesson.lessonType === 'live' ? 'Live' : 'Video'}
+                        {lesson.lessonType === 'live' ? (
+                          <FiRadio className="h-3 w-3" />
+                        ) : lesson.lessonType === 'quiz' ? (
+                          <FiHelpCircle className="h-3 w-3" />
+                        ) : (
+                          <FiVideo className="h-3 w-3" />
+                        )}
+                        {lesson.lessonType === 'live' ? 'Live' : lesson.lessonType === 'quiz' ? 'Quiz' : 'Video'}
                       </span>
                       <Link
                         href={`/admin/lessons/${lesson.id}`}

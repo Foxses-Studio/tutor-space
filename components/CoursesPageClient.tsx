@@ -67,7 +67,7 @@ function CourseCard({ course, view }: { course: CourseDoc; view: 'grid' | 'list'
     return (
       <Link
         href={`/courses/${course.slug}`}
-        className="flex flex-col md:flex-row gap-6 bg-white rounded-lg p-5 border-0 border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_30px_rgba(97,95,255,0.06)] hover:-translate-y-1 transition-all duration-300 group w-full"
+        className="flex flex-col md:flex-row gap-6 bg-white rounded-lg p-5 border border-[#615fff]/20 hover:border-[#615fff]/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_30px_rgba(97,95,255,0.10)] hover:-translate-y-1 transition-all duration-300 group w-full"
       >
         {/* Aspect-ratio constrained image wrapper */}
         <div className="shrink-0 w-full md:w-60 aspect-[16/10] rounded-lg overflow-hidden bg-zinc-50 relative">
@@ -143,9 +143,9 @@ function CourseCard({ course, view }: { course: CourseDoc; view: 'grid' | 'list'
               </span>
             </div>
 
-            <div className="px-4 py-2 border border-zinc-200 hover:bg-[#615fff]/5 group-hover:border-[#615fff]/30 rounded-lg text-base font-semibold text-zinc-800 transition-all duration-300 flex items-center gap-1.5 bg-white shrink-0 whitespace-nowrap">
+            <div className="px-4 py-2 border border-[#615fff] bg-[#615fff] group-hover:bg-[#543cdf] group-hover:border-[#543cdf] rounded-lg text-base font-semibold text-white transition-all duration-300 flex items-center gap-1.5 shrink-0 whitespace-nowrap">
               <span>Enroll Now</span>
-              <FiArrowRight className="h-4 w-4 text-zinc-500 transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
+              <FiArrowRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ function CourseCard({ course, view }: { course: CourseDoc; view: 'grid' | 'list'
     <div className="w-full flex justify-center sm:justify-start">
       <Link
         href={`/courses/${course.slug}`}
-        className="bg-white rounded-lg overflow-hidden border-0 border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_30px_rgba(97,95,255,0.06)] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full w-full max-w-[380px]"
+        className="bg-white rounded-lg overflow-hidden border border-[#615fff]/20 hover:border-[#615fff]/50 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_30px_rgba(97,95,255,0.10)] hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full w-full max-w-[380px]"
       >
         {/* Aspect-ratio constrained image wrapper */}
         <div className="relative aspect-[16/10] bg-zinc-50 overflow-hidden rounded-t-lg">
@@ -237,9 +237,9 @@ function CourseCard({ course, view }: { course: CourseDoc; view: 'grid' | 'list'
                 </span>
               </div>
 
-              <div className="px-4 py-2 border border-zinc-205 hover:bg-[#615fff]/5 group-hover:border-[#615fff]/30 rounded-lg text-base font-semibold text-zinc-800 transition-all duration-300 flex items-center gap-2 bg-white shrink-0 whitespace-nowrap">
+              <div className="px-4 py-2 border border-[#615fff] bg-[#615fff] group-hover:bg-[#543cdf] group-hover:border-[#543cdf] rounded-lg text-base font-semibold text-white transition-all duration-300 flex items-center gap-2 shrink-0 whitespace-nowrap">
                 <span>Enroll Now</span>
-                <FiArrowRight className="h-4.5 w-4.5 text-zinc-500 transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
+                <FiArrowRight className="h-4.5 w-4.5 text-white transition-transform duration-300 group-hover:translate-x-0.5 shrink-0" />
               </div>
             </div>
           </div>

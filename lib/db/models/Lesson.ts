@@ -1,11 +1,18 @@
 import mongoose, { Schema, Document } from 'mongoose'
 
+export interface IQuizQuestion {
+  questionText: string
+  options: string[]
+  correctAnswerIndex: number
+}
+
 export interface ILesson extends Document {
   title: string
   slug: string
   course: mongoose.Types.ObjectId | string
   order: number
-  lessonType: 'recorded' | 'live'
+  lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
+  totalMarks?: number
   videoUrl?: string
   videoFile?: mongoose.Types.ObjectId | string
   livePlatform?: 'zoom' | 'meet' | 'teams' | 'other'
@@ -16,6 +23,7 @@ export interface ILesson extends Document {
   duration: number
   isPreviewable: boolean
   reminderSent?: boolean
+  quizQuestions?: IQuizQuestion[]
   seo?: {
     metaTitle?: string
     metaDescription?: string
@@ -23,13 +31,20 @@ export interface ILesson extends Document {
   }
 }
 
+const QuizQuestionSchema = new Schema<IQuizQuestion>({
+  questionText: { type: String, required: true },
+  options: [{ type: String, required: true }],
+  correctAnswerIndex: { type: Number, required: true }
+}, { _id: false })
+
 const LessonSchema = new Schema<ILesson>(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     order: { type: Number, required: true, min: 1 },
-    lessonType: { type: String, enum: ['recorded', 'live'], default: 'recorded', required: true },
+    lessonType: { type: String, enum: ['recorded', 'live', 'quiz', 'assignment'], default: 'recorded', required: true },
+    totalMarks: { type: Number, default: 100 },
     videoUrl: String,
     videoFile: { type: Schema.Types.ObjectId, ref: 'Video' },
     livePlatform: { type: String, enum: ['zoom', 'meet', 'teams', 'other'], default: 'zoom' },
@@ -40,6 +55,7 @@ const LessonSchema = new Schema<ILesson>(
     duration: { type: Number, required: true },
     isPreviewable: { type: Boolean, default: false },
     reminderSent: { type: Boolean, default: false },
+    quizQuestions: [QuizQuestionSchema],
     seo: {
       metaTitle: String,
       metaDescription: String,

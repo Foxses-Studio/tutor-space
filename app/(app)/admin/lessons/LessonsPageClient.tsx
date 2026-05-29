@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FiPlus, FiEdit, FiTrash2, FiVideo, FiRadio, FiEye } from 'react-icons/fi'
+import { FiPlus, FiEdit, FiTrash2, FiVideo, FiRadio, FiEye, FiHelpCircle } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface CourseOption {
@@ -17,7 +17,7 @@ interface LessonItem {
   title: string
   slug: string
   order: number
-  lessonType: 'recorded' | 'live'
+  lessonType: 'recorded' | 'live' | 'quiz'
   videoUrl?: string
   livePlatform?: string
   liveUrl?: string
@@ -222,10 +222,14 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
                                 <span className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
                                   lesson.lessonType === 'live'
                                     ? 'bg-rose-500/10 border border-rose-500/20 text-rose-450'
+                                    : lesson.lessonType === 'quiz'
+                                    ? 'bg-amber-500/10 border border-amber-500/20 text-amber-450'
                                     : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-450'
                                 }`}>
                                   {lesson.lessonType === 'live' ? (
                                     <FiRadio className="h-4.5 w-4.5" />
+                                  ) : lesson.lessonType === 'quiz' ? (
+                                    <FiHelpCircle className="h-4.5 w-4.5" />
                                   ) : (
                                     <FiVideo className="h-4.5 w-4.5" />
                                   )}
@@ -241,10 +245,14 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
                                 <span className={`text-xs font-bold capitalize px-2.5 py-1 rounded border select-none ${
                                   lesson.lessonType === 'live'
                                     ? 'text-rose-400 bg-rose-500/10 border-rose-500/20'
+                                    : lesson.lessonType === 'quiz'
+                                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
                                     : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
                                 }`}>
                                   {lesson.lessonType === 'live'
                                     ? `Live • ${lesson.livePlatform || 'zoom'}`
+                                    : lesson.lessonType === 'quiz'
+                                    ? 'Quiz'
                                     : 'Recorded'}
                                 </span>
                                 {lesson.isPreviewable && (

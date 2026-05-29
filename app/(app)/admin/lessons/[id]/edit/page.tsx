@@ -55,7 +55,7 @@ export default async function EditLessonPage({ params }: Props) {
     title: lessonDoc.title,
     slug: lessonDoc.slug,
     order: lessonDoc.order || 1,
-    lessonType: lessonDoc.lessonType as 'recorded' | 'live',
+    lessonType: lessonDoc.lessonType as 'recorded' | 'live' | 'quiz',
     videoUrl: lessonDoc.videoUrl || '',
     livePlatform: lessonDoc.livePlatform || 'zoom',
     liveUrl: lessonDoc.liveUrl || '',
@@ -64,6 +64,7 @@ export default async function EditLessonPage({ params }: Props) {
     isPreviewable: lessonDoc.isPreviewable ?? false,
     courseId: lessonDoc.course ? lessonDoc.course.toString() : '',
     autoGenerateZoom: lessonDoc.autoGenerateZoom ?? false,
+    quizQuestions: lessonDoc.quizQuestions ? JSON.parse(JSON.stringify(lessonDoc.quizQuestions)) : [],
   }
 
   return (

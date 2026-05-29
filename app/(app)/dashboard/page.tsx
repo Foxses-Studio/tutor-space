@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { FiUser, FiLogOut, FiBookOpen, FiClock, FiAward, FiBook, FiExternalLink, FiCalendar, FiArrowRight } from 'react-icons/fi'
+import { FiUser, FiLogOut, FiBookOpen, FiClock, FiAward, FiBook, FiExternalLink, FiCalendar, FiArrowRight, FiCheckCircle } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface UserSession {
@@ -66,6 +66,11 @@ export default function StudentDashboard() {
   const [streakCount, setStreakCount] = useState(5)
   const [loginDates, setLoginDates] = useState<string[]>([])
   const [courseProgress, setCourseProgress] = useState<Record<string, number>>({})
+
+  // Academic submissions and grading stats
+  const [submissions, setSubmissions] = useState<any[]>([])
+  const [marksEarned, setMarksEarned] = useState(0)
+  const [marksPossible, setMarksPossible] = useState(0)
 
   useEffect(() => {
     async function checkSessionAndFetchData() {
@@ -132,6 +137,29 @@ export default function StudentDashboard() {
             }
           }
           setStreakCount(streak || 1)
+        }
+
+        // Fetch student's submissions and evaluate marks
+        try {
+          const subsRes = await fetch('/api/submissions')
+          if (subsRes.ok) {
+            const subsData = await subsRes.json()
+            if (subsData.success && subsData.submissions) {
+              setSubmissions(subsData.submissions)
+              let earned = 0
+              let possible = 0
+              subsData.submissions.forEach((s: any) => {
+                if (s.status === 'graded') {
+                  earned += s.marksObtained || 0
+                  possible += s.totalMarks || 0
+                }
+              })
+              setMarksEarned(earned)
+              setMarksPossible(possible)
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load academic submissions', err)
         }
 
       } catch (error) {
@@ -223,7 +251,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Quick Stats Grid - Completely borderless and shadowless */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
         {/* Enrolled Courses Stat */}
         <div className="bg-white p-6 border border-zinc-200 rounded-lg flex items-center gap-5">
           <div className="h-12 w-12 rounded-lg bg-[#615fff]/10 flex items-center justify-center text-[#615fff]">
@@ -238,7 +266,7 @@ export default function StudentDashboard() {
         {/* Completed Lessons Stat */}
         <div className="bg-white p-6 border border-zinc-200 rounded-lg flex items-center gap-5">
           <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-600">
-            <FiAward className="h-6 w-6" />
+            <FiCheckCircle className="h-6 w-6" />
           </div>
           <div>
             <p className="text-base font-semibold text-zinc-500">Completed Lessons</p>
@@ -254,6 +282,19 @@ export default function StudentDashboard() {
           <div>
             <p className="text-base font-semibold text-zinc-500">Learning Hours</p>
             <h2 className="text-2xl font-bold text-zinc-800 mt-1">{totalLearningHours} hrs</h2>
+          </div>
+        </div>
+
+        {/* Evaluation Marks Stat */}
+        <div className="bg-white p-6 border border-zinc-200 rounded-lg flex items-center gap-5">
+          <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+            <FiAward className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-base font-semibold text-zinc-500">Academic Score</p>
+            <h2 className="text-2xl font-bold text-zinc-800 mt-1">
+              {marksPossible > 0 ? `${marksEarned} / ${marksPossible}` : '0 / 0'}
+            </h2>
           </div>
         </div>
       </div>
@@ -302,6 +343,21 @@ export default function StudentDashboard() {
                   : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop'
 
                 const progress = courseProgress[course.id] ?? 0
+
+                // Course evaluation marks calculations
+                const courseSubmissions = submissions.filter((s: any) => {
+                  const cId = s.course?._id || s.course
+                  return cId && cId.toString() === course.id
+                })
+
+                let courseEarned = 0
+                let coursePossible = 0
+                courseSubmissions.forEach((s: any) => {
+                  if (s.status === 'graded') {
+                    courseEarned += s.marksObtained || 0
+                    coursePossible += s.totalMarks || 0
+                  }
+                })
 
                 return (
                   <div key={enrollment.id} className="group bg-white border border-zinc-200/80 rounded-lg overflow-hidden hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-200/50 hover:border-[#615fff]/30 transition-all duration-300 flex flex-col justify-between">
@@ -356,8 +412,15 @@ export default function StudentDashboard() {
 
                     {/* Progress Bar & CTA */}
                     <div className="p-6 pt-0 space-y-5">
+                      {coursePossible > 0 && (
+                        <div className="flex justify-between text-base font-semibold text-zinc-550 border-t border-zinc-100 pt-4">
+                          <span className="flex items-center gap-1.5"><FiAward className="text-zinc-400 h-4 w-4 shrink-0" /> Academic Score</span>
+                          <span className="font-bold text-emerald-600">{courseEarned} / {coursePossible} Marks</span>
+                        </div>
+                      )}
+
                       <div className="space-y-2 border-t border-zinc-100 pt-4">
-                        <div className="flex justify-between text-base font-semibold text-zinc-500">
+                        <div className="flex justify-between text-base font-semibold text-zinc-550">
                           <span className="flex items-center gap-1.5"><FiBookOpen className="text-zinc-400 h-4 w-4 shrink-0" /> Syllabus Progress</span>
                           <span className="font-bold text-[#615fff]">{progress}%</span>
                         </div>

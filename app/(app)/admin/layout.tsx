@@ -22,8 +22,8 @@ import {
   FiTag,
   FiUsers,
   FiTrendingUp,
-  FiAward,
   FiPlus,
+  FiAward,
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
@@ -145,12 +145,13 @@ export default function AdminLayout({
   const sidebarLinks = [
     { label: 'Overview', href: '/admin', icon: FiLayout, roles: ['admin', 'staff', 'instructor'], permission: 'overview' },
     { label: 'Manage Enrollments', href: '/admin/enrollments', icon: FiUsers, roles: ['admin'], permission: 'overview' },
+    { label: 'Certificate Requests', href: '/admin/certificates', icon: FiAward, roles: ['admin', 'staff'], permission: 'certificates' },
+    { label: 'Grading Submissions', href: '/admin/submissions', icon: FiFileText, roles: ['admin', 'instructor'], permission: 'lessons' },
     { label: 'Courses', href: '/admin/courses', icon: FiBookOpen, roles: ['admin', 'instructor'], permission: 'courses' },
     { label: 'Lessons Syllabus', href: '/admin/lessons', icon: FiList, roles: ['admin', 'instructor'], permission: 'lessons' },
     { label: 'Live Classes', href: '/admin/live-classes', icon: FiRadio, roles: ['admin', 'instructor'], permission: 'live-classes' },
     { label: 'Batches', href: '/admin/batches', icon: FiUsers, roles: ['admin', 'instructor'], permission: 'batches' },
     { label: 'Attendance', href: '/admin/attendance', icon: FiList, roles: ['admin', 'instructor'], permission: 'attendance' },
-    { label: 'Bootcamp Programs', href: '/admin/bootcamps', icon: FiAward, roles: ['admin', 'instructor'], permission: 'bootcamps' },
     { label: 'Reviews Moderate', href: '/admin/reviews', icon: FiStar, roles: ['admin', 'staff'], permission: 'reviews' },
     { label: 'Categories', href: '/admin/categories', icon: FiBookmark, roles: ['admin', 'staff'], permission: 'categories' },
     { label: 'FAQs Landing', href: '/admin/faqs', icon: FiHelpCircle, roles: ['admin', 'staff'], permission: 'faqs' },
