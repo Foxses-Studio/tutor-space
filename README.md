@@ -48,6 +48,17 @@ Use the following credentials to test the various role access levels of the plat
 
 ---
 
+## 🌐 Deployed Environments & Live Links
+
+You can access the hosted version of the platform and its panels using these URLs:
+
+- **🌐 Public Frontend Website:** [https://tutor-space-three.vercel.app/](https://tutor-space-three.vercel.app/)
+- **🔑 Payload Admin Dashboard:** [https://tutor-space-three.vercel.app/admin](https://tutor-space-three.vercel.app/admin) (Use this link to log in to Admin, Instructor, and Staff dashboards)
+- **🔌 REST API Gateway:** [https://tutor-space-three.vercel.app/api](https://tutor-space-three.vercel.app/api)
+
+---
+
+
 ## ⚙️ Environment Configuration (`.env.local`)
 
 To run the project locally, create a `.env.local` file in the root directory and configure the following variables:
