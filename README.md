@@ -6,6 +6,12 @@ It provides completely isolated environments for public-facing client pages and 
 
 ---
 
+## 📸 Website Preview
+
+![Tutor Space Preview](./public/webscreenshort.png)
+
+---
+
 ## ✨ Features & Capabilities
 
 - **🚀 Native Next.js 16 + React 19:** High-performance React Server Components (RSC) and server actions.
@@ -26,6 +32,50 @@ It provides completely isolated environments for public-facing client pages and 
 - **Image Resizer:** Sharp 0.34.5
 - **Style Processor:** Tailwind CSS v4
 - **Package Manager:** pnpm 10.31.0
+
+---
+
+## 🔑 Demo & Test Login Credentials
+
+Use the following credentials to test the various role access levels of the platform:
+
+| Role | Email Login | Password | Description / Dashboard |
+|---|---|---|---|
+| **Admin** | `admin@tutorspace.com` | `123456` | Full administrative control under `/admin` |
+| **Instructor** | `instractor@tutorspace.com` | `123456` | Manage courses, lessons, and content |
+| **Staff** | `staf@tutorpsace.com` | `123456` | Staff/Moderator privileges |
+| **Student** | `student@tutorpsace.com` | `123456` | Regular user learning & dashboard access |
+
+---
+
+## ⚙️ Environment Configuration (`.env.local`)
+
+To run the project locally, create a `.env.local` file in the root directory and configure the following variables:
+
+```env
+# Database Configuration
+DATABASE_URL=your_mongodb_connection_string
+
+# Payload CMS Secrets
+PAYLOAD_SECRET=your_payload_secret_key
+ADMIN_REGISTRATION_SECRET=super-secret-admin-token-2026
+
+# Email Provider Configuration (Resend)
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+
+# Zoom Server-to-Server OAuth Credentials (Optional: Fill out to auto-generate Zoom links)
+ZOOM_ACCOUNT_ID=your_zoom_account_id
+ZOOM_CLIENT_ID=your_zoom_client_id
+ZOOM_CLIENT_SECRET=your_zoom_client_secret
+SECRET_TOKEN=your_zoom_secret_token
+
+# Cloudflare R2 / S3 Storage Credentials (Optional: For remote file uploads instead of local storage)
+S3_ENDPOINT=your_cloudflare_r2_endpoint
+S3_BUCKET=your_s3_bucket_name
+S3_ACCESS_KEY_ID=your_s3_access_key_id
+S3_SECRET_ACCESS_KEY=your_s3_secret_access_key
+```
 
 ---
 
@@ -59,7 +109,7 @@ pnpm dev
 ## 🤖 For AI Coding Assistants
 
 If you are using an AI Coding Assistant (such as Antigravity, Claude, Cursor, Copilot, or similar LLMs) to write code for this project, please direct them to read:
-👉 **[AGENTS.md](file:///d:/Shahriar/All%20projects/tutor%20Space/tutor-space/AGENTS.md)**
+👉 **[AGENTS.md](file:///d:/Shahriar/personal/tutor-space/AGENTS.md)**
 
 It contains crucial instructions about Next.js 15/16 asynchronous parameter typing and Payload CMS 3.x layout configurations to prevent compiler conflicts or build breaks.
 
