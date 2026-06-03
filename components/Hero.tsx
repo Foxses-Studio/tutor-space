@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 
 export default function Hero({ children }: { children?: React.ReactNode }) {
   return (
@@ -111,9 +112,12 @@ export default function Hero({ children }: { children?: React.ReactNode }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.35, ease: 'easeOut' }}
         >
-          <button className="px-8 py-4 rounded-lg bg-[#543CDF] hover:bg-[#543CDF]/95 text-white font-bold text-base shadow-lg shadow-[#543CDF]/25 hover:shadow-[#543CDF]/35 transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer">
+          <Link 
+            href="/courses" 
+            className="inline-block px-8 py-4 rounded-lg bg-[#543CDF] hover:bg-[#543CDF]/95 text-white font-bold text-base shadow-lg shadow-[#543CDF]/25 hover:shadow-[#543CDF]/35 transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer text-center"
+          >
             Start Learning Today
-          </button>
+          </Link>
         </motion.div>
 
       </div>
