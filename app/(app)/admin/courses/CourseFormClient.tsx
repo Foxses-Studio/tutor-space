@@ -82,6 +82,10 @@ export default function CourseFormClient({
   const [requirements, setRequirements] = useState<Array<{ requirement: string }>>(
     initialData?.requirements || []
   )
+  const [studyMaterials, setStudyMaterials] = useState<Array<{ title: string; url: string; materialType: 'pdf' | 'epub' | 'link' | 'other' }>>(
+    initialData?.studyMaterials || []
+  )
+  const [uploadingStates, setUploadingStates] = useState<Record<number, boolean>>({})
 
   // SEO accordion
   const [metaTitle, setMetaTitle] = useState(initialData?.seo?.metaTitle || '')
@@ -212,6 +216,83 @@ export default function CourseFormClient({
     setRequirements(requirements.filter((_, i) => i !== index))
   }
 
+  const handleAddStudyMaterial = () => {
+    setStudyMaterials([...studyMaterials, { title: '', url: '', materialType: 'pdf' }])
+  }
+
+  const handleStudyMaterialChange = (index: number, field: 'title' | 'url' | 'materialType', val: string) => {
+    const updated = [...studyMaterials]
+    updated[index] = { ...updated[index], [field]: val }
+    setStudyMaterials(updated)
+  }
+
+  const handleRemoveStudyMaterial = (index: number) => {
+    setStudyMaterials(studyMaterials.filter((_, i) => i !== index))
+  }
+
+  const handleStudyMaterialUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingStates(prev => ({ ...prev, [index]: true }))
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/admin/study-materials/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload document.')
+      }
+
+      // Automatically fill the URL and detect type
+      const updated = [...studyMaterials]
+      updated[index].url = data.url
+      
+      // Auto-detect type based on file extension
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      if (ext === 'pdf') {
+        updated[index].materialType = 'pdf'
+      } else if (ext === 'epub') {
+        updated[index].materialType = 'epub'
+      } else {
+        updated[index].materialType = 'other'
+      }
+      
+      // Set title if it is currently empty
+      if (!updated[index].title) {
+        updated[index].title = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+      }
+
+      setStudyMaterials(updated)
+      Swal.fire({
+        icon: 'success',
+        title: 'File Uploaded',
+        text: `${file.name} uploaded successfully.`,
+        timer: 1500,
+        showConfirmButton: false,
+        background: '#121829',
+        color: '#ffffff',
+      })
+    } catch (err: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: err.message || 'Could not upload file.',
+        background: '#121829',
+        color: '#ffffff',
+      })
+    } finally {
+      setUploadingStates(prev => ({ ...prev, [index]: false }))
+      e.target.value = ''
+    }
+  }
+
   // Direct file upload
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -287,6 +368,7 @@ export default function CourseFormClient({
       level,
       whatYouWillLearn: whatYouWillLearn.filter((item) => item.outcome.trim() !== ''),
       requirements: requirements.filter((item) => item.requirement.trim() !== ''),
+      studyMaterials: studyMaterials.filter((item) => item.title.trim() !== '' && item.url.trim() !== ''),
       seo: {
         metaTitle,
         metaDescription,
@@ -507,6 +589,116 @@ export default function CourseFormClient({
                     >
                       <FiTrash2 className="h-5 w-5" />
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Study Materials list card */}
+          <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-6">
+            <div className="flex items-center justify-between border-b border-zinc-850 pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-white tracking-tight">Study Materials & eBooks</h2>
+                <p className="text-sm font-semibold text-zinc-450 mt-1">Upload eBooks/PDFs or add external learning links</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddStudyMaterial}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#615fff]/15 hover:bg-[#615fff]/25 text-[#615fff] border border-[#615fff]/20 rounded-lg text-base font-bold transition-colors cursor-pointer"
+              >
+                <FiPlus className="h-5 w-5" /> Add Material
+              </button>
+            </div>
+
+            {studyMaterials.length === 0 ? (
+              <div className="text-center py-8 bg-[#070b16] rounded-lg border border-dashed border-zinc-800 p-6">
+                <p className="text-base font-semibold text-zinc-450">
+                  No study materials added yet. Click "Add Material" to get started.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {studyMaterials.map((item, idx) => (
+                  <div key={idx} className="bg-[#070b16] p-5 rounded-lg border border-zinc-800/80 space-y-4 relative group">
+                    <div className="flex justify-between items-center border-b border-zinc-850 pb-2">
+                      <span className="text-base font-bold text-[#615fff]">Material #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStudyMaterial(idx)}
+                        className="text-zinc-500 hover:text-red-400 p-1.5 bg-zinc-900/60 border border-zinc-800 rounded-lg transition-colors cursor-pointer"
+                        title="Remove material"
+                      >
+                        <FiTrash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Title */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-base font-bold text-zinc-300">Material Title *</label>
+                        <input
+                          type="text"
+                          required
+                          value={item.title}
+                          onChange={(e) => handleStudyMaterialChange(idx, 'title', e.target.value)}
+                          placeholder="e.g. JavaScript Cheat Sheet"
+                          className="bg-[#0e1422] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+                        />
+                      </div>
+
+                      {/* Material Type */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-base font-bold text-zinc-300">Material Type *</label>
+                        <select
+                          value={item.materialType}
+                          onChange={(e) => handleStudyMaterialChange(idx, 'materialType', e.target.value)}
+                          className="bg-[#0e1422] border border-zinc-800 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors cursor-pointer"
+                        >
+                          <option value="pdf">PDF Document</option>
+                          <option value="epub">eBook (ePub)</option>
+                          <option value="link">External Link / Website</option>
+                          <option value="other">Other Resource</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* URL & Upload */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-base font-bold text-zinc-300">Resource URL / Upload *</label>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="text"
+                          required
+                          value={item.url}
+                          onChange={(e) => handleStudyMaterialChange(idx, 'url', e.target.value)}
+                          placeholder="https://example.com/material or upload below"
+                          className="bg-[#0e1422] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none flex-1 transition-colors"
+                        />
+                        <div className="relative shrink-0">
+                          <input
+                            type="file"
+                            accept=".pdf,.epub,.mobi,.zip,.doc,.docx"
+                            onChange={(e) => handleStudyMaterialUpload(idx, e)}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            id={`file-upload-${idx}`}
+                          />
+                          <button
+                            type="button"
+                            className="px-4 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-750 text-zinc-200 hover:text-white rounded-lg text-base font-bold transition-colors w-full cursor-pointer flex items-center gap-2 justify-center"
+                          >
+                            <FiUploadCloud className="h-5 w-5" />
+                            <span>Upload File</span>
+                          </button>
+                        </div>
+                      </div>
+                      {uploadingStates[idx] && (
+                        <p className="text-sm font-semibold text-[#8a88ff] animate-pulse flex items-center gap-2">
+                          <span className="h-4 w-4 border-2 border-[#615fff] border-t-transparent rounded-full animate-spin inline-block" />
+                          Uploading secure document to server...
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

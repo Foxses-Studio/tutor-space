@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { FiCalendar, FiClock, FiRadio, FiExternalLink } from 'react-icons/fi'
+import { FiCalendar, FiClock, FiRadio, FiExternalLink, FiFileText, FiBookOpen, FiLink, FiDownload } from 'react-icons/fi'
 import Swal from 'sweetalert2'
 
 interface UserSession {
@@ -30,6 +30,7 @@ export default function StudyHubPage() {
   const [webinars, setWebinars] = useState<LiveWebinar[]>([])
   const [streakCount, setStreakCount] = useState(5)
   const [loginDates, setLoginDates] = useState<string[]>([])
+  const [enrollments, setEnrollments] = useState<any[]>([])
 
   useEffect(() => {
     async function checkSessionAndFetchData() {
@@ -72,6 +73,15 @@ export default function StudyHubPage() {
             }
           }
           setStreakCount(streak || 1)
+        }
+
+        // Fetch student's enrollments containing course study materials
+        const enrollmentsRes = await fetch('/api/enrollments?depth=2')
+        if (enrollmentsRes.ok) {
+          const enrollmentsData = await enrollmentsRes.json()
+          if (enrollmentsData.docs) {
+            setEnrollments(enrollmentsData.docs)
+          }
         }
 
       } catch (error) {
@@ -122,6 +132,21 @@ export default function StudyHubPage() {
   }
 
   if (!user) return null
+
+  // Flatten study materials from all enrolled courses
+  const allMaterials = enrollments.reduce((acc: any[], enrollment: any) => {
+    const course = enrollment.course
+    if (course && course.studyMaterials && course.studyMaterials.length > 0) {
+      course.studyMaterials.forEach((material: any) => {
+        acc.push({
+          ...material,
+          courseTitle: course.title,
+          courseId: course.id,
+        })
+      })
+    }
+    return acc
+  }, [])
 
   return (
     <div className="container mx-auto px-6 py-8 pb-16">
@@ -253,6 +278,87 @@ export default function StudyHubPage() {
         </div>
 
       </div>
+
+      {/* Study Materials Hub Section */}
+      <div className="mt-12">
+        <div className="bg-white p-6 border border-zinc-200/80 rounded-lg space-y-6">
+          <div>
+            <h3 className="text-xl font-bold text-zinc-800 flex items-center gap-2">
+              <span className="text-[#615fff]">📚</span> Study Materials & eBooks Hub
+            </h3>
+            <p className="text-base font-semibold text-zinc-450 mt-1 leading-relaxed">
+              Access exclusive ebooks, guides, cheat sheets, and reference materials provided by your course mentors.
+            </p>
+          </div>
+
+          {allMaterials.length === 0 ? (
+            <div className="text-center py-12 bg-zinc-50/50 rounded-lg border border-zinc-100 p-6">
+              <p className="text-base font-semibold text-zinc-450">
+                No study materials have been published for your enrolled courses yet.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allMaterials.map((material: any, idx: number) => {
+                let icon = <FiFileText className="h-6 w-6 text-red-500" />
+                let typeLabel = 'PDF Document'
+                let badgeColor = 'bg-red-50 text-red-600 border-red-105'
+
+                if (material.materialType === 'epub') {
+                  icon = <FiBookOpen className="h-6 w-6 text-purple-500" />
+                  typeLabel = 'eBook (ePub)'
+                  badgeColor = 'bg-purple-50 text-purple-600 border-purple-105'
+                } else if (material.materialType === 'link') {
+                  icon = <FiLink className="h-6 w-6 text-blue-500" />
+                  typeLabel = 'Web Link'
+                  badgeColor = 'bg-blue-50 text-blue-600 border-blue-105'
+                } else if (material.materialType === 'other') {
+                  icon = <FiFileText className="h-6 w-6 text-zinc-550" />
+                  typeLabel = 'Resource'
+                  badgeColor = 'bg-zinc-50 text-zinc-650 border-zinc-150'
+                }
+
+                return (
+                  <div key={idx} className="p-5 bg-zinc-50/50 hover:bg-white border border-zinc-150/80 hover:border-[#615fff]/35 rounded-lg transition-all duration-300 flex flex-col justify-between group">
+                    <div className="space-y-3.5">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="p-2.5 bg-white rounded-lg border border-zinc-150 shadow-sm">
+                          {icon}
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold uppercase tracking-wider border ${badgeColor}`}>
+                          {typeLabel}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="text-base font-bold text-zinc-850 line-clamp-2 leading-snug group-hover:text-[#615fff] transition-colors">
+                          {material.title}
+                        </h4>
+                        <p className="text-sm font-semibold text-zinc-450 mt-1.5 line-clamp-1">
+                          Course: <span className="font-bold text-zinc-600">{material.courseTitle}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-5 border-t border-zinc-150/60 mt-5">
+                      <a
+                        href={material.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white hover:bg-[#615fff] text-zinc-700 hover:text-white border border-zinc-250 hover:border-[#615fff] font-bold text-base transition-all duration-200 shadow-sm cursor-pointer"
+                      >
+                        <span>Access Material</span>
+                        <FiDownload className="h-4.5 w-4.5 shrink-0" />
+                      </a>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
     </div>
   )
 }

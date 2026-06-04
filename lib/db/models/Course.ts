@@ -20,6 +20,11 @@ export interface ICourse extends Document {
     metaDescription?: string
     keywords?: string
   }
+  studyMaterials?: Array<{
+    title: string
+    url: string
+    materialType: 'pdf' | 'epub' | 'link' | 'other'
+  }>
 }
 
 const CourseSchema = new Schema<ICourse>(
@@ -51,6 +56,13 @@ const CourseSchema = new Schema<ICourse>(
       metaDescription: String,
       keywords: String,
     },
+    studyMaterials: [
+      {
+        title: { type: String, required: true },
+        url: { type: String, required: true },
+        materialType: { type: String, enum: ['pdf', 'epub', 'link', 'other'], default: 'pdf', required: true },
+      },
+    ],
   },
   { collection: 'courses', timestamps: true }
 )

@@ -51,13 +51,12 @@ export async function POST(request: Request) {
     
     const uniqueId = Date.now() + '-' + Math.round(Math.random() * 1e9)
     const filename = `${baseName}-${uniqueId}${fileExt}`
+    const mimeType = file.type || 'image/jpeg'
 
-    const uploadDir = path.join(process.cwd(), 'public', 'media')
-    await fs.mkdir(uploadDir, { recursive: true })
+    const { uploadToStorage } = await import('@/lib/storage')
 
     // Save main file
-    const mainFilePath = path.join(uploadDir, filename)
-    await fs.writeFile(mainFilePath, buffer)
+    const mainFileUrl = await uploadToStorage(buffer, filename, 'media', mimeType)
 
     // Calculate metadata
     let width = undefined
@@ -81,7 +80,6 @@ export async function POST(request: Request) {
 
     // 4. Generate Responsive Sizes using Sharp
     const sizes: any = {}
-    const mimeType = file.type || 'image/jpeg'
 
     // Only attempt Sharp resizing if it's an image
     if (mimeType.startsWith('image/')) {
@@ -94,16 +92,17 @@ export async function POST(request: Request) {
       for (const conf of sizesConfig) {
         try {
           const subFilename = `${baseName}-${uniqueId}-${conf.name}.webp`
-          const subFilePath = path.join(uploadDir, subFilename)
 
           // Resize keeping aspect ratio or cover
-          await sharp(buffer)
+          const resizedBuffer = await sharp(buffer)
             .resize(conf.w, conf.h, { fit: 'cover', withoutEnlargement: true })
             .toFormat('webp')
-            .toFile(subFilePath)
+            .toBuffer()
+
+          const subUrl = await uploadToStorage(resizedBuffer, subFilename, 'media', 'image/webp')
 
           sizes[conf.name] = {
-            url: `/media/${subFilename}`,
+            url: subUrl,
             width: conf.w,
             height: conf.h,
             filename: subFilename,
@@ -122,7 +121,7 @@ export async function POST(request: Request) {
       width,
       height,
       alt,
-      url: `/media/${filename}`,
+      url: mainFileUrl,
       sizes: Object.keys(sizes).length > 0 ? sizes : undefined,
     })
 

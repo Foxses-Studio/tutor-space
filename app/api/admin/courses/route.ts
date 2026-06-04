@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       whatYouWillLearn,
       requirements,
       seo,
+      studyMaterials,
     } = body
 
     if (!title || !slug || !summary || !description || price === undefined || !thumbnail || !category) {
@@ -110,6 +111,7 @@ export async function POST(request: Request) {
       whatYouWillLearn: whatYouWillLearn || [],
       requirements: requirements || [],
       seo: seo || {},
+      studyMaterials: studyMaterials || [],
     })
 
     await newCourse.save()
