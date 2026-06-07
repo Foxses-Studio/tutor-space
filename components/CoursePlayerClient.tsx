@@ -25,6 +25,14 @@ import {
   FiHelpCircle
 } from 'react-icons/fi'
 import Swal from 'sweetalert2'
+import SecureVideoPlayer from './SecureVideoPlayer'
+
+// Client-safe check: external embeds (YouTube/Vimeo) start with http(s);
+// anything else is treated as a private R2 object key streamed securely.
+function isExternalEmbed(videoUrl?: string): boolean {
+  if (!videoUrl) return false
+  return /^https?:\/\//i.test(videoUrl.trim())
+}
 
 interface QuizQuestion {
   questionText: string
@@ -418,6 +426,33 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     window.addEventListener('focus', handleFocus)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
+    // 7. DevTools open detection via window inner/outer size gap (blackout while open)
+    const checkDevTools = () => {
+      if (!window.location.pathname.includes('/watch')) return
+      const threshold = 170
+      const widthGap = window.outerWidth - window.innerWidth
+      const heightGap = window.outerHeight - window.innerHeight
+      if (widthGap > threshold || heightGap > threshold) {
+        setIsBlackout(true)
+      }
+    }
+    const devToolsInterval = setInterval(checkDevTools, 1000)
+
+    // 8. Mobile / touch protection: block long-press save menu and drag-out
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
+      // Block multi-touch gestures and long-press context menus over the player
+      if (e.touches.length > 1) {
+        e.preventDefault()
+      }
+    }
+    const handleDragStart = (e: DragEvent) => {
+      if (!window.location.pathname.includes('/watch')) return
+      e.preventDefault()
+    }
+    document.addEventListener('touchstart', handleTouchStart, { passive: false })
+    document.addEventListener('dragstart', handleDragStart)
+
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu)
       window.removeEventListener('keydown', handleDevTools)
@@ -427,11 +462,24 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
       window.removeEventListener('blur', handleBlur)
       window.removeEventListener('focus', handleFocus)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearInterval(devToolsInterval)
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('dragstart', handleDragStart)
     }
   }, [])
 
+  // Navigate to the next lesson in order (if any)
+  const goToNextLesson = (fromLessonId: string) => {
+    const nextIdx = sortedLessons.findIndex(l => l.id === fromLessonId) + 1
+    if (nextIdx > 0 && nextIdx < sortedLessons.length) {
+      const nextL = sortedLessons[nextIdx]
+      setActiveLesson(nextL)
+      router.replace(`/courses/${course.slug}/watch?lesson=${nextL.id}`)
+    }
+  }
+
   // Handle Mark as Completed — persists to DB
-  const handleToggleComplete = async (lessonId: string) => {
+  const handleToggleComplete = async (lessonId: string, advance: boolean = false) => {
     const willBeCompleted = !completedLessonIds.includes(lessonId)
     const updatedCompleted = willBeCompleted
       ? [...completedLessonIds, lessonId]
@@ -458,10 +506,13 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     }
 
     if (willBeCompleted) {
+      const isLast = sortedLessons.findIndex(l => l.id === lessonId) === sortedLessons.length - 1
       Swal.fire({
         icon: 'success',
         title: 'Outstanding Work!',
-        text: 'Lesson marked as completed. Keep up the streak!',
+        text: advance && !isLast
+          ? 'Lesson completed. Moving to the next lesson…'
+          : 'Lesson marked as completed. Keep up the streak!',
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
@@ -469,6 +520,10 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
         background: '#1a1a1a',
         color: '#ffffff',
       })
+      // Auto-advance to the next lesson when requested
+      if (advance) {
+        goToNextLesson(lessonId)
+      }
     } else {
       Swal.fire({
         icon: 'info',
@@ -529,7 +584,15 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
   // ─── Render Sub-Components for clean split layouts ───
   const renderPlayer = () => (
-    <div ref={videoContainerRef} className="bg-slate-900 border border-slate-950 rounded-lg overflow-hidden shadow-xl aspect-video relative">
+    <div
+      ref={videoContainerRef}
+      className="bg-slate-900 border border-slate-950 rounded-lg overflow-hidden shadow-xl aspect-video relative"
+      style={{
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTouchCallout: 'none',
+      } as React.CSSProperties}
+    >
       
       {/* Full Black Screen overlay on focus loss or screenshot keys */}
       {isBlackout && (
@@ -545,8 +608,10 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
       )}
 
       {currentLesson.lessonType === 'recorded' && currentLesson.videoUrl ? (
-        // Embed Player (YouTube/Vimeo)
-        getEmbedUrl(currentLesson.videoUrl) ? (
+        // Private R2-hosted video → secure signed-URL streaming player
+        !isExternalEmbed(currentLesson.videoUrl) ? (
+          <SecureVideoPlayer lessonId={currentLesson.id} title={currentLesson.title} />
+        ) : getEmbedUrl(currentLesson.videoUrl) ? (
           <iframe
             src={getEmbedUrl(currentLesson.videoUrl)}
             title={currentLesson.title}
@@ -1268,7 +1333,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
         {/* Complete lesson button */}
         <button
           type="button"
-          onClick={() => handleToggleComplete(currentLesson.id)}
+          onClick={() => handleToggleComplete(currentLesson.id, true)}
           className={`inline-flex items-center gap-2 px-4.5 py-2 rounded-lg border font-bold text-base whitespace-nowrap transition-all cursor-pointer shadow-sm hover:scale-[1.01] ${
             completedLessonIds.includes(currentLesson.id)
               ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100/70'

@@ -316,14 +316,18 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
             {/* Conditional fields depending on format */}
             {lessonType === 'recorded' ? (
               <div className="flex flex-col gap-2 animate-fadeIn">
-                <label className="text-base font-bold text-zinc-300">Video CDN / Embed URL</label>
+                <label className="text-base font-bold text-zinc-300">Video Source (Embed URL or Private R2 Key)</label>
                 <input
-                  type="url"
+                  type="text"
                   value={videoUrl}
                   onChange={handleVideoUrlChange}
-                  placeholder="https://www.youtube.com/embed/..."
+                  placeholder="https://www.youtube.com/embed/...  or  videos/lesson-1.mp4"
                   className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
                 />
+                <p className="text-base font-medium text-zinc-500 leading-relaxed">
+                  Paste a <span className="text-zinc-300 font-semibold">YouTube / Vimeo / any platform URL</span> to embed it,
+                  or a <span className="text-zinc-300 font-semibold">private R2 object key</span> (e.g. <span className="font-mono text-[#8a88ff]">videos/lesson-1.mp4</span>) to stream it securely with link protection.
+                </p>
               </div>
             ) : lessonType === 'live' ? (
               <div className="space-y-4 animate-fadeIn">
