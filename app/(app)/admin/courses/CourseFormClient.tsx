@@ -82,6 +82,30 @@ export default function CourseFormClient({
   const [requirements, setRequirements] = useState<Array<{ requirement: string }>>(
     initialData?.requirements || []
   )
+  const [modules, setModules] = useState<string[]>(initialData?.modules || [])
+  const [newModuleName, setNewModuleName] = useState('')
+
+  const handleAddModule = () => {
+    const trimmed = newModuleName.trim()
+    if (!trimmed) return
+    if (modules.includes(trimmed)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Duplicate Module',
+        text: 'This module name already exists.',
+        background: '#121829',
+        color: '#ffffff',
+      })
+      return
+    }
+    setModules([...modules, trimmed])
+    setNewModuleName('')
+  }
+
+  const handleRemoveModule = (indexToRemove: number) => {
+    setModules(modules.filter((_, idx) => idx !== indexToRemove))
+  }
+
   const [studyMaterials, setStudyMaterials] = useState<Array<{ title: string; url: string; materialType: 'pdf' | 'epub' | 'link' | 'other' }>>(
     initialData?.studyMaterials || []
   )
@@ -369,6 +393,7 @@ export default function CourseFormClient({
       whatYouWillLearn: whatYouWillLearn.filter((item) => item.outcome.trim() !== ''),
       requirements: requirements.filter((item) => item.requirement.trim() !== ''),
       studyMaterials: studyMaterials.filter((item) => item.title.trim() !== '' && item.url.trim() !== ''),
+      modules,
       seo: {
         metaTitle,
         metaDescription,
@@ -699,6 +724,58 @@ export default function CourseFormClient({
                         </p>
                       )}
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Course Modules card */}
+          <div className="bg-[#121829] border border-zinc-800 rounded-lg p-6 space-y-4">
+            <h2 className="text-xl font-bold text-white tracking-tight border-b border-zinc-850 pb-3">Course Modules</h2>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={newModuleName}
+                onChange={(e) => setNewModuleName(e.target.value)}
+                placeholder="e.g. Module 1: Introduction to React"
+                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none flex-1 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddModule()
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleAddModule}
+                className="px-5 py-3 bg-[#615fff] hover:bg-[#5248e8] text-white rounded-lg text-base font-bold transition-all shadow-md shadow-[#615fff]/20 cursor-pointer border-none"
+              >
+                Add Module
+              </button>
+            </div>
+            <p className="text-sm font-semibold text-zinc-500">
+              Create the curriculum modules for this course first. Later, you can select these modules when assigning lessons.
+            </p>
+
+            {modules.length === 0 ? (
+              <p className="text-base font-semibold text-zinc-550 py-2">
+                No modules defined yet. Course lessons will default to "General Module" if no modules are created.
+              </p>
+            ) : (
+              <div className="space-y-2.5 pt-2">
+                {modules.map((modName, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-[#070b16] border border-zinc-800 hover:border-zinc-750 px-4 py-3 rounded-lg transition-colors">
+                    <span className="text-white font-bold text-base">{modName}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveModule(idx)}
+                      className="p-2 text-zinc-500 hover:text-red-400 bg-zinc-900/60 border border-zinc-800 rounded-lg transition-colors cursor-pointer"
+                      title="Remove module"
+                    >
+                      <FiTrash2 className="h-5 w-5" />
+                    </button>
                   </div>
                 ))}
               </div>

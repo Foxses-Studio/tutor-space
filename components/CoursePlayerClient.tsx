@@ -1485,7 +1485,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
           const lectureCount = group.lessons.length
 
           return (
-            <div key={group.name} className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+            <div key={group.name} className="border border-[#615fff]/25 rounded-lg bg-white overflow-hidden shadow-sm">
               {/* Module Header (Clickable toggle) */}
               <button
                 type="button"
@@ -1495,7 +1495,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                     [group.name]: !prev[group.name],
                   }))
                 }}
-                className="w-full px-4 py-3 flex items-center justify-between text-left bg-slate-50 border-b border-slate-100 hover:bg-slate-100/70 transition-colors select-none cursor-pointer"
+                className="w-full px-4 py-3 flex items-center justify-between text-left bg-[#fcfbfe] border-b border-[#615fff]/20 hover:bg-zinc-50/40 transition-colors select-none cursor-pointer"
               >
                 <div className="min-w-0 pr-2">
                   <h4 className="font-bold text-zinc-850 text-sm leading-tight truncate">
@@ -1512,7 +1512,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
               {/* Module Lessons list */}
               {isModuleExpanded && (
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-[#615fff]/15">
                   {group.lessons.map((lesson) => {
                     const isActive = lesson.id === currentLesson.id
                     const isCompleted = completedLessonIds.includes(lesson.id)

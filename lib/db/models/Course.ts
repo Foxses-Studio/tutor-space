@@ -25,6 +25,7 @@ export interface ICourse extends Document {
     url: string
     materialType: 'pdf' | 'epub' | 'link' | 'other'
   }>
+  modules?: string[]
 }
 
 const CourseSchema = new Schema<ICourse>(
@@ -63,8 +64,14 @@ const CourseSchema = new Schema<ICourse>(
         materialType: { type: String, enum: ['pdf', 'epub', 'link', 'other'], default: 'pdf', required: true },
       },
     ],
+    modules: { type: [String], default: [] },
   },
   { collection: 'courses', timestamps: true }
 )
+
+// Clear old model cache in development if modules field is not registered in compiled schema paths
+if (mongoose.models.Course && !mongoose.models.Course.schema.paths.modules) {
+  delete mongoose.models.Course
+}
 
 export const Course = mongoose.models.Course || mongoose.model<ICourse>('Course', CourseSchema)

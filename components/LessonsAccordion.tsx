@@ -96,7 +96,7 @@ export default function LessonsAccordion({
           return (
             <div 
               key={group.name} 
-              className="bg-white rounded-lg overflow-hidden border border-[#E9E6FF] shadow-[0_4px_16px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_24px_rgba(97,95,255,0.03)] transition-all duration-300 select-text"
+              className="bg-white rounded-lg overflow-hidden border border-[#615fff]/25 shadow-[0_4px_16px_rgba(0,0,0,0.01)] hover:shadow-[0_8px_24px_rgba(97,95,255,0.03)] transition-all duration-300 select-text"
             >
               {/* Accordion Header (Module Title) */}
               <button
@@ -113,7 +113,7 @@ export default function LessonsAccordion({
                   </p>
                 </div>
 
-                <span className="text-zinc-450 shrink-0">
+                <span className="text-zinc-455 shrink-0">
                   {isOpen ? (
                     <FiChevronUp className="h-5 w-5" />
                   ) : (
@@ -132,7 +132,7 @@ export default function LessonsAccordion({
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
-                    <div className="border-t border-zinc-150 divide-y divide-zinc-100 bg-white">
+                    <div className="border-t border-[#615fff]/20 divide-y divide-[#615fff]/15 bg-white">
                       {group.lessons.map((lesson) => {
                         const dateObj = lesson.liveDate ? new Date(lesson.liveDate) : null
                         const formattedDate = dateObj

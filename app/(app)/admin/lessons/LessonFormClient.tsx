@@ -80,6 +80,36 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
     ]
   )
   const [saving, setSaving] = useState(false)
+  const [existingModules, setExistingModules] = useState<string[]>([])
+
+  // Fetch unique module names of the selected course
+  React.useEffect(() => {
+    if (!courseId) {
+      setExistingModules([])
+      return
+    }
+    fetch(`/api/admin/courses/${courseId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.course && data.course.modules) {
+          const courseMods = data.course.modules as string[]
+          setExistingModules(courseMods)
+          
+          // If editing a lesson, and its current moduleName is not in the course's modules,
+          // we append it so it's selectable/visible
+          const initialModName = initialData?.moduleName
+          if (initialModName && !courseMods.includes(initialModName)) {
+            setExistingModules((prev) => [...prev, initialModName])
+          } else if (!initialData && courseMods.length > 0) {
+            // If creating a new lesson, default to the first module of the course
+            setModuleName(courseMods[0])
+          }
+        } else {
+          setExistingModules([])
+        }
+      })
+      .catch((err) => console.error('Failed to load course modules:', err))
+  }, [courseId, initialData])
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -247,17 +277,26 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
               />
             </div>
 
-            {/* Module Name */}
+            {/* Target Module Selection */}
             <div className="flex flex-col gap-2">
-              <label className="text-base font-bold text-zinc-300">Module Name (e.g. Module 1: Introduction) *</label>
-              <input
-                type="text"
-                required
+              <label className="text-base font-bold text-zinc-300">Target Module *</label>
+              <select
                 value={moduleName}
                 onChange={(e) => setModuleName(e.target.value)}
-                placeholder="e.g. Module 1: Introduction to JavaScript"
-                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
-              />
+                className="bg-[#070b16] border border-zinc-800 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors cursor-pointer"
+              >
+                <option value="General Module">General Module</option>
+                {existingModules.map((mod) => (
+                  mod !== 'General Module' && (
+                    <option key={mod} value={mod}>
+                      {mod}
+                    </option>
+                  )
+                ))}
+              </select>
+              <p className="text-base font-medium text-zinc-550 leading-relaxed">
+                Select from the curriculum modules defined for this course. (Add/edit modules in the Course parameters page).
+              </p>
             </div>
 
             {/* Slug & Order Grid */}

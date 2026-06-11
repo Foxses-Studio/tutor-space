@@ -136,6 +136,7 @@ export async function PUT(
       requirements,
       seo,
       studyMaterials,
+      modules,
     } = body
 
     if (!title || !slug || !summary || !description || price === undefined || !thumbnail || !category) {
@@ -167,6 +168,7 @@ export async function PUT(
     course.requirements = requirements || []
     course.seo = seo || {}
     course.studyMaterials = studyMaterials || []
+    course.modules = modules || []
 
     await course.save()
 

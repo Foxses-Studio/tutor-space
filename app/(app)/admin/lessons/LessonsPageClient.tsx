@@ -17,6 +17,7 @@ interface LessonItem {
   title: string
   slug: string
   order: number
+  moduleName?: string
   lessonType: 'recorded' | 'live' | 'quiz'
   videoUrl?: string
   livePlatform?: string
@@ -62,6 +63,7 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
           title: l.title,
           slug: l.slug,
           order: l.order,
+          moduleName: l.moduleName,
           lessonType: l.lessonType,
           videoUrl: l.videoUrl,
           livePlatform: l.livePlatform,
@@ -186,9 +188,9 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
                     <tr className="bg-[#121212] border-b border-zinc-800 text-zinc-400 font-bold text-sm uppercase tracking-wider font-display">
                       <th className="px-6 py-3.5 text-center w-16">Order</th>
                       <th className="px-6 py-3.5">Lesson Title</th>
+                      <th className="px-6 py-3.5">Module</th>
                       <th className="px-6 py-3.5">Format</th>
                       <th className="px-6 py-3.5">Duration</th>
-                      <th className="px-6 py-3.5">Scheduled Date</th>
                       <th className="px-6 py-3.5 text-right w-32">Actions</th>
                     </tr>
                   </thead>
@@ -239,6 +241,12 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
                                 </div>
                               </div>
                             </td>
+                            {/* Module */}
+                            <td className="px-6 py-4">
+                              <span className="text-zinc-350 bg-zinc-800/40 border border-zinc-700/50 rounded px-2.5 py-1 text-sm select-none">
+                                {lesson.moduleName || 'General Module'}
+                              </span>
+                            </td>
                             {/* Format */}
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
@@ -266,14 +274,6 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
                             {/* Duration */}
                             <td className="px-6 py-4 text-zinc-300">
                               {lesson.duration} mins
-                            </td>
-                            {/* Scheduled Date */}
-                            <td className="px-6 py-4 text-zinc-300">
-                              {lesson.lessonType === 'live' ? (
-                                <span className="text-zinc-200 font-bold">{formattedDate}</span>
-                              ) : (
-                                <span className="text-zinc-550 italic font-medium">—</span>
-                              )}
                             </td>
                             {/* Actions */}
                             <td className="px-6 py-4 text-right">

@@ -67,4 +67,9 @@ const LessonSchema = new Schema<ILesson>(
   { collection: 'lessons', timestamps: true }
 )
 
+// Clear old model cache in development if moduleName field is not registered in compiled schema paths
+if (mongoose.models.Lesson && !mongoose.models.Lesson.schema.paths.moduleName) {
+  delete mongoose.models.Lesson
+}
+
 export const Lesson = mongoose.models.Lesson || mongoose.model<ILesson>('Lesson', LessonSchema)
