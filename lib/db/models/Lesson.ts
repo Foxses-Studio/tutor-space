@@ -11,6 +11,7 @@ export interface ILesson extends Document {
   slug: string
   course: mongoose.Types.ObjectId | string
   order: number
+  moduleName?: string
   lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
   totalMarks?: number
   videoUrl?: string
@@ -43,6 +44,7 @@ const LessonSchema = new Schema<ILesson>(
     slug: { type: String, required: true, unique: true },
     course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     order: { type: Number, required: true, min: 1 },
+    moduleName: { type: String, default: 'General Module' },
     lessonType: { type: String, enum: ['recorded', 'live', 'quiz', 'assignment'], default: 'recorded', required: true },
     totalMarks: { type: Number, default: 100 },
     videoUrl: String,

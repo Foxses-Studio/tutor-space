@@ -7,6 +7,7 @@ import {
   FiVideo, 
   FiRadio, 
   FiChevronRight, 
+  FiChevronDown,
   FiCheckCircle, 
   FiClock, 
   FiCheck, 
@@ -45,6 +46,7 @@ interface LessonItem {
   title: string
   slug: string
   order: number
+  moduleName?: string
   lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
   duration: number
   isPreviewable: boolean
@@ -209,6 +211,44 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
 
   // Sort lessons by order
   const sortedLessons = [...lessons].sort((a, b) => a.order - b.order)
+
+  // Sidebar expanded modules state
+  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
+
+  // Expand the module of the current active lesson automatically
+  useEffect(() => {
+    const activeL = activeLesson || sortedLessons[0]
+    if (activeL) {
+      const activeModule = activeL.moduleName || 'General Module'
+      setExpandedModules((prev) => ({
+        ...prev,
+        [activeModule]: true,
+      }))
+    }
+  }, [activeLesson?.id, sortedLessons.length])
+
+  // Group lessons by moduleName
+  const grouped: Record<string, typeof sortedLessons> = {}
+  sortedLessons.forEach((lesson) => {
+    const mod = lesson.moduleName || 'General Module'
+    if (!grouped[mod]) {
+      grouped[mod] = []
+    }
+    grouped[mod].push(lesson)
+  })
+
+  // Convert to array and sort modules by the minimum order of their lessons
+  const moduleGroups = Object.keys(grouped).map((name) => {
+    const moduleLessons = [...grouped[name]].sort((a, b) => a.order - b.order)
+    const minOrder = Math.min(...moduleLessons.map((l) => l.order))
+    return {
+      name,
+      lessons: moduleLessons,
+      minOrder,
+    }
+  })
+
+  moduleGroups.sort((a, b) => a.minOrder - b.minOrder)
 
   // Initialize active lesson from query search params or default to first lesson
   useEffect(() => {
@@ -1439,71 +1479,108 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 p-4 space-y-2 max-h-[650px] pr-2">
-        {sortedLessons.map((lesson) => {
-          const isActive = lesson.id === currentLesson.id
-          const isCompleted = completedLessonIds.includes(lesson.id)
-          
+      <div className="flex-grow flex-shrink flex-1 overflow-y-auto p-4 space-y-4 max-h-[650px] pr-2 bg-slate-50/50">
+        {moduleGroups.map((group) => {
+          const isModuleExpanded = !!expandedModules[group.name]
+          const lectureCount = group.lessons.length
+
           return (
-            <div
-              key={lesson.id}
-              onClick={() => {
-                setActiveLesson(lesson)
-                router.replace(`/courses/${course.slug}/watch?lesson=${lesson.id}`)
-              }}
-              className={`w-full flex items-start gap-3.5 p-3 rounded-lg text-left transition-all duration-200 cursor-pointer ${
-                isActive 
-                  ? 'bg-[#615fff]/8 border border-[#615fff]/25 text-zinc-900 shadow-sm' 
-                  : 'hover:bg-slate-50 border border-transparent text-zinc-700 hover:text-zinc-900'
-              }`}
-            >
-              {/* Completion Check or type icon */}
-              <div className="shrink-0 mt-0.5">
-                {isCompleted ? (
-                  <FiCheckCircle className="h-5 w-5 text-emerald-600 fill-emerald-50 shrink-0" />
-                ) : lesson.lessonType === 'live' ? (
-                  <FiRadio className={`h-5 w-5 shrink-0 ${isActive ? 'text-rose-500' : 'text-rose-400'}`} />
-                ) : lesson.lessonType === 'quiz' ? (
-                  <FiHelpCircle className={`h-5 w-5 shrink-0 ${isActive ? 'text-amber-500' : 'text-amber-400'}`} />
-                ) : lesson.lessonType === 'assignment' ? (
-                  <FiFileText className={`h-5 w-5 shrink-0 ${isActive ? 'text-[#615fff]' : 'text-zinc-400'}`} />
-                ) : (
-                  <FiVideo className={`h-5 w-5 shrink-0 ${isActive ? 'text-[#615fff]' : 'text-zinc-400'}`} />
-                )}
-              </div>
-
-              {/* Lesson Meta Data */}
-              <div className="min-w-0 flex-1 space-y-0.5 select-none">
-                <h4 className={`text-base font-bold leading-snug line-clamp-2 ${isActive ? 'text-zinc-900 font-bold' : 'text-zinc-700 font-semibold'}`}>
-                  {lesson.order}. {lesson.title}
-                </h4>
-                <div className="flex items-center gap-2 text-xs font-bold text-zinc-450 uppercase tracking-wide">
-                  <span>{lesson.duration} mins</span>
-                  <span>•</span>
-                  <span className={
-                    lesson.lessonType === 'live' 
-                      ? 'text-rose-500' 
-                      : lesson.lessonType === 'quiz'
-                      ? 'text-amber-500'
-                      : lesson.lessonType === 'assignment'
-                      ? 'text-[#615fff]'
-                      : ''
-                  }>
-                    {lesson.lessonType === 'live' 
-                      ? 'Live Webinar' 
-                      : lesson.lessonType === 'quiz' 
-                      ? 'Interactive Quiz' 
-                      : lesson.lessonType === 'assignment' 
-                      ? 'Assignment Task' 
-                      : 'Pre-recorded'}
-                  </span>
+            <div key={group.name} className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+              {/* Module Header (Clickable toggle) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setExpandedModules((prev) => ({
+                    ...prev,
+                    [group.name]: !prev[group.name],
+                  }))
+                }}
+                className="w-full px-4 py-3 flex items-center justify-between text-left bg-slate-50 border-b border-slate-100 hover:bg-slate-100/70 transition-colors select-none cursor-pointer"
+              >
+                <div className="min-w-0 pr-2">
+                  <h4 className="font-bold text-zinc-850 text-sm leading-tight truncate">
+                    {group.name}
+                  </h4>
+                  <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide mt-0.5">
+                    {lectureCount} {lectureCount === 1 ? 'lesson' : 'lessons'}
+                  </p>
                 </div>
-              </div>
+                <span className="text-zinc-400 shrink-0">
+                  <FiChevronDown className={`h-4 w-4 transition-transform duration-200 ${isModuleExpanded ? 'rotate-180' : ''}`} />
+                </span>
+              </button>
 
-              {/* Simple chevron or check visual */}
-              <div className="shrink-0 flex items-center justify-center text-zinc-350 self-center">
-                <FiChevronRight className="h-4.5 w-4.5" />
-              </div>
+              {/* Module Lessons list */}
+              {isModuleExpanded && (
+                <div className="divide-y divide-slate-100">
+                  {group.lessons.map((lesson) => {
+                    const isActive = lesson.id === currentLesson.id
+                    const isCompleted = completedLessonIds.includes(lesson.id)
+
+                    return (
+                      <div
+                        key={lesson.id}
+                        onClick={() => {
+                          setActiveLesson(lesson)
+                          router.replace(`/courses/${course.slug}/watch?lesson=${lesson.id}`)
+                        }}
+                        className={`w-full flex items-start gap-3 p-3 text-left transition-all duration-150 cursor-pointer ${
+                          isActive 
+                            ? 'bg-[#615fff]/8 text-zinc-900 font-bold' 
+                            : 'hover:bg-slate-50 text-zinc-750 hover:text-zinc-900'
+                        }`}
+                      >
+                        {/* Checkmark or Type Icon */}
+                        <div className="shrink-0 mt-0.5">
+                          {isCompleted ? (
+                            <FiCheckCircle className="h-4.5 w-4.5 text-emerald-600 fill-emerald-50 shrink-0" />
+                          ) : lesson.lessonType === 'live' ? (
+                            <FiRadio className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-rose-500' : 'text-rose-455'}`} />
+                          ) : lesson.lessonType === 'quiz' ? (
+                            <FiHelpCircle className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-amber-500' : 'text-amber-455'}`} />
+                          ) : lesson.lessonType === 'assignment' ? (
+                            <FiFileText className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#615fff]' : 'text-zinc-455'}`} />
+                          ) : (
+                            <FiVideo className={`h-4.5 w-4.5 shrink-0 ${isActive ? 'text-[#615fff]' : 'text-zinc-400'}`} />
+                          )}
+                        </div>
+
+                        {/* Title and Duration */}
+                        <div className="min-w-0 flex-1 space-y-0.5 select-none">
+                          <p className={`text-sm leading-snug line-clamp-2 ${isActive ? 'font-bold text-zinc-900' : 'font-semibold text-zinc-650'}`}>
+                            {lesson.order}. {lesson.title}
+                          </p>
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-zinc-450 uppercase tracking-wide">
+                            <span>{lesson.duration} mins</span>
+                            <span>•</span>
+                            <span className={
+                              lesson.lessonType === 'live' 
+                                ? 'text-rose-500' 
+                                : lesson.lessonType === 'quiz'
+                                ? 'text-amber-500'
+                                : lesson.lessonType === 'assignment'
+                                ? 'text-[#615fff]'
+                                : ''
+                            }>
+                              {lesson.lessonType === 'live' 
+                                ? 'Live' 
+                                : lesson.lessonType === 'quiz' 
+                                ? 'Quiz' 
+                                : lesson.lessonType === 'assignment' 
+                                ? 'Task' 
+                                : 'Video'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 flex items-center justify-center text-zinc-350 self-center">
+                          <FiChevronRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )
         })}

@@ -114,6 +114,7 @@ export default async function CourseWatchPage({ params }: Props) {
     livePlatform: l.livePlatform || '',
     liveDate: l.liveDate ? l.liveDate.toISOString() : undefined,
     videoUrl: l.videoUrl || '',
+    moduleName: l.moduleName || 'General Module',
     quizQuestions: l.quizQuestions ? JSON.parse(JSON.stringify(l.quizQuestions)) : undefined,
   }))
 

@@ -74,6 +74,7 @@ export async function PUT(
       title: finalTitle,
       slug: body.slug ?? lesson.slug,
       order: body.order ?? lesson.order,
+      moduleName: body.moduleName ?? lesson.moduleName,
       lessonType: finalLessonType,
       videoUrl: body.videoUrl ?? lesson.videoUrl,
       livePlatform: finalLivePlatform,

@@ -23,6 +23,7 @@ interface LessonFormProps {
     title: string
     slug: string
     order: number
+    moduleName?: string
     lessonType: 'recorded' | 'live' | 'quiz' | 'assignment'
     videoUrl?: string
     livePlatform?: string
@@ -58,6 +59,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
   const [courseId, setCourseId] = useState(defaultCourseId)
   const [title, setTitle] = useState(initialData?.title || '')
   const [slug, setSlug] = useState(initialData?.slug || '')
+  const [moduleName, setModuleName] = useState(initialData?.moduleName || 'General Module')
   const [order, setOrder] = useState(initialData?.order || 1)
   const [lessonType, setLessonType] = useState<'recorded' | 'live' | 'quiz' | 'assignment'>(
     initialData?.lessonType || 'recorded'
@@ -134,6 +136,7 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
         slug,
         course: courseId,
         order,
+        moduleName,
         lessonType,
         videoUrl: lessonType === 'recorded' ? videoUrl : undefined,
         livePlatform: lessonType === 'live' ? livePlatform : undefined,
@@ -240,6 +243,19 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
                 value={title}
                 onChange={handleTitleChange}
                 placeholder="e.g. Introduction to Next.js routing structures"
+                className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
+              />
+            </div>
+
+            {/* Module Name */}
+            <div className="flex flex-col gap-2">
+              <label className="text-base font-bold text-zinc-300">Module Name (e.g. Module 1: Introduction) *</label>
+              <input
+                type="text"
+                required
+                value={moduleName}
+                onChange={(e) => setModuleName(e.target.value)}
+                placeholder="e.g. Module 1: Introduction to JavaScript"
                 className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors"
               />
             </div>

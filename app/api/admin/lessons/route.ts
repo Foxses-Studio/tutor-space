@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { title, slug, course: courseId, order, lessonType, videoUrl, livePlatform, liveUrl, liveDate, content, duration, isPreviewable, autoGenerateZoom, quizQuestions } = body
+    const { title, slug, course: courseId, order, moduleName, lessonType, videoUrl, livePlatform, liveUrl, liveDate, content, duration, isPreviewable, autoGenerateZoom, quizQuestions } = body
 
     if (!title || !slug || !courseId || !order || !duration) {
       return NextResponse.json({ error: 'Missing required lesson fields.' }, { status: 400 })
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     const newLesson = new Lesson({
-      title, slug, course: courseId, order, lessonType: lessonType || 'recorded',
+      title, slug, course: courseId, order, moduleName, lessonType: lessonType || 'recorded',
       videoUrl, livePlatform, liveUrl: actualLiveUrl,
       liveDate: liveDate ? new Date(liveDate) : undefined,
       content, duration: Number(duration),

@@ -139,6 +139,7 @@ export default async function CourseDetailPage({ params }: Props) {
     title: l.title,
     slug: l.slug,
     order: l.order || 1,
+    moduleName: l.moduleName || 'General Module',
     lessonType: l.lessonType || 'recorded',
     duration: l.duration || 10,
     isPreviewable: l.isPreviewable || false,

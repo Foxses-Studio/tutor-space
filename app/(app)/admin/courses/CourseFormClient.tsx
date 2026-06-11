@@ -761,7 +761,7 @@ export default function CourseFormClient({
                         {lesson.lessonType === 'live' ? 'Live' : lesson.lessonType === 'quiz' ? 'Quiz' : 'Video'}
                       </span>
                       <Link
-                        href={`/admin/lessons/${lesson.id}`}
+                        href={`/admin/lessons/${lesson.id}/edit`}
                         className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-all"
                         title="Edit lesson"
                       >
