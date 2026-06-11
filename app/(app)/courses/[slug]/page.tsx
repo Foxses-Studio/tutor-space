@@ -297,6 +297,82 @@ export default async function CourseDetailPage({ params }: Props) {
             </div>
           )}
 
+          {/* Section: Detailed Description */}
+          {course.description && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-[#0A163A] tracking-tight">
+                Course Description
+              </h2>
+              <div className="bg-white border border-[#E9E6FF] rounded-lg p-6 shadow-[0_4px_20px_rgba(97,95,255,0.02)]">
+                <div 
+                  className="course-description-content font-sans select-text"
+                  dangerouslySetInnerHTML={{ __html: course.description }}
+                />
+              </div>
+              <style dangerouslySetInnerHTML={{ __html: `
+                .course-description-content {
+                  color: #3f3f46;
+                  font-size: 1rem;
+                  line-height: 1.7;
+                }
+                .course-description-content h1 { font-size: 1.8rem; font-weight: 700; margin: 1.5rem 0 0.75rem; color: #0A163A; }
+                .course-description-content h2 { font-size: 1.5rem; font-weight: 700; margin: 1.25rem 0 0.6rem; color: #0A163A; }
+                .course-description-content h3 { font-size: 1.25rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #0A163A; }
+                .course-description-content p { margin-bottom: 0.75rem; }
+                .course-description-content strong { font-weight: 700; color: #0A163A; }
+                .course-description-content em { font-style: italic; color: #4b5563; }
+                .course-description-content u { text-decoration: underline; }
+                .course-description-content code {
+                  background: #f1f5f9; color: #0f172a;
+                  padding: 0.1rem 0.35rem; border-radius: 4px;
+                  font-family: monospace; font-size: 0.9em;
+                }
+                .course-description-content pre {
+                  background: #0f172a; border: 1px solid #e2e8f0;
+                  border-radius: 8px; padding: 1rem 1.25rem; margin: 0.75rem 0;
+                  overflow-x: auto; color: #f8fafc;
+                }
+                .course-description-content pre code { background: none; color: inherit; padding: 0; }
+                .course-description-content blockquote {
+                  border-left: 4px solid #615fff; padding-left: 1rem;
+                  margin: 1rem 0; color: #4b5563; font-style: italic;
+                  background: #f8fafc; padding-top: 0.5rem; padding-bottom: 0.5rem;
+                  border-top-right-radius: 4px; border-bottom-right-radius: 4px;
+                }
+                .course-description-content ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+                .course-description-content ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+                .course-description-content li { margin-bottom: 0.25rem; }
+                .course-description-content hr {
+                  border: none; border-top: 1px solid #e2e8f0;
+                  margin: 1.5rem 0;
+                }
+                .course-description-content a { color: #615fff; text-decoration: underline; font-weight: 600; }
+                .course-description-content img {
+                  max-width: 100%; border-radius: 8px; margin: 1rem 0;
+                }
+                .course-description-content iframe {
+                  width: 100%; border-radius: 8px; margin: 1rem 0;
+                  aspect-ratio: 16/9; border: none;
+                }
+                .course-description-content table {
+                  border-collapse: collapse; width: 100%;
+                  margin: 1rem 0; border-radius: 8px; overflow: hidden;
+                  border: 1px solid #e2e8f0;
+                }
+                .course-description-content th {
+                  background: #f8fafc; color: #0A163A; font-weight: 750;
+                  padding: 0.75rem 1rem; border: 1px solid #e2e8f0;
+                  text-align: left; font-size: 0.95rem;
+                }
+                .course-description-content td {
+                  padding: 0.75rem 1rem; border: 1px solid #e2e8f0;
+                  color: #3f3f46; vertical-align: top;
+                }
+                .course-description-content tr:nth-child(even) td { background: #fcfcfd; }
+              `}} />
+            </div>
+          )}
+
           {/* Section: Course Curriculum Accordion */}
           {serializedLessons.length > 0 && (
             <div className="pt-2">
