@@ -84,9 +84,15 @@ export default async function CourseWatchPage({ params }: Props) {
     }
   }
 
+  // Watermark data — mask sensitive info for privacy
+  const maskEmail = (email: string) => {
+    const [local, domain] = email.split('@')
+    return `${local.charAt(0)}***@${domain}`
+  }
+
   const serializedStudent = studentDoc ? {
-    name: studentDoc.name,
-    email: studentDoc.email,
+    name: studentDoc.name || 'Student',
+    email: maskEmail(studentDoc.email || 'student@example.com'),
   } : undefined
 
   // Serialize models into safe plain structures for the client component
@@ -114,6 +120,7 @@ export default async function CourseWatchPage({ params }: Props) {
     livePlatform: l.livePlatform || '',
     liveDate: l.liveDate ? l.liveDate.toISOString() : undefined,
     videoUrl: l.videoUrl || '',
+    liveUrl: l.liveUrl || '',
     moduleName: l.moduleName || 'General Module',
     quizQuestions: l.quizQuestions ? JSON.parse(JSON.stringify(l.quizQuestions)) : undefined,
   }))

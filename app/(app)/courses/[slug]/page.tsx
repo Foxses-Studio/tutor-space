@@ -146,6 +146,7 @@ export default async function CourseDetailPage({ params }: Props) {
     livePlatform: l.livePlatform || '',
     liveDate: l.liveDate ? l.liveDate.toISOString() : undefined,
     videoUrl: l.videoUrl || '',
+    liveUrl: l.liveUrl || '',
   }))
 
   const initials = instructorName
@@ -456,7 +457,7 @@ export default async function CourseDetailPage({ params }: Props) {
         </div>
 
         {/* Right Area: Premium Sticky Pricing Card (4 cols) */}
-        <div className="lg:col-span-4 relative z-20 lg:-mt-[700px] w-full order-1 lg:order-2">
+        <div className="lg:col-span-4 relative z-20 lg:-mt-[280px] w-full order-1 lg:order-2">
           <div className="sticky top-28 bg-white border border-zinc-200 rounded-lg shadow-[0_12px_45px_rgba(97,95,255,0.09)] overflow-hidden">
             
             {/* Aspect image header on widget */}

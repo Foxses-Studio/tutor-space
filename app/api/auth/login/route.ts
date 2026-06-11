@@ -4,10 +4,39 @@ import { Student } from '@/lib/db/models/Student'
 import { User } from '@/lib/db/models/User'
 import { Media } from '@/lib/db/models/Media'
 import { comparePasswords, signToken } from '@/lib/auth/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    // ═══════════════════════════════════════════════════════
+    // Rate limiting — max 5 login attempts per IP per minute
+    // ═══════════════════════════════════════════════════════
+    const clientIP = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown'
+    const { allowed, resetIn } = rateLimit(clientIP, 5, 60)
+
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many login attempts. Please try again in ${resetIn} seconds.`,
+          code: 'RATE_LIMIT_EXCEEDED',
+        },
+        { status: 429 }
+      )
+    }
+
+    let body
+    try {
+      body = await request.json()
+    } catch (e) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid JSON format' },
+        { status: 400 }
+      )
+    }
+
     const { email, password } = body
 
     if (!email || !password) {

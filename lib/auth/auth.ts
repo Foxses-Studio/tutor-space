@@ -1,7 +1,10 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-const PAYLOAD_SECRET = process.env.PAYLOAD_SECRET || 'tutor-space-development-secret-key-1234567890'
+const PAYLOAD_SECRET = process.env.PAYLOAD_SECRET as string
+if (!PAYLOAD_SECRET) {
+  throw new Error('❌ PAYLOAD_SECRET environment variable is required! Set it in .env.local')
+}
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = await bcrypt.genSalt(10)

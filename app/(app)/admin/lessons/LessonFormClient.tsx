@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FiSave, FiX, FiVideo, FiRadio, FiHelpCircle, FiPlus, FiTrash2, FiFileText } from 'react-icons/fi'
 import Swal from 'sweetalert2'
+import VideoUploadWidget from '@/components/VideoUploadWidget'
 
 interface CourseOption {
   id: string
@@ -370,19 +371,48 @@ export default function LessonFormClient({ courses, initialData }: LessonFormPro
 
             {/* Conditional fields depending on format */}
             {lessonType === 'recorded' ? (
-              <div className="flex flex-col gap-2 animate-fadeIn">
-                <label className="text-base font-bold text-zinc-300">Video Source (Embed URL or Private R2 Key)</label>
-                <input
-                  type="text"
-                  value={videoUrl}
-                  onChange={handleVideoUrlChange}
-                  placeholder="https://www.youtube.com/embed/...  or  videos/lesson-1.mp4"
-                  className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
-                />
-                <p className="text-base font-medium text-zinc-500 leading-relaxed">
-                  Paste a <span className="text-zinc-300 font-semibold">YouTube / Vimeo / any platform URL</span> to embed it,
-                  or a <span className="text-zinc-300 font-semibold">private R2 object key</span> (e.g. <span className="font-mono text-[#8a88ff]">videos/lesson-1.mp4</span>) to stream it securely with link protection.
-                </p>
+              <div className="flex flex-col gap-4 animate-fadeIn">
+                <div className="space-y-2">
+                  <label className="text-base font-bold text-zinc-300">📹 Upload Video to R2 (Recommended)</label>
+                  <VideoUploadWidget
+                    onUploadSuccess={(objectKey) => {
+                      setVideoUrl(objectKey)
+                      Swal.fire({
+                        icon: 'success',
+                        title: 'Video Key Added',
+                        text: 'Video key has been automatically filled in the form below.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: '#121829',
+                        color: '#ffffff',
+                      })
+                    }}
+                  />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-zinc-700"></div>
+                  </div>
+                  <div className="relative flex justify-center text-base">
+                    <span className="px-2 bg-[#070b16] text-zinc-400">OR</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-base font-bold text-zinc-300">Or Paste Video URL</label>
+                  <input
+                    type="text"
+                    value={videoUrl}
+                    onChange={handleVideoUrlChange}
+                    placeholder="https://www.youtube.com/embed/...  or  videos/lesson-1.mp4"
+                    className="bg-[#070b16] border border-zinc-800 focus:border-[#615fff]/80 focus:ring-1 focus:ring-[#615fff]/80 text-white rounded-lg p-3 text-base font-semibold outline-none w-full transition-colors font-mono"
+                  />
+                  <p className="text-base font-medium text-zinc-500 leading-relaxed">
+                    Paste a <span className="text-zinc-300 font-semibold">YouTube / Vimeo URL</span> to embed it,
+                    or an <span className="text-zinc-300 font-semibold">R2 object key</span> (e.g. <span className="font-mono text-[#8a88ff]">videos/lesson-1.mp4</span>).
+                  </p>
+                </div>
               </div>
             ) : lessonType === 'live' ? (
               <div className="space-y-4 animate-fadeIn">

@@ -74,8 +74,26 @@ export async function GET(request: Request) {
       .sort({ createdAt: -1 })
       .lean()
 
-    // Map Mongoose _id fields to id for client convenience and inject totalLessons dynamically
-    const formattedDocs = await Promise.all(docs.map(async (doc: any) => {
+    // ═══════════════════════════════════════════════════════
+    // Pre-fetch ALL lesson counts in ONE aggregation query
+    // (instead of N separate queries — N+1 problem fixed)
+    // ═══════════════════════════════════════════════════════
+    const lessonCounts = await Lesson.aggregate([
+      {
+        $group: {
+          _id: '$course',
+          count: { $sum: 1 }
+        }
+      }
+    ])
+
+    const countMap: Record<string, number> = {}
+    lessonCounts.forEach((item: any) => {
+      countMap[item._id.toString()] = item.count
+    })
+
+    // Now map enrollments with pre-fetched counts (no N+1 queries)
+    const formattedDocs = docs.map((doc: any) => {
       if (!doc.course) {
         return {
           id: doc._id.toString(),
@@ -84,13 +102,14 @@ export async function GET(request: Request) {
         }
       }
 
-      const totalLessons = await Lesson.countDocuments({ course: doc.course._id })
+      const courseId = doc.course._id.toString()
+      const totalLessons = countMap[courseId] || 0
 
       return {
         id: doc._id.toString(),
         ...doc,
         course: {
-          id: doc.course._id.toString(),
+          id: courseId,
           ...doc.course,
           totalLessons,
           category: doc.course.category ? {
@@ -107,7 +126,7 @@ export async function GET(request: Request) {
           } : null
         }
       }
-    }))
+    })
 
     return NextResponse.json({
       success: true,

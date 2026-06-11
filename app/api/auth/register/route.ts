@@ -4,13 +4,40 @@ import { Student } from '@/lib/db/models/Student'
 import { User } from '@/lib/db/models/User'
 import { Media } from '@/lib/db/models/Media'
 import { hashPassword, verifyToken } from '@/lib/auth/auth'
+import { rateLimit } from '@/lib/rateLimit'
 import { cookies } from 'next/headers'
 import fs from 'fs/promises'
 import path from 'path'
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    // Rate limiting — max 3 registration attempts per IP per hour
+    const clientIP = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown'
+    const { allowed, resetIn } = rateLimit(`reg_${clientIP}`, 3, 3600)
+
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many registration attempts. Please try again in ${resetIn} seconds.`,
+          code: 'RATE_LIMIT_EXCEEDED',
+        },
+        { status: 429 }
+      )
+    }
+
+    let body
+    try {
+      body = await request.json()
+    } catch (e) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid JSON format' },
+        { status: 400 }
+      )
+    }
+
     const { name, email, password, phone, profilePic, role, permissions, designation } = body
 
     // 1. Basic validation
