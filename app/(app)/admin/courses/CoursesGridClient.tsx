@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import Link from 'next/link'
 import {
   FiSearch,
@@ -44,18 +44,21 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all')
 
-  // Filter courses based on search term and status
-  const filteredCourses = courses.filter((c) => {
-    const matchesSearch =
-      c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.instructorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+  // TASK 7: Memoize filtering logic to prevent recalculation on every render
+  // This is especially important when filtering 50+ courses with multiple criteria
+  const filteredCourses = useMemo(() => {
+    return courses.filter((c) => {
+      const matchesSearch =
+        c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.instructorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus =
-      statusFilter === 'all' || c.status === statusFilter
+      const matchesStatus =
+        statusFilter === 'all' || c.status === statusFilter
 
-    return matchesSearch && matchesStatus
-  })
+      return matchesSearch && matchesStatus
+    })
+  }, [courses, searchTerm, statusFilter])
 
   // Quick toggle course draft/published status
   const handleToggleStatus = async (id: string, currentStatus: 'draft' | 'published') => {
@@ -110,7 +113,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
     }
   }
 
-  // Delete Course
+  // Delete Course with progress tracking
   const handleDeleteCourse = async (id: string, title: string) => {
     if (userRole !== 'admin') {
       Swal.fire({
@@ -125,7 +128,7 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
 
     const result = await Swal.fire({
       title: 'Delete Course Permanently?',
-      text: `Warning: Deleting "${title}" will remove its syllabus, student enrollments, and reviews. This action CANNOT be undone!`,
+      text: `Warning: Deleting "${title}" will remove all lessons, quiz submissions, assignments, student enrollments, and reviews. This action CANNOT be undone!`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -137,26 +140,79 @@ export default function CoursesGridClient({ initialCourses, userRole }: Props) {
 
     if (!result.isConfirmed) return
 
+    // Show progress dialog
+    Swal.fire({
+      title: 'Deleting Course...',
+      html: `
+        <div style="text-align: center;">
+          <div style="margin: 20px 0;">
+            <div style="background: #1f2937; border-radius: 8px; overflow: hidden; height: 8px;">
+              <div id="progress-bar" style="background: linear-gradient(90deg, #ef4444, #dc2626); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+            <p id="progress-text" style="margin-top: 12px; font-size: 14px; color: #d1d5db;">Removing course data...</p>
+          </div>
+        </div>
+      `,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        const progressBar = document.getElementById('progress-bar') as HTMLElement
+        const progressText = document.getElementById('progress-text') as HTMLElement
+        if (progressBar) progressBar.style.width = '20%'
+        if (progressText) progressText.textContent = 'Removing course data...'
+      },
+      background: '#121829',
+      color: '#ffffff',
+    })
+
     try {
+      // Update progress
+      const progressBar = document.getElementById('progress-bar') as HTMLElement
+      const progressText = document.getElementById('progress-text') as HTMLElement
+
+      if (progressBar) progressBar.style.width = '40%'
+      if (progressText) progressText.textContent = 'Deleting lessons and submissions...'
+
       const res = await fetch(`/api/admin/courses/${id}`, {
         method: 'DELETE',
       })
 
+      if (progressBar) progressBar.style.width = '80%'
+      if (progressText) progressText.textContent = 'Finalizing deletion...'
+
       if (!res.ok) {
-        throw new Error('Failed to delete course document.')
+        const errData = await res.json()
+        throw new Error(errData.error || 'Failed to delete course.')
       }
 
+      const data = await res.json()
+
+      if (progressBar) progressBar.style.width = '100%'
+      if (progressText) progressText.textContent = 'Done! Course deleted.'
+
+      // Remove from UI
       setCourses((prev) => prev.filter((c) => c.id !== id))
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Course Deleted',
-        text: 'Course successfully removed from database.',
-        timer: 1500,
-        showConfirmButton: false,
-        background: '#121829',
-        color: '#ffffff',
-      })
+      // Success message
+      setTimeout(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Course Deleted Successfully',
+          html: `
+            <p style="margin: 10px 0;">Course "${title}" and all related data have been removed:</p>
+            <ul style="text-align: left; display: inline-block; margin-top: 12px;">
+              <li>${data.deletedItemCounts?.lessons || 0} lessons deleted</li>
+              <li>All quiz submissions deleted</li>
+              <li>All assignments deleted</li>
+              <li>All student enrollments deleted</li>
+              <li>All reviews deleted</li>
+            </ul>
+          `,
+          confirmButtonColor: '#10b981',
+          background: '#121829',
+          color: '#ffffff',
+        })
+      }, 300)
     } catch (err: any) {
       Swal.fire({
         icon: 'error',

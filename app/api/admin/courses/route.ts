@@ -6,6 +6,11 @@ import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
+/**
+ * GET /api/admin/courses
+ * Fetch all courses (admin: all, instructor: own)
+ * Returns standardized response format
+ */
 export async function GET(request: Request) {
   try {
     await connectToDatabase()
@@ -14,17 +19,41 @@ export async function GET(request: Request) {
     const payloadToken = cookieStore.get('payload-token')?.value
 
     if (!payloadToken) {
-      return NextResponse.json({ error: 'Unauthorized: Session missing.' }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+          code: 'AUTH_REQUIRED',
+          message: 'Session authentication token is missing.',
+        },
+        { status: 401 }
+      )
     }
 
     const decoded = verifyToken(payloadToken)
     if (!decoded || !decoded.id) {
-      return NextResponse.json({ error: 'Unauthorized: Session invalid.' }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+          code: 'INVALID_TOKEN',
+          message: 'Session authentication token is invalid.',
+        },
+        { status: 401 }
+      )
     }
 
     const user = await User.findById(decoded.id).lean()
     if (!user || !['admin', 'staff', 'instructor'].includes(user.role)) {
-      return NextResponse.json({ error: 'Forbidden: Insufficient permissions.' }, { status: 403 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Forbidden',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          message: 'You do not have permission to access this resource.',
+        },
+        { status: 403 }
+      )
     }
 
     let query = {}
@@ -34,13 +63,30 @@ export async function GET(request: Request) {
 
     const courses = await Course.find(query).select('title _id').sort({ title: 1 }).lean()
 
-    return NextResponse.json({ success: true, courses })
+    return NextResponse.json({
+      success: true,
+      data: { courses },
+    })
   } catch (error: any) {
-    console.error('GET Courses API Error:', error)
-    return NextResponse.json({ error: error.message || 'Failed to fetch courses.' }, { status: 500 })
+    console.error('GET /api/admin/courses error:', error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch courses',
+        code: 'INTERNAL_ERROR',
+        message: error.message || 'An unexpected error occurred while fetching courses.',
+      },
+      { status: 500 }
+    )
   }
 }
 
+/**
+ * POST /api/admin/courses
+ * Create a new course with validation
+ * TASK 6: Validates duration (0-10000 mins) and price (valid positive number)
+ * Returns standardized response format
+ */
 export async function POST(request: Request) {
   try {
     await connectToDatabase()
@@ -50,17 +96,41 @@ export async function POST(request: Request) {
     const payloadToken = cookieStore.get('payload-token')?.value
 
     if (!payloadToken) {
-      return NextResponse.json({ error: 'Unauthorized: Session missing.' }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+          code: 'AUTH_REQUIRED',
+          message: 'Session authentication token is missing.',
+        },
+        { status: 401 }
+      )
     }
 
     const decoded = verifyToken(payloadToken)
     if (!decoded || !decoded.id) {
-      return NextResponse.json({ error: 'Unauthorized: Session invalid.' }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+          code: 'INVALID_TOKEN',
+          message: 'Session authentication token is invalid.',
+        },
+        { status: 401 }
+      )
     }
 
     const user = await User.findById(decoded.id).lean()
     if (!user || !['admin', 'instructor'].includes(user.role)) {
-      return NextResponse.json({ error: 'Forbidden: Insufficient permissions.' }, { status: 403 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Forbidden',
+          code: 'INSUFFICIENT_PERMISSIONS',
+          message: 'You do not have permission to create courses.',
+        },
+        { status: 403 }
+      )
     }
 
     // 2. Parse and validate parameters
@@ -85,13 +155,55 @@ export async function POST(request: Request) {
     } = body
 
     if (!title || !slug || !summary || !description || price === undefined || !thumbnail || !category) {
-      return NextResponse.json({ error: 'Missing required course parameters.' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing required parameters',
+          code: 'VALIDATION_ERROR',
+          message: 'Required fields: title, slug, summary, description, price, thumbnail, category.',
+        },
+        { status: 400 }
+      )
+    }
+
+    // TASK 6: Validate duration
+    if (duration !== undefined && (duration < 0 || duration > 10000)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid duration value',
+          code: 'VALIDATION_ERROR',
+          message: 'Duration must be between 0 and 10000 minutes.',
+        },
+        { status: 400 }
+      )
+    }
+
+    // TASK 6: Validate price
+    if (price !== undefined && (price < 0 || !Number.isFinite(price))) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid price value',
+          code: 'VALIDATION_ERROR',
+          message: 'Price must be a valid positive number.',
+        },
+        { status: 400 }
+      )
     }
 
     // Check slug uniqueness
     const existingCourse = await Course.findOne({ slug }).lean()
     if (existingCourse) {
-      return NextResponse.json({ error: 'Slug must be unique. A course with this slug already exists.' }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Duplicate slug',
+          code: 'VALIDATION_ERROR',
+          message: 'Slug must be unique. A course with this slug already exists.',
+        },
+        { status: 400 }
+      )
     }
 
     // Force instructor ID for instructor role
@@ -129,14 +241,24 @@ export async function POST(request: Request) {
       console.error('Failed to revalidate paths:', cacheError)
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Course successfully created.',
-      course: newCourse,
-    }, { status: 211 }) // Status 201 Created
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: { course: newCourse },
+        message: 'Course successfully created.',
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
-    console.error('Create Course API Error:', error)
-    return NextResponse.json({ error: error.message || 'Failed to create course.' }, { status: 500 })
+    console.error('POST /api/admin/courses error:', error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to create course',
+        code: 'INTERNAL_ERROR',
+        message: error.message || 'An unexpected error occurred while creating the course.',
+      },
+      { status: 500 }
+    )
   }
 }

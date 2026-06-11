@@ -53,6 +53,7 @@ interface LessonItem {
   livePlatform?: string
   liveDate?: string
   videoUrl?: string
+  liveUrl?: string
   quizQuestions?: QuizQuestion[]
   totalMarks?: number
 }
@@ -133,44 +134,29 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
   const [driveLinkInput, setDriveLinkInput] = useState('')
   const [submittingDrive, setSubmittingDrive] = useState(false)
 
-  const fetchSubmissions = async () => {
+  // Combined fetch for course data (progress, submissions, certificates)
+  // Eliminates 3 separate API calls and consolidates into 1
+  const loadCourseData = async () => {
     try {
-      const res = await fetch(`/api/submissions?courseId=${course.id}`)
+      const res = await fetch(`/api/course-data?courseId=${course.id}`)
       if (res.ok) {
         const data = await res.json()
-        if (data.success && data.submissions) {
-          const map: Record<string, any> = {}
-          data.submissions.forEach((s: any) => {
-            const lessonId = s.lesson?._id || s.lesson
-            if (lessonId) {
-              map[lessonId.toString()] = s
-            }
-          })
-          setSubmissionsMap(map)
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load submissions', err)
-    }
-  }
+        if (data.success && data.data) {
+          // Set progress
+          const ids: string[] = data.data.progress?.completedLessons || []
+          setCompletedLessonIds(ids)
 
-  const loadCertificateStatus = async () => {
-    try {
-      const res = await fetch('/api/certificates')
-      if (res.ok) {
-        const data = await res.json()
-        const found = data.requests?.find((r: any) => r.courseId === course.id)
-        if (found) {
-          setCertRequest({
-            status: found.status,
-            certificateUrl: found.certificateUrl,
-          })
-        } else {
-          setCertRequest(null)
+          // Set submissions
+          setSubmissionsMap(data.data.submissions || {})
+
+          // Set certificate status
+          setCertRequest(data.data.certificates)
         }
+      } else {
+        console.error('Failed to load course data:', res.statusText)
       }
     } catch (err) {
-      console.error('Failed to load certificate status', err)
+      console.error('Failed to load course data from combined API', err)
     }
   }
 
@@ -184,9 +170,9 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
       })
       const data = await res.json()
       if (res.ok) {
-        loadCertificateStatus()
+        loadCourseData()
       } else {
-        throw new Error(data.error || 'Failed to request certificate.')
+        throw new Error(data.error || 'Unable to request certificate. Please try again.')
       }
     } catch (err: any) {
       console.error('Auto-request certificate failed:', err)
@@ -195,9 +181,9 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
     }
   }
 
-  // Load certificate status on course mount
+  // Load all course data on component mount
   useEffect(() => {
-    loadCertificateStatus()
+    loadCourseData()
   }, [course.id])
 
   // Reset quiz states when active lesson changes
@@ -264,24 +250,6 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
       setActiveLesson(sortedLessons[0])
     }
   }, [searchParams, lessons])
-
-  // Load completed lessons & submissions from DB API on mount
-  useEffect(() => {
-    async function loadProgress() {
-      try {
-        const res = await fetch('/api/progress')
-        if (res.ok) {
-          const data = await res.json()
-          const ids: string[] = data.completedLessons?.[course.id] || []
-          setCompletedLessonIds(ids)
-        }
-      } catch (err) {
-        console.error('Failed to load progress from API', err)
-      }
-    }
-    loadProgress()
-    fetchSubmissions()
-  }, [course.id])
 
   // Fullscreen toggle handler
   const toggleFullscreen = () => {
@@ -716,9 +684,9 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
               </p>
             </div>
 
-            {currentLesson.videoUrl ? (
+            {currentLesson.liveUrl || currentLesson.videoUrl ? (
               <a 
-                href={currentLesson.videoUrl} 
+                href={currentLesson.liveUrl || currentLesson.videoUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="py-2.5 px-4.5 rounded-lg bg-[#615fff] hover:bg-[#5248e8] text-white font-bold text-base whitespace-nowrap transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#615fff]/15 cursor-pointer inline-flex items-center gap-2"
@@ -999,7 +967,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
                                   selectedAnswers: answersArray
                                 })
                               })
-                              fetchSubmissions()
+                              loadCourseData()
                             } catch (err) {
                               console.error('Failed to save quiz score to DB', err)
                             }
@@ -1206,7 +1174,7 @@ export default function CoursePlayerClient({ course, lessons, student }: CourseP
               }
 
               setDriveLinkInput('')
-              fetchSubmissions()
+              loadCourseData()
             } catch (err: any) {
               Swal.fire({
                 icon: 'error',
