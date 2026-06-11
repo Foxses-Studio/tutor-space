@@ -57,8 +57,8 @@ export default function LessonsPageClient({ courses }: { courses: CourseOption[]
     try {
       const res = await fetch(`/api/admin/lessons?courseId=${courseId}`)
       const data = await res.json()
-      if (data.success) {
-        const mapped = data.lessons.map((l: any) => ({
+      if (data.success && data.data?.lessons) {
+        const mapped = data.data.lessons.map((l: any) => ({
           id: l._id,
           title: l.title,
           slug: l.slug,

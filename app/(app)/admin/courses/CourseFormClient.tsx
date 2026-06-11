@@ -130,8 +130,8 @@ export default function CourseFormClient({
     fetch(`/api/admin/lessons?courseId=${initialData._id}`)
       .then(r => r.json())
       .then(data => {
-        if (data.lessons) {
-          setLessons(data.lessons.map((l: any) => ({
+        if (data.success && data.data?.lessons) {
+          setLessons(data.data.lessons.map((l: any) => ({
             id: l._id,
             title: l.title,
             order: l.order,
