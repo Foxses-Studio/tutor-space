@@ -6,6 +6,7 @@ import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
 import { createZoomMeeting } from '@/lib/zoom'
+import { revalidatePath } from 'next/cache'
 
 async function authCheck() {
   const cookieStore = await cookies()
@@ -88,6 +89,18 @@ export async function PUT(
     })
     await lesson.save()
 
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    if (course && (course as any).slug) {
+      try {
+        revalidatePath('/')
+        revalidatePath('/courses')
+        revalidatePath('/instructors')
+        revalidatePath(`/courses/${(course as any).slug}`)
+      } catch (cacheError) {
+        console.error('Failed to revalidate paths during lesson update:', cacheError)
+      }
+    }
+
     return NextResponse.json({ success: true, lesson })
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to update lesson.' }, { status: 500 })
@@ -108,15 +121,31 @@ export async function DELETE(
     const lesson = await Lesson.findById(id)
     if (!lesson) return NextResponse.json({ error: 'Lesson not found.' }, { status: 404 })
 
+    // Fetch course details before deleting to get its slug for revalidation
+    const course = await Course.findById(lesson.course).lean()
+    const slug = (course as any)?.slug
+
     // Ownership check
     if (user.role === 'instructor') {
-      const course = await Course.findById(lesson.course).lean()
       if ((course as any)?.instructor.toString() !== user._id.toString()) {
         return NextResponse.json({ error: 'Forbidden: Not your course.' }, { status: 403 })
       }
     }
 
     await lesson.deleteOne()
+
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    if (slug) {
+      try {
+        revalidatePath('/')
+        revalidatePath('/courses')
+        revalidatePath('/instructors')
+        revalidatePath(`/courses/${slug}`)
+      } catch (cacheError) {
+        console.error('Failed to revalidate paths during lesson deletion:', cacheError)
+      }
+    }
+
     return NextResponse.json({ success: true, message: 'Lesson deleted successfully.' })
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Failed to delete lesson.' }, { status: 500 })

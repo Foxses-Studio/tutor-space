@@ -7,6 +7,7 @@ import { Enrollment } from '@/lib/db/models/Enrollment'
 import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 // GET a specific course
 export async function GET(
@@ -61,6 +62,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden: Admins only.' }, { status: 403 })
     }
 
+    // Fetch course details before deleting to get its slug for revalidation
+    const courseToDelete = await Course.findById(id).lean() as any
+    const slug = courseToDelete?.slug
+
     // 2. Delete related documents
     await Promise.all([
       Course.findByIdAndDelete(id),
@@ -68,6 +73,18 @@ export async function DELETE(
       Review.deleteMany({ course: id }),
       Enrollment.deleteMany({ course: id }),
     ])
+
+    // Revalidate paths for the public frontend
+    if (slug) {
+      try {
+        revalidatePath('/')
+        revalidatePath('/courses')
+        revalidatePath('/instructors')
+        revalidatePath(`/courses/${slug}`)
+      } catch (cacheError) {
+        console.error('Failed to revalidate paths during delete:', cacheError)
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -149,6 +166,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Slug must be unique. A course with this slug already exists.' }, { status: 400 })
     }
 
+    // Capture old slug for revalidation if it changes
+    const oldSlug = course.slug
+
     // 4. Perform Mongoose Update
     course.title = title
     course.slug = slug
@@ -171,6 +191,19 @@ export async function PUT(
     course.modules = modules || []
 
     await course.save()
+
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    try {
+      revalidatePath('/')
+      revalidatePath('/courses')
+      revalidatePath('/instructors')
+      revalidatePath(`/courses/${course.slug}`)
+      if (oldSlug && oldSlug !== course.slug) {
+        revalidatePath(`/courses/${oldSlug}`)
+      }
+    } catch (cacheError) {
+      console.error('Failed to revalidate paths during update:', cacheError)
+    }
 
     return NextResponse.json({
       success: true,

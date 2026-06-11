@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/db/mongodb'
 import { Review } from '@/lib/db/models/Review'
+import { Course } from '@/lib/db/models/Course'
 import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 export async function POST(request: Request) {
   try {
@@ -43,6 +45,22 @@ export async function POST(request: Request) {
 
     review.status = status
     await review.save()
+
+    // Fetch the related course to get its slug for revalidation
+    const course = await Course.findById(review.course).lean()
+    const slug = (course as any)?.slug
+
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    if (slug) {
+      try {
+        revalidatePath('/')
+        revalidatePath('/courses')
+        revalidatePath('/instructors')
+        revalidatePath(`/courses/${slug}`)
+      } catch (cacheError) {
+        console.error('Failed to revalidate paths during review moderation:', cacheError)
+      }
+    }
 
     return NextResponse.json({
       success: true,

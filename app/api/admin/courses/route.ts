@@ -4,6 +4,7 @@ import { Course } from '@/lib/db/models/Course'
 import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 export async function GET(request: Request) {
   try {
@@ -117,6 +118,16 @@ export async function POST(request: Request) {
     })
 
     await newCourse.save()
+
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    try {
+      revalidatePath('/')
+      revalidatePath('/courses')
+      revalidatePath('/instructors')
+      revalidatePath(`/courses/${slug}`)
+    } catch (cacheError) {
+      console.error('Failed to revalidate paths:', cacheError)
+    }
 
     return NextResponse.json({
       success: true,

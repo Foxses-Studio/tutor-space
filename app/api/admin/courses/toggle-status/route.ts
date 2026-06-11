@@ -4,6 +4,7 @@ import { Course } from '@/lib/db/models/Course'
 import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 export async function POST(request: Request) {
   try {
@@ -49,6 +50,16 @@ export async function POST(request: Request) {
     // 4. Update course status
     course.status = status
     await course.save()
+
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    try {
+      revalidatePath('/')
+      revalidatePath('/courses')
+      revalidatePath('/instructors')
+      revalidatePath(`/courses/${course.slug}`)
+    } catch (cacheError) {
+      console.error('Failed to revalidate paths during status toggle:', cacheError)
+    }
 
     return NextResponse.json({
       success: true,

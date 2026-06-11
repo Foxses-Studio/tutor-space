@@ -6,6 +6,7 @@ import { User } from '@/lib/db/models/User'
 import { verifyToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
 import { createZoomMeeting } from '@/lib/zoom'
+import { revalidatePath } from 'next/cache'
 
 // GET all lessons (optionally filtered by courseId)
 export async function GET(request: Request) {
@@ -86,6 +87,18 @@ export async function POST(request: Request) {
       quizQuestions: lessonType === 'quiz' ? quizQuestions : undefined,
     })
     await newLesson.save()
+
+    // Revalidate paths for the public frontend to ensure changes are immediately visible
+    if (course && (course as any).slug) {
+      try {
+        revalidatePath('/')
+        revalidatePath('/courses')
+        revalidatePath('/instructors')
+        revalidatePath(`/courses/${(course as any).slug}`)
+      } catch (cacheError) {
+        console.error('Failed to revalidate paths during lesson creation:', cacheError)
+      }
+    }
 
     return NextResponse.json({ success: true, lesson: newLesson }, { status: 201 })
   } catch (error: any) {
